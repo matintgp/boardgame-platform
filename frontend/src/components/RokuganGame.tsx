@@ -181,16 +181,18 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
             setDefense((d) => ({ target: idx, token: d?.token ?? 3 }));
           }
         }}
-        className={`relative flex h-16 w-16 flex-col items-center justify-center rounded-lg border text-2xl ${
+        className={`relative flex h-20 w-[4.6rem] flex-col items-center justify-center rounded-md border-2 text-2xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
           razed
-            ? "border-red-900/60 bg-[#3a2626] opacity-60"
+            ? "border-red-800 bg-[#2a1616] text-red-300/90"
             : selected
-              ? "border-[var(--accent)] bg-[#4a5d3a]"
-              : "border-[var(--border)] bg-[var(--surface)]"
+              ? "border-[var(--accent)] bg-[#3d4a2c] shadow-[0_0_0_2px_rgba(212,162,78,0.4)]"
+              : "border-[#5a4a32] bg-[#2a241c]"
         } ${clickable ? "cursor-pointer hover:border-[var(--accent)]" : "opacity-80"}`}
       >
         <span>{razed ? "💥" : "⛩"}</span>
-        <span className="muted text-[10px]">{label}</span>
+        <span className={`mt-0.5 text-[11px] font-semibold leading-tight ${razed ? "text-red-300/80" : ""}`}>
+          {label}
+        </span>
       </button>
     );
   }
@@ -252,41 +254,45 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
           </span>
         </div>
 
-        <div className="flex gap-2">
-          {oppProvinces.map((razed, i) => (
-            <Province
-              key={i}
-              ownerSeat={oppSeat}
-              idx={i}
-              clickable={canPlan && !alreadySubmitted}
-              selected={attack?.target === i}
-              razed={razed}
-              label={`${t("province")} ${i + 1}`}
-            />
-          ))}
-        </div>
+        <div className="rounded-2xl border-2 border-[#3d3428] bg-[#14110d] p-4 shadow-[inset_0_0_48px_rgba(0,0,0,0.5)]">
+          <p className="mb-2 text-center text-xs font-semibold tracking-wide text-[var(--muted)]">
+            {players.find((p) => p.seat === oppSeat)?.user.username ?? "..."}
+          </p>
+          <div className="flex justify-center gap-3">
+            {oppProvinces.map((razed, i) => (
+              <Province
+                key={i}
+                ownerSeat={oppSeat}
+                idx={i}
+                clickable={canPlan && !alreadySubmitted}
+                selected={attack?.target === i}
+                razed={razed}
+                label={`${t("province")} ${i + 1}`}
+              />
+            ))}
+          </div>
 
-        <div className="muted text-sm">
-          {t("round")} {state?.round ?? 1}/5
-        </div>
+          <div className="my-3 text-center text-sm font-bold text-[var(--accent)]">
+            {t("round")} {state?.round ?? 1}/5
+          </div>
 
-        <div className="flex gap-2">
-          {myProvinces.map((razed, i) => (
-            <Province
-              key={i}
-              ownerSeat={mySeat ?? 0}
-              idx={i}
-              clickable={canPlan && !alreadySubmitted}
-              selected={defense?.target === i}
-              razed={razed}
-              label={`${t("province")} ${i + 1}`}
-            />
-          ))}
-        </div>
-
-        <div className="card flex items-center gap-2 p-3 text-sm">
-          <span className="font-bold">{players.find((p) => p.seat === mySeat)?.user.username ?? "..."}</span>
-          <span className="muted">(you)</span>
+          <div className="flex justify-center gap-3">
+            {myProvinces.map((razed, i) => (
+              <Province
+                key={i}
+                ownerSeat={mySeat ?? 0}
+                idx={i}
+                clickable={canPlan && !alreadySubmitted}
+                selected={defense?.target === i}
+                razed={razed}
+                label={`${t("province")} ${i + 1}`}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-center text-xs font-semibold">
+            {players.find((p) => p.seat === mySeat)?.user.username ?? "..."}
+            <em className="muted ms-1 font-normal">{t("youMarker")}</em>
+          </p>
         </div>
 
         <p className="muted text-center text-sm">
@@ -305,13 +311,10 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
       {/* Side panel */}
       <div className="flex flex-col gap-4">
         <VoicePanel
-
           gameId={gameId}
-
           selfName={user?.username}
-
+          defaultCollapsed
           labels={{ join: tv("join"), leave: tv("leave"), mute: tv("mute"), unmute: tv("unmute"), title: tv("title"), micError: tv("micError") }}
-
         />
 
 
@@ -339,10 +342,10 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                     key={v}
                     disabled={!canPlan || !alreadySubmitted === false ? !canPlan : !canPlan}
                     onClick={() => setAttack((a) => ({ target: a?.target ?? 0, token: v }))}
-                    className={`h-8 w-8 rounded border text-sm ${
+                    className={`h-9 w-9 rounded-full border text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                       attack?.token === v
                         ? "border-[var(--accent)] bg-[var(--accent)] font-bold text-black"
-                        : "border-[var(--border)]"
+                        : "border-[#5a4a32] bg-[#1a1610]"
                     }`}
                   >
                     {v}
@@ -363,10 +366,10 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                     key={v}
                     disabled={!canPlan}
                     onClick={() => setDefense((d) => ({ target: d?.target ?? 0, token: v }))}
-                    className={`h-8 w-8 rounded border text-sm ${
+                    className={`h-9 w-9 rounded-full border text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                       defense?.token === v
                         ? "border-[var(--accent)] bg-[var(--accent)] font-bold text-black"
-                        : "border-[var(--border)]"
+                        : "border-[#5a4a32] bg-[#1a1610]"
                     }`}
                   >
                     {v}

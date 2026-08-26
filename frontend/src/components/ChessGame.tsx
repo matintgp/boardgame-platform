@@ -658,7 +658,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
               <div key={p.seat} className="flex justify-between py-1 text-sm">
                 <span>
                   {p.seat === 0 ? "♔" : "♚"} {p.user.username}
-                  {isViewer && <em className="muted ms-1">(you)</em>}
+                  {isViewer && <em className="muted ms-1">{t("youMarker")}</em>}
                 </span>
                 <span className="muted">
                   {p.seat === 0
@@ -688,17 +688,10 @@ export default function GamePage({ gameId }: { gameId: string }) {
         {error && <p className="text-sm text-red-400">{error}</p>}
 
         <VoicePanel
-
-
           gameId={gameId}
-
-
           selfName={user?.username}
-
-
+          defaultCollapsed
           labels={{ join: tv("join"), leave: tv("leave"), mute: tv("mute"), unmute: tv("unmute"), title: tv("title"), micError: tv("micError") }}
-
-
         />
 
 
@@ -714,7 +707,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
 
         {state && (
           <div className="card max-h-64 overflow-auto p-4">
-            <h3 className="mb-2 font-semibold">Moves</h3>
+            <h3 className="mb-2 font-semibold">{t("moves")}</h3>
             <div className="grid grid-cols-2 gap-x-4 text-sm">
               {state.san_history.map((san, i) => (
                 <span key={i}>

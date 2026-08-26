@@ -7,7 +7,8 @@
     "friends": "Friends",
     "login": "Log in",
     "register": "Sign up",
-    "logout": "Log out"
+    "logout": "Log out",
+    "language": "Language"
   },
   "auth": {
     "email": "Email",
@@ -42,7 +43,10 @@
     "gameChess": "Chess",
     "gameMafia": "Mafia",
     "gameRokugan": "Rokugan",
-    "unknownGame": "Game"
+    "unknownGame": "Game",
+    "gameChessTag": "Classic 1v1 on the sixty-four squares",
+    "gameMafiaTag": "Deduce, deceive, survive the night",
+    "gameRokuganTag": "Secret plans. Razed provinces."
   },
   "game": {
     "waiting": "Waiting for opponent...",
@@ -88,7 +92,9 @@
     "loadingGame": "Loading game...",
     "unknownType": "This game type isn't supported.",
     "loadFailed": "Couldn't load this game.",
-    "backToLobby": "Back to lobby"
+    "backToLobby": "Back to lobby",
+    "moves": "Moves",
+    "youMarker": "(you)"
   },
   "friends": {
     "title": "Friends",
@@ -134,7 +140,8 @@
     "victory": "Victory!",
     "defeat": "Defeat",
     "drawTitle": "Draw!",
-    "resultLine": "The result was decided by razed provinces."
+    "resultLine": "The result was decided by razed provinces.",
+    "youMarker": "(you)"
   },
   "chat": {
     "title": "Game Chat",
@@ -168,7 +175,8 @@
     "chatTitle": "Game Chat",
     "chatPlaceholder": "Message...",
     "chatSend": "Send",
-    "reportPrompt": "Reason for report:"
+    "reportPrompt": "Reason for report:",
+    "youMarker": "(you)"
   },
   "voice": {
     "join": "Join Voice",

@@ -1,13 +1,15 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { ensureSession, logout, onAuthChange, type SessionUser } from "@/lib/api";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 
 export default function Navbar() {
   const t = useTranslations("app");
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -35,6 +37,40 @@ export default function Navbar() {
           <Link href="/friends" className="hover:text-[var(--accent)]">
             {t("friends")}
           </Link>
+          <div
+            className="flex items-center gap-1 text-xs font-semibold tracking-wide"
+            dir="ltr"
+            role="group"
+            aria-label={t("language")}
+          >
+            <Link
+              href={pathname}
+              locale="fa"
+              className={
+                locale === "fa"
+                  ? "text-[var(--accent)]"
+                  : "muted hover:text-[var(--accent)]"
+              }
+              aria-current={locale === "fa" ? "true" : undefined}
+            >
+              FA
+            </Link>
+            <span className="muted" aria-hidden="true">
+              |
+            </span>
+            <Link
+              href={pathname}
+              locale="en"
+              className={
+                locale === "en"
+                  ? "text-[var(--accent)]"
+                  : "muted hover:text-[var(--accent)]"
+              }
+              aria-current={locale === "en" ? "true" : undefined}
+            >
+              EN
+            </Link>
+          </div>
           {!ready ? null : user ? (
             <>
               <Link href="/profile" className="muted hover:text-[var(--accent)]">

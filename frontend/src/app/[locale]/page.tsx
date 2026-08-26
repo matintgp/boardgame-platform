@@ -2,9 +2,9 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 const GAMES = [
-  { id: "chess", icon: "♞", nameKey: "gameChess" as const },
-  { id: "mafia", icon: "🕵", nameKey: "gameMafia" as const },
-  { id: "rokugan", icon: "⚔", nameKey: "gameRokugan" as const },
+  { id: "chess", icon: "♞", nameKey: "gameChess" as const, tagKey: "gameChessTag" as const },
+  { id: "mafia", icon: "🕵", nameKey: "gameMafia" as const, tagKey: "gameMafiaTag" as const },
+  { id: "rokugan", icon: "⚔", nameKey: "gameRokugan" as const, tagKey: "gameRokuganTag" as const },
 ];
 
 export default function HomePage() {
@@ -31,10 +31,11 @@ export default function HomePage() {
           <Link
             key={g.id}
             href="/lobby"
-            className="card p-5 text-center hover:border-[var(--accent)]"
+            className="card group p-5 text-center transition-colors hover:border-[var(--accent)] hover:bg-[rgba(212,162,78,0.07)]"
           >
             <div className="text-4xl">{g.icon}</div>
             <div className="mt-2 font-bold">{tl(g.nameKey)}</div>
+            <p className="muted mt-1 text-sm">{tl(g.tagKey)}</p>
           </Link>
         ))}
       </section>

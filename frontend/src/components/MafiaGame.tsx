@@ -148,30 +148,60 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
       {/* Rematch offer */}
       {view && view.status !== undefined && null}
       {/* Main */}
-      <div className="mx-auto w-full max-w-md">
-        {/* Role badge */}
+      <div
+        className={`mx-auto w-full max-w-md rounded-2xl p-3 ${
+          state?.phase === "night"
+            ? "bg-[#08090d] ring-1 ring-indigo-950/80"
+            : state?.phase === "day"
+              ? "bg-[#16140f] ring-1 ring-[var(--accent)]/20"
+              : ""
+        }`}
+      >
+        {/* Phase heading */}
         <div
-          className={`card mb-4 flex items-center justify-between p-4 ${
-            you?.role === "mafia" ? "!border-red-800" : ""
+          className={`mb-4 rounded-xl border px-4 py-3 text-center ${
+            state?.phase === "night"
+              ? "border-indigo-950 bg-[#0b0d14]"
+              : state?.phase === "day"
+                ? "border-[var(--accent)]/35 bg-[#1c1912]"
+                : "border-[var(--border)] bg-[var(--surface)]"
           }`}
         >
-          <div>
-            <p className="muted text-xs uppercase tracking-wide">{t("yourRole")}</p>
-            <p className={`text-lg font-extrabold ${you?.role === "mafia" ? "text-red-400" : "text-[var(--accent)]"}`}>
-              {roleLabel}
+          <p
+            className={`text-2xl font-extrabold ${
+              state?.phase === "night"
+                ? "text-indigo-200"
+                : state?.phase === "day"
+                  ? "text-[var(--accent)]"
+                  : "text-[var(--text)]"
+            }`}
+          >
+            {state?.phase === "night" ? `🌙 ${t("night")}` : state?.phase === "day" ? `☀️ ${t("day")}` : "🏁"}
+          </p>
+          <p className="muted mt-0.5 text-sm">
+            {t("round")} {state?.round ?? 1}
+          </p>
+        </div>
+
+        {/* Role badge */}
+        <div
+          className={`card mb-4 p-4 ${
+            you?.role === "mafia"
+              ? "!border-red-800"
+              : state?.phase === "night"
+                ? "border-indigo-900/70 bg-[#101218]"
+                : ""
+          }`}
+        >
+          <p className="muted text-xs uppercase tracking-wide">{t("yourRole")}</p>
+          <p className={`mt-1 text-2xl font-extrabold ${you?.role === "mafia" ? "text-red-400" : "text-[var(--accent)]"}`}>
+            {roleLabel}
+          </p>
+          {you?.role === "mafia" && you.teammates && (
+            <p className="muted mt-1 text-xs">
+              🤝 {t("teammates")}: {you.teammates.map(nameOf).join(", ") || "—"}
             </p>
-            {you?.role === "mafia" && you.teammates && (
-              <p className="muted text-xs">
-                🤝 {t("teammates")}: {you.teammates.map(nameOf).join(", ") || "—"}
-              </p>
-            )}
-          </div>
-          <div className="text-right text-sm">
-            <p className="font-bold">
-              {state?.phase === "night" ? `🌙 ${t("night")}` : state?.phase === "day" ? `☀️ ${t("day")}` : "🏁"}
-            </p>
-            <p className="muted">{t("round")} {state?.round ?? 1}</p>
-          </div>
+          )}
         </div>
 
         {/* Players */}
@@ -194,19 +224,26 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
               return (
                 <div
                   key={p.seat}
-                  className={`flex items-center justify-between rounded-lg border p-2 ${
-                    myPick ? "border-[var(--accent)]" : "border-[var(--border)]"
+                  className={`flex items-center justify-between gap-2 rounded-lg border p-2 ${
+                    myPick ? "border-[var(--accent)] bg-[rgba(212,162,78,0.08)]" : "border-[var(--border)]"
                   } ${!alive ? "opacity-50" : ""}`}
                 >
                   <span>
                     {!alive && "💀 "}
                     {p.user.username}
-                    {isSelf && <em className="muted ms-1">(you)</em>}
+                    {isSelf && <em className="muted ms-1">{t("youMarker")}</em>}
                     {!alive && <em className="muted ms-1">— {t("dead")}</em>}
                   </span>
+                  <div className="flex items-center gap-1">
                   {targetable && (
                     <button
-                      className="btn btn-ghost !py-1 !px-2 text-xs"
+                      className={`btn !py-1.5 !px-3 text-xs ${
+                        state?.phase === "night"
+                          ? you?.role === "mafia"
+                            ? "bg-red-700 text-white"
+                            : "bg-emerald-700 text-white"
+                          : "btn-primary"
+                      }`}
                       onClick={() =>
                         act(
                           state?.phase === "night"
@@ -249,6 +286,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
                       ⚑
                     </button>
                   )}
+                  </div>
                 </div>
               );
             })}
@@ -332,13 +370,10 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
 
       {/* Chat */}
       <VoicePanel
-
         gameId={gameId}
-
         selfName={user?.username}
-
+        defaultCollapsed
         labels={{ join: tv("join"), leave: tv("leave"), mute: tv("mute"), unmute: tv("unmute"), title: tv("title"), micError: tv("micError") }}
-
       />
 
 

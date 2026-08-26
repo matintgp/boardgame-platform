@@ -7,7 +7,8 @@
     "friends": "دوستان",
     "login": "ورود",
     "register": "ثبت‌نام",
-    "logout": "خروج"
+    "logout": "خروج",
+    "language": "زبان"
   },
   "auth": {
     "email": "ایمیل",
@@ -42,7 +43,10 @@
     "gameChess": "شطرنج",
     "gameMafia": "مافیا",
     "gameRokugan": "روگان",
-    "unknownGame": "بازی"
+    "unknownGame": "بازی",
+    "gameChessTag": "شطرنج کلاسیک، یک‌به‌یک روی ۶۴ خانه",
+    "gameMafiaTag": "شب مخفی شو، روز حقیقت رو پیدا کن",
+    "gameRokuganTag": "نقشه‌های مخفی. استان‌های ویران."
   },
   "game": {
     "waiting": "در انتظار حریف...",
@@ -88,7 +92,9 @@
     "loadingGame": "در حال بارگذاری بازی...",
     "unknownType": "این نوع بازی پشتیبانی نمی‌شه.",
     "loadFailed": "نتونستم این بازی رو بارگذاری کنم.",
-    "backToLobby": "برگشت به لابی"
+    "backToLobby": "برگشت به لابی",
+    "moves": "حرکت‌ها",
+    "youMarker": "(تو)"
   },
   "friends": {
     "title": "دوستان",
@@ -134,7 +140,8 @@
     "victory": "پیروزی!",
     "defeat": "شکست",
     "drawTitle": "مساوی!",
-    "resultLine": "نتیجه بر اساس استان‌های ویران‌شده تعیین شد."
+    "resultLine": "نتیجه بر اساس استان‌های ویران‌شده تعیین شد.",
+    "youMarker": "(تو)"
   },
   "chat": {
     "title": "چت بازی",
@@ -168,7 +175,8 @@
     "chatTitle": "چت بازی",
     "chatPlaceholder": "پیام...",
     "chatSend": "ارسال",
-    "reportPrompt": "دلیل گزارش تخلف:"
+    "reportPrompt": "دلیل گزارش تخلف:",
+    "youMarker": "(تو)"
   },
   "voice": {
     "join": "ورود به چت صوتی",

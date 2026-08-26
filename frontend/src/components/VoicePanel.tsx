@@ -1,27 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ConnectionState, Room, RoomEvent } from "livekit-client";
+import { Room, RoomEvent } from "livekit-client";
 import { api } from "@/lib/api";
 
 /**
  * Voice chat panel (LiveKit). Joins `voice:{gameId}` on demand.
  * Mic permission is requested by the browser on first join.
+ * Collapsed by default — LiveKit join is roadmap phase 3.
  */
 export default function VoicePanel({
   gameId,
   selfName,
   labels,
+  defaultCollapsed = true,
 }: {
   gameId: string;
   selfName: string | undefined;
   labels: { join: string; leave: string; mute: string; unmute: string; title: string; micError: string };
+  defaultCollapsed?: boolean;
 }) {
   const [joined, setJoined] = useState(false);
   const [muted, setMuted] = useState(false);
   const [peers, setPeers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(!defaultCollapsed);
   const roomRef = useRef<Room | null>(null);
 
   function refreshPeers(room: Room) {
@@ -79,48 +83,59 @@ export default function VoicePanel({
   }, []);
 
   return (
-    <div className="card p-4">
-      <h3 className="mb-2 font-semibold">🎙 {labels.title}</h3>
-      {!joined ? (
-        <button className="btn btn-primary w-full" onClick={joinVoice} disabled={busy}>
-          🎙 {labels.join}
-        </button>
-      ) : (
-        <div className="flex flex-col gap-2 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-green-400">● {labels.title}</span>
-            <span className="muted">
-              {peers.length + 1} {selfName ? "" : ""}
-            </span>
-          </div>
-          <div className="muted">
-            🗣 {selfName} {muted ? "🔇" : "🎙"}
-            {peers.map((p) => (
-              <span key={p}>
-                , {p} 🎙
+    <details
+      className="card overflow-hidden"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold marker:content-none">
+        <span className="flex items-center justify-between gap-2">
+          <span>🎙 {labels.title}</span>
+          <span className="muted text-xs font-normal">{open ? "▴" : "▾"}</span>
+        </span>
+      </summary>
+      <div className="px-4 pb-4">
+        {!joined ? (
+          <button className="btn btn-primary w-full" onClick={joinVoice} disabled={busy}>
+            🎙 {labels.join}
+          </button>
+        ) : (
+          <div className="flex flex-col gap-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-green-400">● {labels.title}</span>
+              <span className="muted">
+                {peers.length + 1} {selfName ? "" : ""}
               </span>
-            ))}
+            </div>
+            <div className="muted">
+              🗣 {selfName} {muted ? "🔇" : "🎙"}
+              {peers.map((p) => (
+                <span key={p}>
+                  , {p} 🎙
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button
+                className="btn btn-ghost flex-1"
+                onClick={() => {
+                  const room = roomRef.current;
+                  if (!room) return;
+                  const next = !muted;
+                  void room.localParticipant.setMicrophoneEnabled(!next);
+                  setMuted(next);
+                }}
+              >
+                {muted ? `🔇 ${labels.unmute}` : `🎙 ${labels.mute}`}
+              </button>
+              <button className="btn btn-ghost flex-1 text-red-400" onClick={leave}>
+                ⏏ {labels.leave}
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              className="btn btn-ghost flex-1"
-              onClick={() => {
-                const room = roomRef.current;
-                if (!room) return;
-                const next = !muted;
-                void room.localParticipant.setMicrophoneEnabled(!next);
-                setMuted(next);
-              }}
-            >
-              {muted ? `🔇 ${labels.unmute}` : `🎙 ${labels.mute}`}
-            </button>
-            <button className="btn btn-ghost flex-1 text-red-400" onClick={leave}>
-              ⏏ {labels.leave}
-            </button>
-          </div>
-        </div>
-      )}
-      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
-    </div>
+        )}
+        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      </div>
+    </details>
   );
 }

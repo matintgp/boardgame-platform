@@ -1,10 +1,18 @@
 import type { Metadata, Viewport } from "next";
+import { Vazirmatn } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { hasLocale } from "use-intl";
 import { routing } from "@/i18n/routing";
 import Navbar from "@/components/Navbar";
 import "../globals.css";
+
+const vazirmatn = Vazirmatn({
+  subsets: ["arabic", "latin"],
+  display: "swap",
+  variable: "--font-vazirmatn",
+  fallback: ["Segoe UI", "system-ui", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   title: "BoardGame Platform",
@@ -34,7 +42,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={dir}>
-      <body className="min-h-screen">
+      <body className={`${vazirmatn.className} ${vazirmatn.variable} min-h-screen`}>
         <NextIntlClientProvider>
           <Navbar />
           <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
