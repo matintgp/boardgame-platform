@@ -1,13 +1,14 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { FormEvent, useState } from "react";
+import { Link, useRouter } from "@/i18n/navigation";
 
 type Mode = "login" | "register";
 
 export default function AuthForm({ mode }: { mode: Mode }) {
   const t = useTranslations("auth");
-  const locale = useLocale();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +32,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       // Small delay: the Set-Cookie from this response must be committed by the
       // browser before the navigation, or the next page's token refresh 401s.
       await new Promise((r) => setTimeout(r, 400));
-      window.location.assign(`/${locale}/lobby`);
+      router.replace("/lobby");
     } catch {
       setError(t("genericError"));
     } finally {
@@ -88,9 +89,9 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       </form>
       <p className="muted mt-4 text-sm">
         {mode === "login" ? (
-          <a href="/register" className="hover:text-[var(--accent)]">{t("noAccount")}</a>
+          <Link href="/register" className="hover:text-[var(--accent)]">{t("noAccount")}</Link>
         ) : (
-          <a href="/login" className="hover:text-[var(--accent)]">{t("haveAccount")}</a>
+          <Link href="/login" className="hover:text-[var(--accent)]">{t("haveAccount")}</Link>
         )}
       </p>
     </div>

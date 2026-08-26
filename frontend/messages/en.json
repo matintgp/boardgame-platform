@@ -35,7 +35,14 @@
     "searching": "Searching for an opponent...",
     "cancel": "Cancel",
     "createRokugan": "Create Rokugan Table",
-    "createMafia": "Create Mafia Table (4+)"
+    "createMafia": "Create Mafia Table (4+)",
+    "loading": "Loading...",
+    "loadError": "Couldn't load tables. Try again.",
+    "retry": "Retry",
+    "gameChess": "Chess",
+    "gameMafia": "Mafia",
+    "gameRokugan": "Rokugan",
+    "unknownGame": "Game"
   },
   "game": {
     "waiting": "Waiting for opponent...",
@@ -77,7 +84,11 @@
     "winGeneric": "You won!",
     "opponentWonGeneric": "won",
     "opponentOffline": "Opponent disconnected - reconnect in",
-    "autoMoveIn": "Auto-move in {{seconds}}s"
+    "autoMoveIn": "Auto-move in {{seconds}}s",
+    "loadingGame": "Loading game...",
+    "unknownType": "This game type isn't supported.",
+    "loadFailed": "Couldn't load this game.",
+    "backToLobby": "Back to lobby"
   },
   "friends": {
     "title": "Friends",

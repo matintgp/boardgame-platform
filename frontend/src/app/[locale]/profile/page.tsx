@@ -3,10 +3,12 @@
 import { useLocale, useTranslations } from "next-intl";
 import { FormEvent, useEffect, useState } from "react";
 import { api, ensureSession, type SessionUser } from "@/lib/api";
+import { useRouter } from "@/i18n/navigation";
 
 export default function ProfilePage() {
   const t = useTranslations("profile");
   const locale = useLocale();
+  const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -16,7 +18,7 @@ export default function ProfilePage() {
   useEffect(() => {
     ensureSession().then((u) => {
       if (!u) {
-        window.location.href = "/login";
+        router.replace("/login");
         return;
       }
       setUser(u);

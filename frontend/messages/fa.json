@@ -35,7 +35,14 @@
     "searching": "در جستجوی حریف...",
     "cancel": "لغو",
     "createRokugan": "ساخت میز روگان",
-    "createMafia": "ساخت میز مافیا (۴+ نفر)"
+    "createMafia": "ساخت میز مافیا (۴+ نفر)",
+    "loading": "در حال بارگذاری...",
+    "loadError": "لیست میزها نیومد. دوباره تلاش کن.",
+    "retry": "تلاش مجدد",
+    "gameChess": "شطرنج",
+    "gameMafia": "مافیا",
+    "gameRokugan": "روگان",
+    "unknownGame": "بازی"
   },
   "game": {
     "waiting": "در انتظار حریف...",
@@ -77,7 +84,11 @@
     "winGeneric": "تو بردی!",
     "opponentWonGeneric": "برنده شد",
     "opponentOffline": "حریف قطع شده — بازگشت تا",
-    "autoMoveIn": "حرکت خودکار تا {{seconds}} ثانیه"
+    "autoMoveIn": "حرکت خودکار تا {{seconds}} ثانیه",
+    "loadingGame": "در حال بارگذاری بازی...",
+    "unknownType": "این نوع بازی پشتیبانی نمی‌شه.",
+    "loadFailed": "نتونستم این بازی رو بارگذاری کنم.",
+    "backToLobby": "برگشت به لابی"
   },
   "friends": {
     "title": "دوستان",

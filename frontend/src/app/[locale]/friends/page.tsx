@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { api, ensureSession } from "@/lib/api";
+import { useRouter } from "@/i18n/navigation";
 
 interface FriendEntry {
   request_id: string;
@@ -18,6 +19,7 @@ interface Profile {
 
 export default function FriendsPage() {
   const t = useTranslations("friends");
+  const router = useRouter();
   const [user, setUser] = useState<Profile | null>(null);
   const [entries, setEntries] = useState<FriendEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
@@ -45,7 +47,7 @@ export default function FriendsPage() {
         setUser(u);
         void load();
       } else {
-        window.location.href = "/login";
+        router.replace("/login");
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,8 +1,9 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ensureSession, type SessionUser } from "@/lib/api";
+import { useRouter } from "@/i18n/navigation";
 import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
@@ -42,10 +43,10 @@ const TOKENS = [1, 2, 3, 4, 5];
 
 export default function RokuganGame({ gameId }: { gameId: string }) {
   const t = useTranslations("rokugan");
+  const router = useRouter();
   const tc = useTranslations("chat");
   const tv = useTranslations("voice");
   const tg = useTranslations("game");
-  const locale = useLocale();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [view, setView] = useState<GameView | null>(null);
   const [state, setState] = useState<RokuganState | null>(null);
@@ -108,7 +109,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
     let disposed = false;
     ensureSession().then(async (u) => {
       if (!u) {
-        window.location.href = "/login";
+        router.replace("/login");
         return;
       }
       if (disposed) return;
@@ -226,9 +227,9 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                       `/api/games/${gameId}/rematch`,
                       { method: "POST" }
                     );
-                    window.location.assign(`/${locale}/game/${res.game_id}`);
+                    router.push(`/game/${res.game_id}`);
                   } catch {
-                    window.location.assign(`/${locale}/lobby`);
+                    router.push("/lobby");
                   }
                 }}
               >

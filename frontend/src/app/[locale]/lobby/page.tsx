@@ -1,9 +1,9 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ensureSession, type SessionUser } from "@/lib/api";
+import { Link, useRouter } from "@/i18n/navigation";
 
 interface LobbyInfo {
   id: string;
@@ -18,19 +18,37 @@ interface MyGame {
   status: string;
 }
 
+function gameLabel(
+  t: ReturnType<typeof useTranslations>,
+  gameType: string
+): { icon: string; name: string } {
+  switch (gameType) {
+    case "mafia":
+      return { icon: "🎭", name: t("gameMafia") };
+    case "rokugan":
+      return { icon: "⚔", name: t("gameRokugan") };
+    case "chess":
+      return { icon: "♞", name: t("gameChess") };
+    default:
+      return { icon: "♟", name: t("unknownGame") };
+  }
+}
+
 export default function LobbyPage() {
   const t = useTranslations("lobby");
   const router = useRouter();
-  const locale = useLocale();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [lobbies, setLobbies] = useState<LobbyInfo[]>([]);
   const [myGames, setMyGames] = useState<MyGame[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
+  const [listLoading, setListLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const searchRef = useRef(false);
 
   const refreshLists = useCallback(async () => {
+    setListError(null);
     try {
       const [ls, mine] = await Promise.all([
         api<LobbyInfo[]>("/api/games/lobbies"),
@@ -38,10 +56,12 @@ export default function LobbyPage() {
       ]);
       setLobbies(ls);
       setMyGames(mine);
-    } catch {
-      /* session expired etc. */
+    } catch (e) {
+      setListError(e instanceof Error ? e.message : t("loadError"));
+    } finally {
+      setListLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     ensureSession().then((u) => {
@@ -54,16 +74,19 @@ export default function LobbyPage() {
     });
   }, [router, refreshLists]);
 
-  async function createTable() {
-    setBusy(true);
+  async function createTable(gameType: "chess" | "mafia" | "rokugan") {
+    setBusy(gameType);
+    setJoinError(null);
     try {
       const g = await api<{ id: string }>("/api/games", {
         method: "POST",
-        body: JSON.stringify({ game_type: "chess" }),
+        body: JSON.stringify({ game_type: gameType }),
       });
       router.push(`/game/${g.id}`);
+    } catch (e) {
+      setJoinError(e instanceof Error ? e.message : t("loadError"));
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
@@ -78,7 +101,6 @@ export default function LobbyPage() {
     }
   }
 
-  // Quick match: poll the queue endpoint until paired.
   useEffect(() => {
     if (!searching) return;
     let stopped = false;
@@ -122,13 +144,15 @@ export default function LobbyPage() {
     );
   }
 
-  const path = (suffix: string) => (locale === "fa" ? suffix : `/en${suffix}`);
-
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("title")}</h1>
-        {user && <span className="muted text-sm">{user.username} · {user.rating}</span>}
+        {user && (
+          <span className="muted text-sm">
+            {user.username} · {user.rating}
+          </span>
+        )}
       </div>
 
       {searching ? (
@@ -142,75 +166,69 @@ export default function LobbyPage() {
           </button>
         </div>
       ) : (
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button className="btn btn-primary" onClick={quickMatch}>
             ⚡ {t("quickMatch")}
           </button>
           <button
             className="btn btn-ghost"
-            onClick={async () => {
-              setBusy(true);
-              try {
-                const g = await api<{ id: string }>("/api/games", {
-                  method: "POST",
-                  body: JSON.stringify({ game_type: "mafia" }),
-                });
-                router.push(`/game/${g.id}`);
-              } finally {
-                setBusy(false);
-              }
-            }}
-            disabled={busy}
+            onClick={() => createTable("chess")}
+            disabled={busy !== null}
+          >
+            ♞ {t("createChess")}
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={() => createTable("mafia")}
+            disabled={busy !== null}
           >
             🎭 {t("createMafia")}
           </button>
           <button
             className="btn btn-ghost"
-            onClick={async () => {
-              setBusy(true);
-              try {
-                const g = await api<{ id: string }>("/api/games", {
-                  method: "POST",
-                  body: JSON.stringify({ game_type: "rokugan" }),
-                });
-                router.push(`/game/${g.id}`);
-              } finally {
-                setBusy(false);
-              }
-            }}
-            disabled={busy}
+            onClick={() => createTable("rokugan")}
+            disabled={busy !== null}
           >
             ⚔ {t("createRokugan")}
           </button>
-          <button className="btn btn-ghost" onClick={createTable} disabled={busy}>
-            ♞ {t("createChess")}
-          </button>
         </div>
       )}
-
-      <button className="btn btn-ghost self-start" onClick={createTable} disabled={busy}>
-        ♞ {t("createChess")}
-      </button>
 
       {joinError && <p className="text-sm text-red-400">{joinError}</p>}
 
       <section>
         <h2 className="mb-3 font-semibold">{t("openLobbies")}</h2>
-        {lobbies.length === 0 && <p className="muted">{t("empty")}</p>}
+        {listLoading && <p className="muted">{t("loading")}</p>}
+        {listError && (
+          <p className="text-sm text-red-400">
+            {t("loadError")}{" "}
+            <button className="btn btn-ghost !py-1 !px-2" onClick={() => void refreshLists()}>
+              {t("retry")}
+            </button>
+          </p>
+        )}
+        {!listLoading && !listError && lobbies.length === 0 && (
+          <p className="muted">{t("empty")}</p>
+        )}
         <div className="flex flex-col gap-2">
-          {lobbies.map((l) => (
-            <div key={l.id} className="card flex items-center justify-between p-4">
-              <div>
-                <span className="font-semibold">♞ Chess</span>
-                <span className="muted ms-3 text-sm">
-                  {t("players")}: {l.players.length}/{l.max_players}
-                </span>
+          {lobbies.map((l) => {
+            const { icon, name } = gameLabel(t, l.game_type);
+            return (
+              <div key={l.id} className="card flex items-center justify-between p-4">
+                <div>
+                  <span className="font-semibold">
+                    {icon} {name}
+                  </span>
+                  <span className="muted ms-3 text-sm">
+                    {t("players")}: {l.players.length}/{l.max_players}
+                  </span>
+                </div>
+                <button className="btn btn-ghost" onClick={() => join(l.id)}>
+                  {t("join")}
+                </button>
               </div>
-              <button className="btn btn-ghost" onClick={() => join(l.id)}>
-                {t("join")}
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -218,13 +236,21 @@ export default function LobbyPage() {
         <section>
           <h2 className="mb-3 font-semibold">{t("yourGames")}</h2>
           <div className="flex flex-col gap-2">
-            {myGames.map((g) => (
-              <a key={g.id} href={path(`/game/${g.id}`)}
-                 className="card flex items-center justify-between p-3 hover:border-[var(--accent)]">
-                <span>♞ {g.game_type}</span>
-                <span className="muted text-sm">{g.status}</span>
-              </a>
-            ))}
+            {myGames.map((g) => {
+              const { icon, name } = gameLabel(t, g.game_type);
+              return (
+                <Link
+                  key={g.id}
+                  href={`/game/${g.id}`}
+                  className="card flex items-center justify-between p-3 hover:border-[var(--accent)]"
+                >
+                  <span>
+                    {icon} {name}
+                  </span>
+                  <span className="muted text-sm">{g.status}</span>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
