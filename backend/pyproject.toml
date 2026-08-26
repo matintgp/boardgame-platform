@@ -1,0 +1,44 @@
+[project]
+name = "boardgame-backend"
+version = "0.1.0"
+description = "Online board game platform - FastAPI backend"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.32,<1",
+    "sqlalchemy[asyncio]>=2.0.36,<2.1",
+    "asyncpg>=0.30,<0.31",
+    "alembic>=1.14,<2",
+    "pydantic>=2.9,<3",
+    "pydantic-settings>=2.6,<3",
+    "email-validator>=2.2,<3",
+    "redis>=5.2,<6",
+    "pyjwt>=2.10,<3",
+    "pwdlib[argon2]>=0.2.1,<0.3",
+    "celery>=5.4,<6",
+    "chess>=1.10,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.28",
+    "aiosqlite>=0.20",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

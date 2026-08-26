@@ -1,0 +1,19 @@
+{
+  "name": "BoardGame Platform",
+  "short_name": "BoardGame",
+  "description": "Play classic board games online with friends",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "lang": "fa",
+  "dir": "auto",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

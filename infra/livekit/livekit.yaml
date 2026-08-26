@@ -1,0 +1,15 @@
+port: 7880
+bind_addresses:
+  - ""
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  use_external_ip: false
+  # local dev: advertise 127.0.0.1 so browsers on the host can reach the
+  # Docker-published UDP port directly
+  enable_loopback_candidate: true
+# keys are injected via LIVEKIT_KEYS env (see docker-compose)
+logging:
+  level: info
+room:
+  max_participants: 16
