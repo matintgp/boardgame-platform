@@ -173,7 +173,13 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
         setView((prev) => {
           const next = prev
             ? { ...prev }
-            : ({ id: gameId, game_type: "mafia", status: "active", players: [] } as GameView);
+            : ({
+                id: gameId,
+                game_type: "mafia",
+                status: "active",
+                players: [],
+                your_seat: null,
+              } as GameView);
           if (payload.players) next.players = payload.players;
           if (payload.status) next.status = payload.status;
           if (env.type === "started") next.status = "active";
@@ -556,7 +562,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
                 {you.role === "mafia" && (
                   <p className="muted mt-1 text-xs">
                     🤝 {t("teammates")}:{" "}
-                    {teammates.map((s) => nameOf(players, s)).join(", ") || "—"}
+                    {teammates.filter((s) => s !== you.seat).map((s) => nameOf(players, s)).join(", ") || "—"}
                     {you.team_ready ? ` — ${t("teamReady")}` : ""}
                   </p>
                 )}
@@ -579,7 +585,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
               </div>
             )}
 
-            {state.last_night && (state.phase === "day" || state.phase === "over") && (
+            {state.last_night && (
               <div className="card mb-4 p-4 text-sm">
                 🌙 {t("nightResult")}{" "}
                 {state.last_night.killed != null ? (
@@ -591,7 +597,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
                 )}
               </div>
             )}
-            {state.last_vote && (state.phase === "night" || state.phase === "over") && (
+            {state.last_vote && (
               <div className="card mb-4 p-4 text-sm">
                 ☀️ {t("voteResult")}{" "}
                 {state.last_vote.eliminated != null ? (
