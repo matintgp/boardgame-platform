@@ -16,6 +16,8 @@ import {
 
 const FILES = "abcdefgh";
 
+const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
 function pieceImg(piece: string): string {
   // Files on disk are lowercase (wp.png, bk.png, ...) and the Linux container
   // filesystem is case-sensitive.
@@ -325,13 +327,11 @@ export default function GamePage({ gameId }: { gameId: string }) {
 
   const flip = mySeat === 1;
   const oppSeat = mySeat === 0 ? 1 : 0;
-  const rows = state ? parseFen(state.fen) : null;
+  const rows = parseFen(state?.fen ?? START_FEN);
   // Flip = reverse rank AND file order so the viewer's pieces sit at the bottom.
-  const displayRows: string[][] = rows
-    ? flip
-      ? rows.slice().reverse().map((r) => r.slice().reverse())
-      : rows
-    : emptyRows();
+  const displayRows: string[][] = flip
+    ? rows.slice().reverse().map((r) => r.slice().reverse())
+    : rows;
 
   // Pixel offset for the slide-in animation of the last moved piece.
   const squareSize = boardRef.current?.clientWidth
@@ -634,8 +634,10 @@ export default function GamePage({ gameId }: { gameId: string }) {
           )}
         </div>
         <p className="muted mt-2 text-center text-sm">
-          {conn !== "open"
+          {conn === "closed"
             ? t("disconnected")
+            : conn === "connecting"
+              ? t("connecting")
             : !state
               ? status === "waiting"
                 ? t("waiting")
@@ -723,9 +725,6 @@ export default function GamePage({ gameId }: { gameId: string }) {
   );
 }
 
-function emptyRows(): string[][] {
-  return Array.from({ length: 8 }, () => Array(8).fill(""));
-}
 
 function formatResult(
   result: { reason: string; winner_seat: number | null },

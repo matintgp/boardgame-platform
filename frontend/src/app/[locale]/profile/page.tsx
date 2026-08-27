@@ -1,13 +1,12 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { FormEvent, useEffect, useState } from "react";
 import { api, ensureSession, type SessionUser } from "@/lib/api";
 import { useRouter } from "@/i18n/navigation";
 
 export default function ProfilePage() {
   const t = useTranslations("profile");
-  const locale = useLocale();
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [current, setCurrent] = useState("");
@@ -101,9 +100,6 @@ export default function ProfilePage() {
         </form>
         <p className="muted mt-3 text-xs">{t("logoutEverywhere")}</p>
       </div>
-      <p className="muted mt-4 text-xs">
-        {locale === "fa" ? "پس از تغییر پسورد، همه‌ی دستگاه‌ها از حساب خارج می‌شوند." : "After changing your password, all devices are logged out."}
-      </p>
     </div>
   );
 }

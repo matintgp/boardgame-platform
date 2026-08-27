@@ -84,7 +84,7 @@ export default function VoicePanel({
 
   return (
     <details
-      className="card overflow-hidden"
+      className="card h-fit self-start overflow-hidden"
       open={open}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >

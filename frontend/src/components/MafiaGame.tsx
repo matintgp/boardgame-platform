@@ -44,8 +44,10 @@ interface GameView {
   id: string;
   game_type: string;
   status: string;
+  max_players?: number;
   players: PlayerInfo[];
   your_seat: number | null;
+  is_host?: boolean;
 }
 
 export default function MafiaGame({ gameId }: { gameId: string }) {
@@ -134,6 +136,28 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
     socketRef.current?.send({ type: "action", room, action, payload: { target } });
   }
 
+  async function joinTable() {
+    setError(null);
+    try {
+      await api(`/api/games/${gameId}/join`, { method: "POST" });
+      const g = await api<GameView>(`/api/games/${gameId}`);
+      setView(g);
+      socketRef.current?.join(room);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "join failed");
+    }
+  }
+
+  async function start() {
+    setError(null);
+    try {
+      await api(`/api/games/${gameId}/start`, { method: "POST" });
+      setView((prev) => (prev ? { ...prev, status: "active" } : prev));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    }
+  }
+
   const players = view?.players ?? [];
   const you = state?.you ?? null;
   const isAlive = you?.alive ?? true;
@@ -142,6 +166,10 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
 
   const roleLabel =
     you?.role === "mafia" ? t("roleMafia") : you?.role === "doctor" ? t("roleDoctor") : t("roleCitizen");
+  const waiting = (view?.status ?? "waiting") === "waiting" || !state;
+  const maxPlayers = view?.max_players ?? 4;
+  const mySeat = view?.your_seat ?? null;
+  const canStart = (view?.is_host ?? false) && waiting && players.length >= maxPlayers;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
@@ -157,6 +185,36 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
               : ""
         }`}
       >
+        {waiting ? (
+          <div className="card p-5">
+            <h2 className="mb-3 text-xl font-bold">🎭 {t("title")}</h2>
+            <p className="muted mb-4 text-sm">
+              ⏳ {tg("waiting")} ({players.length}/{maxPlayers})
+            </p>
+            <div className="flex flex-col gap-2 text-sm">
+              {players.map((p) => (
+                <div key={p.seat} className="flex justify-between rounded-lg border border-[var(--border)] p-2">
+                  <span>
+                    {p.user.username}
+                    {p.user.id === user?.id && <em className="muted ms-1">{t("youMarker")}</em>}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {view && mySeat == null && (
+              <button className="btn btn-primary mt-4 w-full" onClick={joinTable}>
+                {tg("join")}
+              </button>
+            )}
+            {canStart && (
+              <button className="btn btn-primary mt-4 w-full" onClick={start}>
+                ▶ {tg("start")}
+              </button>
+            )}
+            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+          </div>
+        ) : (
+        <>
         {/* Phase heading */}
         <div
           className={`mb-4 rounded-xl border px-4 py-3 text-center ${
@@ -366,25 +424,26 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
             </div>
           </div>
         )}
+        </>
+        )}
       </div>
 
-      {/* Chat */}
-      <VoicePanel
-        gameId={gameId}
-        selfName={user?.username}
-        defaultCollapsed
-        labels={{ join: tv("join"), leave: tv("leave"), mute: tv("mute"), unmute: tv("unmute"), title: tv("title"), micError: tv("micError") }}
-      />
-
-
-      <ChatPanel
-        socket={socket}
-        selfName={user?.username}
+      <div className="flex w-full min-w-0 flex-col gap-4 self-start">
+        <VoicePanel
+          gameId={gameId}
+          selfName={user?.username}
+          defaultCollapsed
+          labels={{ join: tv("join"), leave: tv("leave"), mute: tv("mute"), unmute: tv("unmute"), title: tv("title"), micError: tv("micError") }}
+        />
+        <ChatPanel
+          socket={socket}
+          selfName={user?.username}
           room={room}
-        title={t("chatTitle")}
-        placeholder={t("chatPlaceholder")}
-        sendLabel={t("chatSend")}
-      />
+          title={t("chatTitle")}
+          placeholder={t("chatPlaceholder")}
+          sendLabel={t("chatSend")}
+        />
+      </div>
     </div>
   );
 }
