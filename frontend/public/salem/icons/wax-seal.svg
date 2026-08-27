@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+  <path d="M32 6c8 0 10 6 16 7 6 1 10 7 10 14 0 5-2 8 0 13 2 6-2 12-8 15-4 2-6 7-12 8s-10-3-14-2c-7 2-14-3-16-10-1-5 2-8 1-13-1-6 2-12 8-15 5-2 7-8 15-17z" fill="#8a1a24" stroke="#4a0c12" stroke-width="1.2"/>
+  <circle cx="32" cy="34" r="16" fill="#9e2230" stroke="#f0d9a0" stroke-width="1.4"/>
+  <circle cx="32" cy="34" r="11.5" fill="none" stroke="#d4a24e" stroke-width="1" stroke-dasharray="2.2 2.4"/>
+  <path d="M32 24l2.2 6.4 6.8.2-5.4 4.2 1.8 6.4L32 37.4 26.6 41.2l1.8-6.4-5.4-4.2 6.8-.2z" fill="#f0d9a0"/>
+  <text x="32" y="48.5" text-anchor="middle" font-size="6" font-family="Palatino, Georgia, serif" fill="#f0d9a0">1692</text>
+</svg>

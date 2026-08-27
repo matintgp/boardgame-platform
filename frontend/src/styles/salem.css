@@ -1,0 +1,754 @@
+/* Salem 1692 — candlelit parchment table. Scoped: never restyles the gold salon. */
+
+.salem-table,
+.salem-root,
+html.salem .salem-table {
+  --salem-parchment: #e6d3a8;
+  --salem-parchment-deep: #c4a66a;
+  --salem-ink: #1a1208;
+  --salem-ink-soft: #4a3420;
+  --salem-wax: #9a1c2a;
+  --salem-wax-hot: #d44545;
+  --salem-wood: #2a160c;
+  --salem-wood-rim: #5c3820;
+  --salem-wood-hi: #7a4a24;
+  --salem-felt: #d7c08a;
+  --salem-night: #0c0818;
+  --salem-fog: #2a1c58;
+  --salem-blessing: #2f6a88;
+  --salem-blessing-glow: #7ec8e8;
+  --salem-day: #355c38;
+  --salem-harm: #8c1a22;
+  --salem-candle: #ffb04a;
+  --salem-flame: #ffe08a;
+  --salem-gold: #c4a24e;
+  --salem-serif: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+}
+
+html[dir="rtl"] .salem-table,
+html[dir="rtl"] .salem-root,
+html[lang="fa"] .salem-table,
+html[lang="fa"] .salem-root {
+  --salem-serif: var(--font-vazirmatn), Vazirmatn, Palatino, Georgia, serif;
+  letter-spacing: 0;
+}
+
+/* —— table shell: walnut rim, parchment oval —— */
+.salem-table {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--salem-ink);
+  font-family: var(--salem-serif);
+  background:
+    radial-gradient(ellipse at 50% 28%, rgba(255, 176, 74, 0.16), transparent 42%),
+    repeating-linear-gradient(
+      92deg,
+      #3a2010 0px,
+      #4e2c16 3px,
+      #2c180c 6px,
+      #442414 10px
+    ),
+    var(--salem-wood);
+  border: 11px solid #1a0c08;
+  border-radius: 46% / 50%;
+  box-shadow:
+    inset 0 0 0 5px var(--salem-wood-rim),
+    inset 0 0 0 9px #241208,
+    inset 0 18px 40px rgba(0, 0, 0, 0.35),
+    0 22px 48px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(196, 162, 78, 0.18);
+}
+
+.salem-table-felt {
+  position: absolute;
+  inset: 7.5%;
+  border-radius: 46% / 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 32%, #f3e4bc 0%, #dcc58c 48%, #b89558 100%);
+  box-shadow:
+    inset 0 0 48px rgba(70, 36, 8, 0.32),
+    inset 0 0 0 1px rgba(255, 236, 190, 0.28);
+}
+.salem-table-felt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='.55'/%3E%3C/svg%3E");
+}
+
+.salem-night-fog {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(42, 28, 88, 0.18), rgba(8, 6, 20, 0.72) 70%),
+    linear-gradient(180deg, rgba(20, 16, 48, 0.35), rgba(6, 4, 16, 0.5));
+  mix-blend-mode: multiply;
+  transition: opacity 1.15s ease;
+}
+.salem-table.is-night .salem-night-fog,
+.salem-table.is-night::before {
+  opacity: 1;
+}
+.salem-table.is-night {
+  box-shadow:
+    inset 0 0 0 5px #3a2a68,
+    inset 0 0 0 9px #140c28,
+    inset 0 0 56px rgba(40, 30, 90, 0.55),
+    0 0 40px rgba(70, 50, 160, 0.28);
+  animation: salem-night-breathe 5.2s ease-in-out infinite;
+}
+.salem-table.is-dawn {
+  box-shadow:
+    inset 0 0 0 5px #8a6a32,
+    inset 0 0 40px rgba(255, 196, 90, 0.18),
+    0 0 28px rgba(255, 176, 74, 0.16);
+}
+.salem-table.is-turn {
+  box-shadow:
+    inset 0 0 0 5px var(--salem-wood-rim),
+    inset 0 0 0 9px #241208,
+    0 0 28px rgba(255, 176, 74, 0.12);
+}
+.salem-table.is-over {
+  filter: saturate(0.75);
+}
+
+@keyframes salem-night-breathe {
+  0%, 100% { box-shadow: inset 0 0 0 5px #3a2a68, inset 0 0 56px rgba(40, 30, 90, 0.45), 0 0 32px rgba(70, 50, 160, 0.2); }
+  50% { box-shadow: inset 0 0 0 5px #4a3a88, inset 0 0 72px rgba(70, 50, 140, 0.62), 0 0 48px rgba(90, 70, 200, 0.32); }
+}
+
+/* —— candles —— */
+.salem-candle {
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  z-index: 4;
+  width: 18px;
+  height: 42px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.salem-candle .salem-holder,
+.salem-holder {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 22px;
+  height: 7px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #d4a24e, #5a3410);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+.salem-candle .salem-wick,
+.salem-wick {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  width: 8px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 2px 2px 1px 1px;
+  background: linear-gradient(180deg, #f4e6c0, #e8d5a0 70%, #c4a06a);
+  box-shadow: inset 0 0 0 1px rgba(90, 50, 16, 0.25);
+}
+.salem-candle .salem-wick::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 1.5px;
+  height: 5px;
+  transform: translateX(-50%);
+  background: #1a1208;
+  border-radius: 1px;
+}
+.salem-flame {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  width: 10px;
+  height: 16px;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 50% 70%, #fff6d0 0%, #ffd56a 35%, #ff8c3a 78%, transparent 80%);
+  box-shadow:
+    0 0 10px 3px rgba(255, 176, 74, 0.85),
+    0 0 22px 8px rgba(255, 120, 40, 0.4);
+  animation: salem-flicker 0.16s infinite alternate;
+  transform-origin: 50% 100%;
+}
+.salem-candle-left { left: 18%; top: 22%; }
+.salem-candle-right { left: 82%; top: 22%; }
+
+@keyframes salem-flicker {
+  0% { transform: translateX(-50%) scaleY(1) scaleX(1) rotate(-2deg); filter: brightness(0.95); }
+  100% { transform: translateX(-50%) scaleY(1.14) scaleX(0.88) rotate(3deg); filter: brightness(1.22); }
+}
+
+/* —— gavel token —— */
+.salem-gavel-token {
+  position: absolute;
+  z-index: 4;
+  width: 52px;
+  height: 52px;
+  inset-inline-end: 16%;
+  bottom: 18%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #5a3418, #241208);
+  border: 1px solid var(--salem-gold);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 220, 160, 0.2);
+}
+.salem-gavel-token img { width: 34px; height: 34px; }
+.salem-gavel-token.is-strike { animation: salem-gavel-strike 0.45s ease; }
+
+@keyframes salem-gavel-strike {
+  0% { transform: rotate(0deg); }
+  35% { transform: rotate(-28deg) translateY(4px); }
+  60% { transform: rotate(8deg); }
+  100% { transform: rotate(0); }
+}
+
+/* —— hourglass (30s confession) —— */
+.salem-hourglass {
+  --sand: 1;
+  position: relative;
+  width: 36px;
+  height: 56px;
+  flex-shrink: 0;
+}
+.salem-hourglass-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg, #6a3e18, #3a2010);
+  clip-path: polygon(8% 0, 92% 0, 92% 10%, 58% 46%, 92% 90%, 92% 100%, 8% 100%, 8% 90%, 42% 54%, 8% 10%);
+  box-shadow: inset 0 0 0 1px #d4a24e;
+}
+.salem-hourglass-sand-top,
+.salem-hourglass-sand-bot {
+  position: absolute;
+  left: 50%;
+  width: 18px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #e8c86a, #b8893a);
+  pointer-events: none;
+}
+.salem-hourglass-sand-top {
+  top: 10px;
+  height: calc(14px * var(--sand, 1));
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  animation: salem-sand-top 30s linear forwards;
+}
+.salem-hourglass-sand-bot {
+  bottom: 10px;
+  height: calc(14px * (1 - var(--sand, 1)));
+  min-height: 3px;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  animation: salem-sand-bot 30s linear forwards;
+}
+.salem-hourglass-stream {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  width: 2px;
+  height: 10px;
+  transform: translateX(-50%);
+  background: #d4a24e;
+  animation: salem-sand-stream 30s linear forwards;
+  opacity: 0.85;
+}
+
+@keyframes salem-sand-top {
+  from { height: 14px; }
+  to { height: 1px; opacity: 0.4; }
+}
+@keyframes salem-sand-bot {
+  from { height: 3px; }
+  to { height: 14px; }
+}
+@keyframes salem-sand-stream {
+  0%, 92% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* —— deck / discard / accusation placeholders —— */
+.salem-zone {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 4.5rem;
+  pointer-events: auto;
+}
+.salem-zone-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--salem-ink-soft);
+}
+html[dir="rtl"] .salem-zone-label {
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.salem-zone-deck { inset-inline-start: 14%; top: 42%; }
+.salem-zone-discard { inset-inline-end: 14%; top: 42%; }
+.salem-zone-accuse { left: 50%; bottom: 12%; transform: translateX(-50%); }
+
+.salem-deck-stack,
+.salem-discard-slot {
+  width: 42px;
+  height: 60px;
+  border-radius: 5px;
+  border: 1px solid #4a2a10;
+  background:
+    linear-gradient(145deg, #1c1430, #0c0818);
+  box-shadow:
+    3px 3px 0 #241810,
+    6px 6px 0 #1a100c,
+    0 8px 16px rgba(0, 0, 0, 0.35);
+}
+.salem-deck-stack {
+  background:
+    radial-gradient(circle at 50% 42%, #2a1848, #0c0818 70%);
+  box-shadow:
+    2px 2px 0 #3a2058,
+    4px 4px 0 #1a1028,
+    6px 6px 0 #0c0818;
+}
+
+.salem-accusation {
+  position: relative;
+  width: 72px;
+  height: 54px;
+}
+.salem-accusation .salem-card,
+.salem-accusation-chip {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 38px;
+  height: 54px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #c45a5a, #8c1a22);
+  border: 1px solid #4a0c12;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+}
+.salem-accusation.is-grow .salem-accusation-chip {
+  animation: salem-pile-grow 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.salem-accusation-chip:nth-child(1) { transform: translateX(-50%) rotate(-12deg); }
+.salem-accusation-chip:nth-child(2) { transform: translateX(-42%) rotate(4deg); }
+.salem-accusation-chip:nth-child(3) { transform: translateX(-58%) rotate(-6deg); }
+.salem-accusation-chip:nth-child(4) { transform: translateX(-46%) rotate(10deg); }
+
+@keyframes salem-pile-grow {
+  0% { transform: translateX(-50%) scale(0.7) translateY(12px); opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* wax-seal stamp */
+.salem-wax-stamp {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #c44545, #8a1a24 62%, #4a0c12);
+  box-shadow:
+    inset 0 0 0 2px #d4a24e,
+    0 4px 10px rgba(80, 10, 16, 0.45);
+  animation: salem-stamp 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes salem-stamp {
+  0% { transform: scale(1.5) rotate(-14deg); opacity: 0; filter: blur(2px); }
+  55% { transform: scale(0.9) rotate(3deg); opacity: 1; filter: blur(0); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* —— 3D cards —— */
+.salem-card {
+  --card-w: 7.1rem;
+  position: relative;
+  width: var(--card-w);
+  min-height: 10.15rem;
+  padding: 0.55rem 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  text-align: start;
+  border-radius: 0.55rem;
+  border: 1px solid #6a4a22;
+  color: var(--salem-ink);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 224, 0.35), transparent 40%),
+    var(--salem-parchment);
+  box-shadow:
+    0 1px 0 rgba(255, 240, 210, 0.5) inset,
+    0 8px 18px rgba(20, 10, 0, 0.32);
+  transform-origin: 50% 100%;
+  animation: salem-card-deal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  cursor: pointer;
+  font-family: var(--salem-serif);
+}
+.salem-card.is-compact,
+.salem-card-3d.is-compact {
+  --card-w: 4.6rem;
+  min-height: 6.6rem;
+  padding: 0.35rem 0.3rem;
+  font-size: 0.72rem;
+}
+.salem-card.is-green { border-color: #3d6a3a; box-shadow: 0 0 0 1px rgba(61, 92, 56, 0.35), 0 8px 18px rgba(20, 10, 0, 0.32); }
+.salem-card.is-blue { border-color: #2f6a88; box-shadow: 0 0 0 1px rgba(47, 106, 136, 0.4), 0 8px 18px rgba(20, 10, 0, 0.32); }
+.salem-card.is-red { border-color: #8c1a22; box-shadow: 0 0 0 1px rgba(140, 26, 34, 0.45), 0 8px 18px rgba(20, 10, 0, 0.32); }
+.salem-card.is-black {
+  border-color: #2a2048;
+  color: #e8e0d0;
+  background: linear-gradient(180deg, #2a2048, #100c1c);
+}
+.salem-card.is-selected,
+.salem-card-3d.is-selected {
+  transform: translateY(-10px) rotate(-2deg);
+  box-shadow:
+    0 0 0 2px var(--salem-candle),
+    0 12px 28px rgba(255, 176, 74, 0.28);
+  z-index: 2;
+}
+.salem-card-color {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--salem-ink-soft);
+}
+.salem-card.is-green .salem-card-color { color: var(--salem-day); }
+.salem-card.is-blue .salem-card-color { color: var(--salem-blessing); }
+.salem-card.is-red .salem-card-color { color: var(--salem-wax); }
+.salem-card.is-black .salem-card-color { color: #b8b0d8; }
+.salem-card-title {
+  font-weight: 800;
+  line-height: 1.2;
+  font-size: 0.92rem;
+}
+.salem-card-text {
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--salem-ink-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.salem-card.is-black .salem-card-text { color: #c8c0d8; }
+
+.salem-card-3d {
+  perspective: 900px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-height: calc(var(--card-w) * 1.44);
+}
+.salem-card-3d .salem-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: calc(var(--card-w) * 1.44);
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.4, 0.12, 0.2, 1);
+}
+.salem-card-3d.is-flipped .salem-card-inner { transform: rotateY(180deg); }
+.salem-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 0.55rem;
+  overflow: hidden;
+  border: 1px solid #6a4a22;
+  box-shadow: 0 8px 18px rgba(20, 10, 0, 0.32);
+}
+.salem-card-front { transform: rotateY(180deg); }
+.salem-card-back {
+  background:
+    radial-gradient(circle at 50% 42%, #2a1848, #0c0818 72%);
+  border-color: #d4a24e;
+}
+html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
+  transform: rotateY(-180deg);
+}
+
+@keyframes salem-card-deal {
+  from { opacity: 0; transform: translateY(12px) rotate(4deg); }
+  to { opacity: 1; }
+}
+
+.salem-hand { width: 100%; }
+.salem-hand-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+}
+
+/* —— seats (engine table) —— */
+.salem-seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 4.4rem;
+  max-width: 6.2rem;
+}
+.salem-avatar {
+  width: 2.55rem;
+  height: 2.55rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 800;
+  color: var(--salem-parchment);
+  background: radial-gradient(circle at 40% 32%, #5a3a1c, #1a0e08);
+  border: 1px solid var(--salem-gold);
+  position: relative;
+}
+.salem-avatar.is-self { box-shadow: 0 0 0 2px var(--salem-candle); }
+.salem-avatar.is-picked { box-shadow: 0 0 0 3px var(--salem-wax-hot); }
+.salem-avatar.is-mate { box-shadow: 0 0 0 2px #6a2050; }
+.salem-avatar.is-empty { opacity: 0.45; }
+.salem-avatar.is-target { animation: salem-target-pulse 1.4s ease-in-out infinite; }
+.salem-seat.is-dead { opacity: 0.48; filter: grayscale(0.5); }
+.salem-seat.is-current .salem-avatar {
+  box-shadow: 0 0 16px rgba(255, 176, 74, 0.7);
+}
+.salem-dead-mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #c45a5a;
+  font-size: 1.3rem;
+  background: rgba(10, 6, 6, 0.35);
+  border-radius: inherit;
+}
+.salem-cat-badge {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  inset-inline-end: -4px;
+  bottom: -2px;
+}
+.salem-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  max-width: 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--salem-ink);
+}
+.salem-table.is-night .salem-name { color: #e8e0d0; }
+.salem-you, .salem-dead-label {
+  font-size: 0.62rem;
+  font-style: normal;
+  color: var(--salem-ink-soft);
+}
+.salem-nameplate {
+  font-size: 0.58rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(90, 50, 16, 0.15);
+  border: 1px solid rgba(196, 162, 78, 0.35);
+}
+.salem-tryals { display: flex; gap: 3px; margin-top: 2px; }
+.salem-tryal {
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  background: #1c1430;
+  border: 1px solid #d4a24e;
+}
+.salem-tryal.is-witch { background: #4a1020; border-color: #c44545; }
+.salem-tryal.is-town { background: #e6d3a8; border-color: #3d5c38; }
+.salem-tryal.is-constable { background: #2a1848; border-color: #d4a24e; }
+.salem-wax-row { display: flex; gap: 3px; margin-top: 3px; }
+.salem-wax {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4a3420;
+  border: 1px solid #2a160c;
+}
+.salem-wax.is-lit {
+  background: radial-gradient(circle at 40% 35%, #e06060, var(--salem-wax));
+  box-shadow: 0 0 6px rgba(180, 30, 40, 0.7);
+  animation: salem-stamp 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.salem-blues { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
+.salem-blue-chip {
+  font-size: 0.55rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: rgba(47, 106, 136, 0.25);
+  color: #1a3a4a;
+  border: 1px solid var(--salem-blessing);
+}
+.salem-table.is-night .salem-blue-chip { color: var(--salem-blessing-glow); }
+.salem-action-hint {
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: var(--salem-wax);
+}
+.salem-center-icon { font-size: 1.6rem; line-height: 1; }
+.salem-deck-count {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--salem-ink-soft);
+}
+
+@keyframes salem-target-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(212, 162, 78, 0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(212, 162, 78, 0.15); }
+}
+
+/* —— chrome around the table (game root) —— */
+.salem-root {
+  color: var(--text);
+}
+.salem-phase-banner {
+  border-radius: 0.9rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(196, 162, 78, 0.28);
+  background: rgba(28, 20, 12, 0.72);
+  animation: salem-phase-in 0.45s ease both;
+}
+.salem-phase-banner.is-night {
+  background: linear-gradient(180deg, rgba(24, 16, 48, 0.9), rgba(10, 8, 20, 0.9));
+  border-color: rgba(90, 70, 180, 0.4);
+}
+.salem-phase-banner.is-dawn {
+  background: linear-gradient(180deg, rgba(60, 40, 16, 0.9), rgba(20, 14, 8, 0.9));
+}
+.salem-phase-title { font-weight: 800; font-size: 1.05rem; color: var(--salem-gold); }
+.salem-role-card.is-witch { border-color: rgba(180, 40, 50, 0.45); }
+.salem-own-tryal {
+  font-size: 0.68rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--gold-line);
+  background: rgba(24, 18, 12, 0.5);
+}
+.salem-own-tryal.is-witch { border-color: #c44545; color: #f0a0a0; }
+.salem-own-tryal.is-town { border-color: #6a9a6a; color: #b8d4b0; }
+.salem-own-tryal.is-constable { border-color: #d4a24e; color: #e8d090; }
+.salem-own-tryal.is-hidden { color: var(--muted); }
+
+.salem-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 6, 12, 0.62);
+  backdrop-filter: blur(6px);
+}
+.salem-parchment-card {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 236, 196, 0.18), transparent 50%),
+    linear-gradient(180deg, #efe0b8, #d4bc86);
+  color: var(--salem-ink);
+  border: 1px solid #8a6a32;
+  border-radius: 1rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 240, 210, 0.35);
+}
+.salem-parchment-card .muted { color: var(--salem-ink-soft); }
+.salem-countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--salem-wax);
+}
+
+.salem-lobby { background: rgba(22, 16, 10, 0.78); }
+.salem-lobby-hero {
+  position: relative;
+  min-height: 8.5rem;
+  overflow: hidden;
+  background: #1a100c;
+}
+.salem-lobby-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+.salem-lobby-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(16, 10, 6, 0.94), rgba(16, 10, 6, 0.2) 55%);
+}
+
+.salem-felt-shell {
+  position: relative;
+  min-height: 28rem;
+  width: 100%;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .salem-table.is-night,
+  .salem-flame,
+  .salem-card,
+  .salem-card-3d .salem-card-inner,
+  .salem-wax-stamp,
+  .salem-wax.is-lit,
+  .salem-gavel-token.is-strike,
+  .salem-hourglass-sand-top,
+  .salem-hourglass-sand-bot,
+  .salem-hourglass-stream,
+  .salem-accusation.is-grow .salem-accusation-chip,
+  .salem-avatar.is-target,
+  .salem-phase-banner {
+    animation: none !important;
+    transition: none !important;
+  }
+  .salem-card-3d.is-flipped .salem-card-inner {
+    transform: none;
+  }
+  .salem-card-3d.is-flipped .salem-card-back { display: none; }
+  .salem-card-3d:not(.is-flipped) .salem-card-front { display: none; }
+  .salem-card-front { transform: none; }
+  .salem-night-fog { transition: none; }
+}
+
+.salem-table::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(42, 28, 88, 0.05), rgba(10, 8, 28, 0.55) 72%);
+  mix-blend-mode: multiply;
+  transition: opacity 1.15s ease;
+}
+.salem-table.is-night::before { opacity: 1; }
