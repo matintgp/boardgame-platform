@@ -11,6 +11,7 @@ import VoicePanel from "@/components/VoicePanel";
 import "@/styles/salem.css";
 import SalemTable from "./SalemTable";
 import {
+  accusationValue,
   cardForbidsSelf,
   cardI18nKey,
   cardNeedsTarget,
@@ -23,7 +24,6 @@ import {
   playSalemNight,
   playSalemReveal,
 } from "./salemSounds";
-import { accusationValue } from "./catalog";
 import {
   MARK_THRESHOLD,
   SALEM_MAX_FALLBACK,
