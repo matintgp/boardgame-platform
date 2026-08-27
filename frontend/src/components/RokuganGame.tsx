@@ -135,6 +135,28 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
     };
   }, [applyEnvelope, gameId, room]);
 
+  async function joinTable() {
+    setError(null);
+    try {
+      await api(`/api/games/${gameId}/join`, { method: "POST" });
+      const g = await api<GameView>(`/api/games/${gameId}`);
+      setView(g);
+      socketRef.current?.join(room);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "join failed");
+    }
+  }
+
+  async function start() {
+    setError(null);
+    try {
+      await api(`/api/games/${gameId}/start`, { method: "POST" });
+      setView((prev) => (prev ? { ...prev, status: "active" } : prev));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    }
+  }
+
   async function submitPlan() {
     setError(null);
     if (!attack || !defense) {
@@ -202,6 +224,9 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
   const canPlan =
     state?.phase === "choose" && mySeat != null && conn === "open";
   const alreadySubmitted = state?.you?.plan != null;
+  const waiting = (view?.status ?? "waiting") === "waiting" || !state || players.length < 2;
+  const maxPlayers = view?.max_players ?? 2;
+  const canStart = (view?.is_host ?? false) && waiting && players.length >= maxPlayers;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
@@ -247,6 +272,36 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
 
       {/* Battle board */}
       <div className="mx-auto flex flex-col items-center gap-4">
+        {waiting ? (
+          <div className="card w-full max-w-md p-5">
+            <h2 className="mb-3 text-xl font-bold">⚔ {t("title")}</h2>
+            <p className="muted mb-4 text-sm">
+              ⏳ {tg("waiting")} ({players.length}/{maxPlayers})
+            </p>
+            <div className="flex flex-col gap-2 text-sm">
+              {players.map((p) => (
+                <div key={p.seat} className="flex justify-between rounded-lg border border-[var(--border)] p-2">
+                  <span>
+                    {p.user.username}
+                    {p.user.id === user?.id && <em className="muted ms-1">{t("youMarker")}</em>}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {view && mySeat == null && (
+              <button className="btn btn-primary mt-4 w-full" onClick={joinTable}>
+                {tg("join")}
+              </button>
+            )}
+            {canStart && (
+              <button className="btn btn-primary mt-4 w-full" onClick={start}>
+                ▶ {tg("start")}
+              </button>
+            )}
+            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+          </div>
+        ) : (
+        <>
         <div className="card flex items-center gap-2 p-3 text-sm">
           <span className="font-bold">{players.find((p) => p.seat === oppSeat)?.user.username ?? "..."}</span>
           <span className="muted">
@@ -296,8 +351,10 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
         </div>
 
         <p className="muted text-center text-sm">
-          {conn !== "open"
+          {conn === "closed"
             ? tg("disconnected")
+            : conn === "connecting"
+              ? tg("connecting")
             : state?.result
               ? ""
               : alreadySubmitted
@@ -306,6 +363,8 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                   ? t("planHint")
                   : tg("waiting")}
         </p>
+        </>
+        )}
       </div>
 
       {/* Side panel */}
@@ -326,6 +385,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
           placeholder={tc("placeholder")}
           sendLabel={tc("send")}
         />
+        {!waiting && (
         <div className="card p-4">
           <h3 className="mb-2 font-semibold">⚔ {t("title")}</h3>
           <div className="flex flex-col gap-3 text-sm">
@@ -388,6 +448,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
             {error && <p className="text-sm text-red-400">{error}</p>}
           </div>
         </div>
+        )}
 
         {state && state.log.length > 0 && (
           <div className="card max-h-72 overflow-auto p-4">

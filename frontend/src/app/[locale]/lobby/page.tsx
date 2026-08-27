@@ -44,8 +44,8 @@ export default function LobbyPage() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
   const [listLoading, setListLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
-  const searchRef = useRef(false);
+  const [searching, setSearching] = useState<"chess" | "mafia" | "rokugan" | null>(null);
+  const searchRef = useRef<"chess" | "mafia" | "rokugan" | null>(null);
 
   const refreshLists = useCallback(async () => {
     setListError(null);
@@ -103,23 +103,24 @@ export default function LobbyPage() {
 
   useEffect(() => {
     if (!searching) return;
+    const gameType = searching;
     let stopped = false;
     const poll = async () => {
-      while (!stopped && searchRef.current) {
+      while (!stopped && searchRef.current === gameType) {
         try {
           const res = await api<{ status: string; game_id?: string }>(
             "/api/games/queue",
-            { method: "POST", body: JSON.stringify({ game_type: "chess" }) }
+            { method: "POST", body: JSON.stringify({ game_type: gameType }) }
           );
           if (res.status === "matched" && res.game_id) {
-            searchRef.current = false;
-            setSearching(false);
+            searchRef.current = null;
+            setSearching(null);
             router.push(`/game/${res.game_id}`);
             return;
           }
         } catch {
-          searchRef.current = false;
-          setSearching(false);
+          searchRef.current = null;
+          setSearching(null);
           return;
         }
         await new Promise((r) => setTimeout(r, 2500));
@@ -131,15 +132,17 @@ export default function LobbyPage() {
     };
   }, [searching, router]);
 
-  async function quickMatch() {
-    setSearching(true);
-    searchRef.current = true;
+  function quickMatch(gameType: "chess" | "mafia" | "rokugan") {
+    searchRef.current = gameType;
+    setSearching(gameType);
   }
 
   async function cancelSearch() {
-    searchRef.current = false;
-    setSearching(false);
-    await api("/api/games/queue?game_type=chess", { method: "DELETE" }).catch(
+    const gameType = searchRef.current;
+    searchRef.current = null;
+    setSearching(null);
+    if (!gameType) return;
+    await api(`/api/games/queue?game_type=${gameType}`, { method: "DELETE" }).catch(
       () => undefined
     );
   }
@@ -159,7 +162,7 @@ export default function LobbyPage() {
         <div className="card flex items-center justify-between p-4">
           <span className="flex items-center gap-2">
             <span className="inline-block h-2 w-2 animate-ping rounded-full bg-[var(--accent)]" />
-            {t("searching")}
+            {t("searching")} · {gameLabel(t, searching).icon} {gameLabel(t, searching).name}
           </span>
           <button className="btn btn-ghost" onClick={cancelSearch}>
             {t("cancel")}
@@ -167,8 +170,14 @@ export default function LobbyPage() {
         </div>
       ) : (
         <div className="flex flex-wrap gap-3">
-          <button className="btn btn-primary" onClick={quickMatch}>
-            ⚡ {t("quickMatch")}
+          <button className="btn btn-primary" onClick={() => quickMatch("chess")}>
+            ⚡ {t("quickMatch")} {t("gameChess")}
+          </button>
+          <button className="btn btn-primary" onClick={() => quickMatch("mafia")}>
+            ⚡ {t("quickMatch")} {t("gameMafia")}
+          </button>
+          <button className="btn btn-primary" onClick={() => quickMatch("rokugan")}>
+            ⚡ {t("quickMatch")} {t("gameRokugan")}
           </button>
           <button
             className="btn btn-ghost"

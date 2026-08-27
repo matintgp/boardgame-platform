@@ -1,6 +1,6 @@
 "use client";
 
-import { getWsUrl, refreshSession } from "./api";
+import { getAccessToken, getWsUrl, refreshSession } from "./api";
 
 export interface Envelope {
   type: string;
@@ -54,6 +54,13 @@ export class GameSocket {
     ws.onopen = () => {
       this.retry = 0;
       this.emitStatus("open");
+      const token = getAccessToken();
+      if (!token) {
+        ws.close();
+        return;
+      }
+      // First frame must be auth; JWT is not placed on the query string.
+      ws.send(JSON.stringify({ type: "auth", token }));
       // Re-join rooms and resync missed events after any reconnect.
       for (const room of this.rooms) {
         ws.send(

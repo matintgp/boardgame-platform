@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { ensureSession, logout, onAuthChange, type SessionUser } from "@/lib/api";
+import { ensureSession, getCurrentUser, logout, onAuthChange, type SessionUser } from "@/lib/api";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 
 export default function Navbar() {
@@ -10,12 +10,15 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [ready, setReady] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(() => getCurrentUser());
+  const [ready, setReady] = useState(() => getCurrentUser() != null);
 
   useEffect(() => {
     const unsub = onAuthChange(setUser);
-    ensureSession().finally(() => setReady(true));
+    ensureSession().then((u) => {
+      setUser(u);
+      setReady(true);
+    });
     return unsub;
   }, []);
 

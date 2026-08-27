@@ -176,7 +176,8 @@
     "chatPlaceholder": "Message...",
     "chatSend": "Send",
     "reportPrompt": "Reason for report:",
-    "youMarker": "(you)"
+    "youMarker": "(you)",
+    "title": "Mafia"
   },
   "voice": {
     "join": "Join Voice",

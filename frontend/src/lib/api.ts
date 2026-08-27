@@ -128,12 +128,24 @@ export async function logout() {
   notifyAuth();
 }
 
+/** In-memory access token for the WS auth frame (never put on the query string). */
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
 export function getWsUrl(): string {
   if (!accessToken) throw new Error("no access token");
-  const base = process.env.NEXT_PUBLIC_WS_BASE;
-  if (base) return `${base}/api/ws?token=${accessToken}`;
+  const wsBase = process.env.NEXT_PUBLIC_WS_BASE;
+  if (wsBase) return `${wsBase.replace(/\/$/, "")}/api/ws`;
+  // Split-port local dev: REST already targets NEXT_PUBLIC_API_BASE (:8000)
+  // but window.location is the Next server (:3000), which 404s /api/ws.
+  const api = process.env.NEXT_PUBLIC_API_BASE;
+  if (api) {
+    const origin = api.replace(/^http/i, "ws").replace(/\/$/, "");
+    return `${origin}/api/ws`;
+  }
   const proto = window.location.protocol === "https:" ? "wss" : "ws";
-  return `${proto}://${window.location.host}/api/ws?token=${accessToken}`;
+  return `${proto}://${window.location.host}/api/ws`;
 }
 
 export async function api<T>(
