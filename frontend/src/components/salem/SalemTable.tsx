@@ -87,7 +87,7 @@ export default function SalemTable({
 
   return (
     <div
-      className={`salem-table mx-auto aspect-[5/4] w-full ${crowded ? "is-crowded max-w-[46rem]" : "max-w-[36rem]"} ${tableClass}`}
+      className={`salem-table mx-auto aspect-[5/4] w-full ${crowded ? "is-crowded" : "max-w-[36rem]"} ${tableClass}`}
       dir="ltr"
     >
       <div className="salem-table-felt" />

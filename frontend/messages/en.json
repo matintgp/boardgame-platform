@@ -252,7 +252,7 @@
     "youMarker": "(you)",
     "emptySeat": "Empty",
     "dead": "eliminated",
-    "accusations": "Accusations",
+    "accusations": "Seals",
     "playOn": "Play",
     "placeCat": "Place the Black Cat",
     "kill": "Night kill",
@@ -429,7 +429,7 @@
     "tryalInnocent": "Not a Witch",
     "lastReveal": "A Tryal of {name} was revealed:",
     "kicker": "The year 1692",
-    "deck": "Draw pile",
+    "deck": "Draw",
     "discard": "Discard"
   }
 }

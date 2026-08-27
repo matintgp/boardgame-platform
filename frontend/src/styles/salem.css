@@ -520,27 +520,36 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
   to { opacity: 1; }
 }
 
-.salem-hand { width: 100%; min-width: 0; }
+.salem-hand {
+  width: 100%;
+  min-width: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 18;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.15rem 0.55rem;
+  background: linear-gradient(180deg, rgba(12, 8, 6, 0), rgba(12, 8, 6, 0.92) 22%, rgba(12, 8, 6, 0.98));
+}
 .salem-hand-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 0.45rem;
-  justify-content: flex-start;
+  gap: 0.4rem;
+  justify-content: center;
   overflow-x: auto;
-  padding-block: 0.35rem 0.55rem;
+  padding-block: 0.2rem 0.35rem;
   scrollbar-width: thin;
 }
 .salem-hand-row .salem-card {
-  --card-w: 6.2rem;
-  min-height: 8.9rem;
+  --card-w: 5.4rem;
+  min-height: 7.6rem;
   flex: 0 0 auto;
 }
-@media (max-width: 1280px) {
+@media (max-width: 1280px), (max-height: 860px) {
   .salem-hand-row .salem-card {
-    --card-w: 5.2rem;
-    min-height: 7.6rem;
-    padding: 0.4rem 0.35rem;
-    font-size: 0.74rem;
+    --card-w: 4.7rem;
+    min-height: 6.6rem;
+    padding: 0.35rem 0.3rem;
+    font-size: 0.7rem;
   }
 }
 
@@ -590,10 +599,12 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
   height: 46px;
 }
 .salem-table.is-crowded .salem-zone-label {
-  max-width: 5.2rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 6.4rem;
+  letter-spacing: 0.02em;
   white-space: nowrap;
+}
+.salem-table.is-crowded {
+  max-width: min(38rem, calc(54vh * 5 / 4));
 }
 .salem-avatar {
   width: 2.55rem;
@@ -787,9 +798,9 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
 
 .salem-felt-shell {
   position: relative;
-  min-height: 28rem;
+  min-height: 22rem;
   width: 100%;
-  max-width: 40rem;
+  max-width: min(40rem, calc(54vh * 5 / 4));
   margin-inline: auto;
 }
 

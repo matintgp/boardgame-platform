@@ -798,9 +798,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             />
 
             {you && youAlive && (you.hand ?? []).length >= 0 && (
-              <div className="salem-hand mt-5">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <h3 className="font-semibold">{t("handTitle")}</h3>
+              <div className="salem-hand">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold">{t("handTitle")}</h3>
                   {selectedCardId && (
                     <button
                       className="btn btn-ghost !py-1 !px-2 text-xs"
@@ -810,7 +810,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                     </button>
                   )}
                 </div>
-                <p className="muted mb-3 text-xs">
+                <p className="muted mb-1 text-xs">
                   {myDay
                     ? selectedCardId
                       ? t("pickTarget")
