@@ -156,8 +156,9 @@ def test_citizen_and_spectator_cannot_see_others_tryals_hands_or_night_votes(eng
     assert "witches" not in spec
     assert "night_kills" not in spec
     for s, pub in spec["tryals"].items():
-        assert set(pub) == {"revealed", "facedown"}
+        assert set(pub) == {"revealed", "facedown", "unrevealed"}
         assert pub["facedown"] == len(state["tryals"][s])
+        assert pub["unrevealed"] == list(range(len(state["tryals"][s])))
         assert pub["revealed"] == []
 
     cv = engine.visible_state(state, town)
@@ -234,6 +235,8 @@ def test_seven_marks_reveals_chosen_tryal(engine):
     pub = engine.visible_state(state, None)
     assert card_id in pub["tryals"][str(target)]["revealed"]
     assert pub["tryals"][str(target)]["facedown"] == 4
+    assert pub["tryals"][str(target)]["unrevealed"] == [0, 2, 3, 4]
+    assert idx not in pub["tryals"][str(target)]["unrevealed"]
 
 
 def test_alibi_clears_marks(engine):

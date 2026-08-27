@@ -770,6 +770,10 @@ class SalemEngine(BaseEngine):
             out[s] = {
                 "revealed": [c["id"] for c in row if c["revealed"]],
                 "facedown": sum(1 for c in row if not c["revealed"]),
+                # Slot indexes still face-down (no card ids). Survives mid-row
+                # reveals and Conspiracy left-shifts so clients do not assume
+                # a prefix of 0..facedown-1.
+                "unrevealed": [i for i, c in enumerate(row) if not c["revealed"]],
             }
         return out
 
