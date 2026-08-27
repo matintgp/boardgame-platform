@@ -82,6 +82,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   const hydratedRef = useRef(false);
   const seatFetchRef = useRef(false);
   const tickedRef = useRef<number | null>(null);
+  const phaseRef = useRef<SalemPhase | null>(null);
+  const seenRevealKeyRef = useRef<string | null>(null);
+  const [revealedSlots, setRevealedSlots] = useState<Record<number, number[]>>({});
   const room = `game:${gameId}`;
 
   const applyEnvelope = useCallback(
@@ -209,6 +212,29 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     };
   }, [applyEnvelope, gameId, room, router]);
 
+  useEffect(() => {
+    setRevealedSlots({});
+    seenRevealKeyRef.current = null;
+    phaseRef.current = null;
+  }, [gameId]);
+
+  useEffect(() => {
+    if (phaseRef.current === "conspiracy" && state?.phase === "day") {
+      setRevealedSlots({});
+    }
+    phaseRef.current = state?.phase ?? null;
+    const lr = state?.last_reveal;
+    if (!lr || typeof lr.index !== "number") return;
+    const key = `${lr.seat}:${lr.index}:${lr.id}`;
+    if (seenRevealKeyRef.current === key) return;
+    seenRevealKeyRef.current = key;
+    setRevealedSlots((map) => {
+      const cur = map[lr.seat] ?? [];
+      if (cur.includes(lr.index)) return map;
+      return { ...map, [lr.seat]: [...cur, lr.index] };
+    });
+  }, [state?.phase, state?.last_reveal?.seat, state?.last_reveal?.index, state?.last_reveal?.id]);
+
   const confessUntil = deadlineMs(state?.confess_deadline);
   useEffect(() => {
     if (state?.phase !== "confess" || !confessUntil) return;
@@ -219,6 +245,10 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   function sendAction(action: string, payload: Record<string, unknown> = {}) {
     setError(null);
     socketRef.current?.send({ type: "action", room, action, payload });
+  }
+
+  function openPublicTryals(seat: number): number[] {
+    return unrevealedPublicIndexes(tryalsOf(state, seat), revealedSlots[seat]);
   }
 
   useEffect(() => {
@@ -360,7 +390,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
       const wouldReveal =
         (add > 0 || selectedCardId === "scapegoat") && newMarks >= MARK_THRESHOLD;
       if (wouldReveal) {
-        const open = unrevealedPublicIndexes(tryalsOf(state, seat));
+        const open = openPublicTryals(seat);
         if (open.length) {
           setTryalPrompt({ cardId: selectedCardId, target: seat, extra });
           return;
@@ -470,7 +500,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     you != null && nSeats > 0 ? leftSeat(you.seat, nSeats) : null;
   const conspiracyIndexes =
     conspiracySource != null
-      ? unrevealedPublicIndexes(tryalsOf(state, conspiracySource))
+      ? openPublicTryals(conspiracySource)
       : [];
 
   const phaseTitle =
@@ -851,7 +881,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               {t("pickTryalHint", { name: nameOf(players, tryalPrompt.target) })}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {unrevealedPublicIndexes(tryalsOf(state, tryalPrompt.target)).map((idx) => (
+              {openPublicTryals(tryalPrompt.target).map((idx) => (
                 <button
                   key={idx}
                   className="btn btn-primary"

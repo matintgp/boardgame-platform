@@ -29,6 +29,10 @@ export interface SalemTownHall {
 export interface SalemPublicTryals {
   revealed: string[];
   facedown: number;
+  /** Engine slot indexes still facedown (public; no hidden ids). */
+  unrevealed?: number[];
+  /** Engine slot indexes already showing, when known. */
+  revealed_indexes?: number[];
 }
 
 export interface SalemYouTryal {
@@ -155,11 +159,36 @@ export function bluesOf(state: SalemState | null, seat: number): string[] {
 export function tryalsOf(state: SalemState | null, seat: number): SalemPublicTryals {
   const empty: SalemPublicTryals = { revealed: [], facedown: 0 };
   if (!state?.tryals) return empty;
-  const row = state.tryals[String(seat)];
+  const row = state.tryals[String(seat)] as SalemPublicTryals & {
+    revealed?: unknown;
+    unrevealed?: unknown;
+    revealed_indexes?: unknown;
+  };
   if (!row || typeof row !== "object") return empty;
+  const revealed: string[] = [];
+  const revealed_indexes: number[] = [];
+  if (Array.isArray(row.revealed)) {
+    for (const item of row.revealed) {
+      if (item && typeof item === "object") {
+        const o = item as { id?: string; index?: number };
+        revealed.push(String(o.id ?? ""));
+        if (typeof o.index === "number" && Number.isFinite(o.index)) revealed_indexes.push(o.index);
+      } else {
+        revealed.push(String(item));
+      }
+    }
+  }
+  const extraIdx = Array.isArray(row.revealed_indexes)
+    ? row.revealed_indexes.map(Number).filter((n) => Number.isFinite(n))
+    : [];
+  const unrevealed = Array.isArray(row.unrevealed)
+    ? row.unrevealed.map(Number).filter((n) => Number.isFinite(n))
+    : undefined;
   return {
-    revealed: Array.isArray(row.revealed) ? row.revealed.map(String) : [],
+    revealed,
     facedown: typeof row.facedown === "number" ? row.facedown : 0,
+    unrevealed,
+    revealed_indexes: revealed_indexes.length ? revealed_indexes : extraIdx.length ? extraIdx : undefined,
   };
 }
 
@@ -293,12 +322,32 @@ export function unrevealedOwnIndexes(you: SalemYou | null): number[] {
     .filter((i) => i >= 0);
 }
 
-/** Prefix heuristic: revealed occupy the front of the public row. */
-export function unrevealedPublicIndexes(row: SalemPublicTryals): number[] {
-  const out: number[] = [];
+/**
+ * Facedown engine slot indexes for a public tryal row.
+ * Prefer engine `unrevealed` / per-card indexes; otherwise punch holes from
+ * known revealed slots (last_reveal). Prefix-only when nothing else is known.
+ */
+export function unrevealedPublicIndexes(
+  row: SalemPublicTryals,
+  knownRevealedIndexes?: readonly number[] | null
+): number[] {
+  const total = row.revealed.length + row.facedown;
+  if (total <= 0) return [];
+  if (Array.isArray(row.unrevealed) && row.unrevealed.length === row.facedown) {
+    return [...new Set(row.unrevealed.filter((i) => i >= 0 && i < total))].sort((a, b) => a - b);
+  }
+  const known = new Set<number>();
+  for (const i of row.revealed_indexes ?? []) known.add(i);
+  for (const i of knownRevealedIndexes ?? []) known.add(i);
+  const valid = [...known].filter((i) => i >= 0 && i < total);
+  if (row.revealed.length === 0) {
+    return Array.from({ length: row.facedown }, (_, i) => i);
+  }
+  if (valid.length === row.revealed.length) {
+    return Array.from({ length: total }, (_, i) => i).filter((i) => !known.has(i));
+  }
   const start = row.revealed.length;
-  for (let i = 0; i < row.facedown; i++) out.push(start + i);
-  return out;
+  return Array.from({ length: row.facedown }, (_, i) => start + i);
 }
 
 
