@@ -159,7 +159,13 @@ def started_payload(engine: BaseEngine, game: Game, users_by_id: dict) -> dict:
 
 # Night actions and day votes are simultaneous + secret. Broadcasting the
 # actor seat (or the event itself) to the rest of the table leaks role.
-SECRET_EVENT_TYPES = frozenset({"night_action", "vote_cast"})
+SECRET_EVENT_TYPES = frozenset({
+    "night_action",
+    "vote_cast",
+    "night_kill",
+    "gavel",
+    "conspiracy_take",
+})
 
 
 def events_for_viewer(events: list[dict], viewer_seat: int | None) -> list[dict]:
