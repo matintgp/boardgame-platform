@@ -200,28 +200,10 @@ export default function LobbyPage() {
         )}
       </div>
 
-      {searching ? (
-        <div className="card enter mm-wrap flex-wrap justify-between p-5" aria-live="polite">
-          <div className="flex items-center gap-4">
-            <div className="mm-orb" aria-hidden="true">
-              <span className="mm-ring" />
-              <span className="mm-ring delay" />
-              <span className="mm-orb-core" />
-            </div>
-            <div>
-              <div className="font-semibold">
-                {t("searching")} · {gameLabel(t, searching).name}
-              </div>
-              <p className="muted mt-0.5 text-sm">{t("matchmakingHint")}</p>
-            </div>
-          </div>
-          <button className="btn btn-ghost" onClick={cancelSearch}>
-            {t("cancel")}
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {MODES.map((m, i) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {MODES.map((m, i) => {
+          const isSearching = searching === m.id;
+          return (
             <article key={m.id} className={`card card-lift overflow-hidden enter enter-d${i + 1}`}>
               <div className="game-cover h-28">
                 <img src={m.cover} alt={t(m.nameKey)} />
@@ -232,21 +214,46 @@ export default function LobbyPage() {
               </div>
               <div className="flex flex-col gap-2 p-4">
                 <p className="muted text-sm">{t(m.tagKey)}</p>
-                <button className="btn btn-primary" onClick={() => quickMatch(m.id)}>
-                  {t("quickMatch")}
-                </button>
-                <button
-                  className="btn btn-ghost"
-                  onClick={() => createTable(m.id)}
-                  disabled={busy !== null}
-                >
-                  {t(m.createKey)}
-                </button>
+                {isSearching ? (
+                  <div className="mm-wrap flex-col gap-3 p-3" aria-live="polite">
+                    <div className="flex items-center gap-3">
+                      <div className="mm-orb" aria-hidden="true">
+                        <span className="mm-ring" />
+                        <span className="mm-ring delay" />
+                        <span className="mm-orb-core" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">{t("searching")}</div>
+                        <p className="muted mt-0.5 text-xs">{t("matchmakingHint")}</p>
+                      </div>
+                    </div>
+                    <button className="btn btn-ghost w-full" onClick={cancelSearch}>
+                      {t("cancel")}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => quickMatch(m.id)}
+                      disabled={searching !== null}
+                    >
+                      {t("quickMatch")}
+                    </button>
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => createTable(m.id)}
+                      disabled={busy !== null || searching !== null}
+                    >
+                      {t(m.createKey)}
+                    </button>
+                  </>
+                )}
               </div>
             </article>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
 
       {joinError && <p className="text-sm text-red-400">{joinError}</p>}
 

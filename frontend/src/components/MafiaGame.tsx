@@ -498,11 +498,6 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
                 ▶ {tg("start")}
               </button>
             )}
-            {isHost && waiting && players.length < minPlayers && (
-              <p className="muted mt-3 text-center text-xs">
-                {t("needMinPlayers", { count: minPlayers })}
-              </p>
-            )}
             {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
           </div>
         ) : !state ? (

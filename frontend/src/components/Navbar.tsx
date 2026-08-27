@@ -83,13 +83,13 @@ export default function Navbar() {
             <>
               <Link
                 href="/profile"
-                className={`flex items-center gap-2 rounded-full border border-[var(--gold-line)] bg-[rgba(24,27,34,0.55)] py-1 ps-1 pe-3 hover:border-[rgba(212,162,78,0.45)] ${
+                className={`flex shrink-0 items-center gap-2 rounded-full border border-[var(--gold-line)] bg-[rgba(24,27,34,0.55)] py-1 ps-1 pe-3 hover:border-[rgba(212,162,78,0.45)] ${
                   active("/profile") ? "border-[rgba(212,162,78,0.5)]" : ""
                 }`}
               >
                 <Avatar name={user.username} size="sm" />
                 <span className="leading-tight">
-                  <span className="block text-xs font-semibold">{user.username}</span>
+                  <span className="block whitespace-nowrap text-xs font-semibold">{user.username}</span>
                   <span className="muted block text-[0.65rem]">{user.rating}</span>
                 </span>
               </Link>
