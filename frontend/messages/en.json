@@ -59,9 +59,9 @@
     "statusFinished": "Finished",
     "matchmakingHint": "We'll seat you as soon as a match is found.",
     "joinFailed": "Couldn't join that table.",
-    "createSalem": "Create Salem Table",
-    "gameSalem": "Salem",
-    "gameSalemTag": "Candlelight, wax seals, secret Tryals. 4 to 12 players."
+    "createSalem": "Open a Salem Table",
+    "gameSalem": "Salem 1692",
+    "gameSalemTag": "Candlelit tryals. Wax-sealed accusations. Lasting blessings."
   },
   "game": {
     "waiting": "Waiting for opponent...",
@@ -242,8 +242,8 @@
     "lobby": "Lobby"
   },
   "salem": {
-    "title": "Salem",
-    "tagline": "Accusations by candlelight. Tryals in the dark. 4 to 12 players.",
+    "title": "Salem 1692",
+    "tagline": "Massachusetts, 1692. Accuse, confess, or keep a lasting blessing.",
     "waitingForPlayers": "Waiting for players...",
     "needMinPlayers": "Need at least {count} players to start",
     "hostCanStart": "Quorum reached — you can start the game",
@@ -269,15 +269,15 @@
     "waitingDawn": "Waiting for the other witches to place the cat...",
     "dawnHintWitch": "Dawn. Living witches place the Black Cat on a player.",
     "dawnHintTown": "Dawn. The witches move in secret.",
-    "yourTurnHint": "Play one card from your hand. You cannot target yourself except with Alibi.",
+    "yourTurnHint": "Your turn. Play a card. Black cards resolve at once.",
     "waitingTurnResolve": "Waiting for this action to resolve...",
     "waitingTurn": "Waiting for {name}...",
     "waitingWitches": "Waiting for the other witches to agree on this target...",
-    "nightHintWitch": "Every living witch must agree on the same target. You cannot target yourself.",
+    "nightHintWitch": "Every living witch must agree on the same target.",
     "waitingNight": "Waiting for the rest of the night...",
     "nightHintConstable": "Raise the gavel — protect someone (not yourself).",
-    "nightHintTown": "Night falls. If you are marked, you may confess a Tryal to survive.",
-    "confessHint": "Reveal one unrevealed Tryal. A Witch Tryal means death; otherwise you live.",
+    "nightHintTown": "Night falls. Witches choose a victim; the Constable may gavel.",
+    "confessHint": "Reveal one unrevealed Tryal, or skip. Then the night kill resolves.",
     "waitingConfess": "Waiting for a confession...",
     "yourAllegiance": "Your allegiance",
     "roleWitch": "Witch",
@@ -296,7 +296,7 @@
     "cancelCard": "Cancel",
     "draw": "Draw",
     "pickTarget": "Click a seat to play this card.",
-    "playHint": "Play one card. The next card is drawn for you.",
+    "playHint": "Play a card, then click a seat if it needs a target.",
     "playOrDraw": "Play a card. Black cards resolve at once.",
     "emptyHand": "No cards in hand.",
     "color": {
@@ -309,7 +309,7 @@
     "chatPlaceholder": "Message...",
     "chatSend": "Send",
     "logTitle": "Game log",
-    "rulesBlurb": "Town wins when every Witch Tryal on the table is revealed. Witches win when every living player is witch-aligned. Seven wax seals force a Tryal. Play a card on your turn — Conspiracy and Night are black.",
+    "rulesBlurb": "Town wins when every Witch Tryal is revealed. Witches win when no town player is left alive. Seven wax seals force a Tryal. Conspiracy and Night are black cards.",
     "pickTryalTitle": "Choose a Tryal",
     "pickTryalHint": "Pick one of {name}'s unrevealed Tryals.",
     "pickOwnTryal": "Pick one of your unrevealed Tryals.",
@@ -331,58 +331,58 @@
     "logConfess": "{name} confessed a Tryal.",
     "logCat": "The Black Cat sits with {name}.",
     "phaseConspiracy": "Conspiracy",
-    "conspiracyHint": "Take one facedown Tryal from {name} (your left).",
+    "conspiracyHint": "Choose one of your unrevealed Tryals to pass.",
     "pickFrom": "First click whose marks to move.",
     "playHintEngine": "Play one card. You draw after it resolves. Black cards start Conspiracy or Night.",
-    "confessSkip": "Remain silent",
+    "confessSkip": "Do not confess",
     "cards": {
       "accusation": {
         "title": "Accusation",
-        "text": "Place 1 mark on a living player."
+        "text": "+1 mark."
       },
       "evidence": {
         "title": "Evidence",
-        "text": "Place 2 marks on a living player."
+        "text": "+2 marks."
       },
       "witness": {
         "title": "Witness",
-        "text": "Place 3 marks on a living player."
+        "text": "+3 marks."
       },
       "alibi": {
         "title": "Alibi",
-        "text": "Clear all marks from a player."
+        "text": "Clear a player's marks."
       },
       "arson": {
         "title": "Arson",
-        "text": "Burn the Black Cat from a player who holds it."
+        "text": "Burn a Black Cat."
       },
       "robbery": {
         "title": "Robbery",
-        "text": "Steal a random card from another player's hand."
+        "text": "Steal a random card. Not self."
       },
       "scapegoat": {
         "title": "Scapegoat",
-        "text": "Move every mark from one player onto another."
+        "text": "Move your marks onto another player."
       },
       "stocks": {
         "title": "Stocks",
-        "text": "That player skips their next turn."
+        "text": "They skip their next turn. Not self."
       },
       "curse": {
         "title": "Curse",
-        "text": "That player discards a random card."
+        "text": "They discard a random card."
       },
       "black_cat": {
         "title": "Black Cat",
-        "text": "Attach the cat. Conspiracy peeks their Tryals."
+        "text": "A lasting hex. Conspiracy peeks."
       },
       "conspiracy": {
         "title": "Conspiracy",
-        "text": "Everyone takes one facedown Tryal from their left."
+        "text": "Each living player passes a Tryal."
       },
       "night": {
         "title": "Night",
-        "text": "Night falls. Witches strike; the Constable may gavel."
+        "text": "Night falls."
       }
     },
     "cardText": {
@@ -401,7 +401,7 @@
     },
     "phaseDay": "Day",
     "gavel": "Gavel",
-    "waitingConspiracy": "Waiting for the rest of the table to take a Tryal...",
+    "waitingConspiracy": "Waiting for the rest of the table to pass a Tryal...",
     "pickFromSeat": "Whose marks move?",
     "logGavel": "{name} raised the gavel.",
     "logConspiracy": "Tryals shifted around the table.",
@@ -423,6 +423,12 @@
       "kiln_guard": "Kiln Guard",
       "quiet_bench": "Quiet Bench",
       "unknownHall": "Town Hall"
-    }
+    },
+    "handIdle": "Wait for your turn to play a card.",
+    "tryalInnocent": "Not a Witch",
+    "lastReveal": "A Tryal of {name} was revealed:",
+    "kicker": "The year 1692",
+    "deck": "Draw pile",
+    "discard": "Discard"
   }
 }

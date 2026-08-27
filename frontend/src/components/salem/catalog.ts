@@ -114,6 +114,39 @@ export function cardMeta(id: string): {
     needsTarget: cardNeedsTargets(id) > 0,
     allowSelf: id === "alibi",
     needsFromSeat: id === "scapegoat",
-    needsTryalOnThreshold: RED_CARDS.has(id) || id === "scapegoat",
+    needsTryalOnThreshold: (RED_CARDS as readonly string[]).includes(id) || id === "scapegoat",
   };
+}
+
+export const RED_MARKS: Record<string, number> = {
+  accusation: 1,
+  evidence: 2,
+  witness: 3,
+};
+
+export function cardColor(id: string): CardColor {
+  if ((RED_CARDS as readonly string[]).includes(id)) return "red";
+  if ((GREEN_CARDS as readonly string[]).includes(id)) return "green";
+  if ((BLUE_CARDS as readonly string[]).includes(id)) return "blue";
+  return "black";
+}
+
+export function cardNeedsTargets(card: { id: string } | string): 0 | 1 {
+  const id = typeof card === "string" ? card : card.id;
+  return TARGET_CARDS.has(id) ? 1 : 0;
+}
+
+export function accusationValue(card: { id: string } | string): number {
+  const id = typeof card === "string" ? card : card.id;
+  return RED_MARKS[id] ?? 0;
+}
+
+export function cardFromId(id: string, title?: string, text?: string) {
+  const info = playCardInfo(id);
+  return { id, color: info.color, title: title ?? info.title, text: text ?? info.text };
+}
+
+export function tryalKind(id: string): "witch" | "town" | "constable" {
+  const k = tryalKindFromId(id);
+  return k === "innocent" ? "town" : k;
 }

@@ -6,8 +6,7 @@ Salem 1692, or any licensed character set.
 
 ## Photographs (Unsplash License / Pexels License)
 
-- `hero.jpg`, `/heroes/salem.jpg` — Unsplash photo `1478144592103-25e218a04891`
-  (candlelight). Unsplash License: https://unsplash.com/license
+- `heroes/salem.jpg`, `hero.jpg` — original composite of Unsplash parchment (`1457369804613-52c61a468e7d`) and candle (`1708382981950-b4d56654bcaa`). Unsplash License: https://unsplash.com/license
 - `candles.jpg` — Unsplash photo `1509248961158-e54f6934749c`
 - `parchment.jpg` — Unsplash photo `1457369804613-52c61a468e7d` (aged paper)
 - `wood.jpg` — Pexels photo `172292` (wood grain). Pexels License:

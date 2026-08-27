@@ -118,9 +118,22 @@ html[lang="fa"] .salem-root {
     inset 0 0 0 9px #241208,
     0 0 28px rgba(255, 176, 74, 0.12);
 }
+.salem-table.is-day {
+  box-shadow:
+    inset 0 0 0 5px var(--salem-wood-rim),
+    inset 0 0 0 9px #241208,
+    0 0 28px rgba(255, 176, 74, 0.12);
+}
+.salem-table.is-conspiracy {
+  box-shadow:
+    inset 0 0 0 5px #6a3a58,
+    inset 0 0 40px rgba(140, 60, 90, 0.22),
+    0 0 28px rgba(160, 70, 100, 0.16);
+}
 .salem-table.is-over {
   filter: saturate(0.75);
 }
+.salem-tryal.is-innocent { background: #1f3d2c; border-color: #8ad4ab; }
 
 @keyframes salem-night-breathe {
   0%, 100% { box-shadow: inset 0 0 0 5px #3a2a68, inset 0 0 56px rgba(40, 30, 90, 0.45), 0 0 32px rgba(70, 50, 160, 0.2); }

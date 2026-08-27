@@ -1,5 +1,7 @@
 "use client";
 
+import "@/styles/salem.css";
+
 import { useTranslations } from "next-intl";
 import SalemCard from "./SalemCard";
 import SalemTableFelt from "./SalemTableFelt";

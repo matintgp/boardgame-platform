@@ -1,5 +1,7 @@
 "use client";
 
+import "@/styles/salem.css";
+
 import type { ReactNode } from "react";
 
 export interface SalemTableFeltProps {

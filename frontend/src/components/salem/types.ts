@@ -34,6 +34,8 @@ export interface SalemPublicTryals {
 export interface SalemYouTryal {
   id: string;
   revealed: boolean;
+  index?: number;
+  kind?: TryalKind;
 }
 
 export interface SalemYou {
@@ -47,11 +49,18 @@ export interface SalemYou {
   my_conspiracy_pick?: number | null;
   my_night_kill?: number | null;
   my_gavel?: number | null;
+  can_play?: boolean;
+  can_draw?: boolean;
+  can_confess?: boolean;
+  my_kill?: number | null;
+  my_protect?: number | null;
 }
 
 export interface SalemResult {
   reason?: string;
+  winner?: SalemWinner;
   winner_role: SalemWinner;
+  ever_witch?: number[];
   winner_seats: number[];
   winner_seat?: number | null;
   roles?: Record<string, string>;
@@ -67,6 +76,10 @@ export interface SalemState {
   tryals: Record<string, SalemPublicTryals>;
   blues: Record<string, string[]>;
   deck_left: number;
+  deck_count?: number;
+  log?: Record<string, unknown>[];
+  players?: { seat: number }[];
+  black_cat?: number | null;
   discard_top?: string | null;
   last_night: { killed: number | null } | null;
   last_reveal?: { seat: number; index: number; id: string } | null;
@@ -74,6 +87,7 @@ export interface SalemState {
   result?: SalemResult | null;
   current_seat: number | null;
   you: SalemYou | null;
+  deadline?: number | null;
 }
 
 export interface PlayerInfo {
@@ -96,6 +110,7 @@ export interface GameView {
 export const SALEM_MIN_PLAYERS = 4;
 export const SALEM_MAX_FALLBACK = 12;
 export const MARK_THRESHOLD = 7;
+export const ACCUSATION_THRESHOLD = MARK_THRESHOLD;
 
 export function seatCount(state: SalemState | null): number {
   if (!state?.alive) return 0;
@@ -196,7 +211,12 @@ function normalizeYouTryals(raw: unknown): SalemYouTryal[] {
             : o.kind === "constable"
               ? "tryal_constable"
               : "tryal_innocent";
-      return { id, revealed: Boolean(o.revealed) };
+      return {
+        id,
+        revealed: Boolean(o.revealed),
+        index: typeof (o as { index?: number }).index === "number" ? (o as { index?: number }).index : undefined,
+        kind: o.kind === "witch" || o.kind === "constable" || o.kind === "innocent" ? (o.kind as TryalKind) : undefined,
+      };
     }
     return { id: String(c), revealed: false };
   });
@@ -281,26 +301,76 @@ export function unrevealedPublicIndexes(row: SalemPublicTryals): number[] {
   return out;
 }
 
-export function normalizePhase(phase: SalemPhase | null | undefined): EnginePhase | null {
-  if (!phase) return null;
-  if (phase === "dawn" || phase === "turn") return "day";
-  return phase;
+
+export function publicTryalsOf(
+  state: SalemState | null,
+  seat: number
+): { total: number; revealed: { id: string; index?: number }[] } {
+  const row = tryalsOf(state, seat);
+  return {
+    total: row.revealed.length + row.facedown,
+    revealed: row.revealed.map((id, i) => ({ id, index: i })),
+  };
 }
 
-export function winnerOf(result: SalemResult | null | undefined): SalemWinner | null {
-  if (!result) return null;
-  if (result.winner === "town" || result.winner === "witches") return result.winner;
-  if (result.winner_role === "town" || result.winner_role === "witches") return result.winner_role;
-  return null;
+export function publicPlayer(state: SalemState | null, seat: number) {
+  return state?.players?.find((p) => p.seat === seat);
 }
+
+export function unrevealedTryalIndexes(stateOrRow: SalemState | { revealed: string[]; facedown: number } | undefined, seat?: number): number[] {
+  if (!stateOrRow) return [];
+  if (seat != null && "tryals" in (stateOrRow as SalemState)) {
+    return unrevealedPublicIndexes(tryalsOf(stateOrRow as SalemState, seat));
+  }
+  if ("revealed" in stateOrRow && "facedown" in stateOrRow) {
+    return unrevealedPublicIndexes(stateOrRow as SalemPublicTryals);
+  }
+  return [];
+}
+
+export function adaptEngineState(raw: SalemState, _roster?: PlayerInfo[]): SalemState {
+  const you = raw.you
+    ? {
+        ...raw.you,
+        can_play: raw.phase === "day" && raw.current_seat === raw.you.seat && raw.you.alive,
+        my_kill: raw.you.my_night_kill ?? raw.you.my_kill ?? null,
+        my_protect: raw.you.my_gavel ?? raw.you.my_protect ?? null,
+        tryals: raw.you.tryals.map((tr, i) => ({
+          ...tr,
+          index: tr.index ?? i,
+          kind:
+            tr.kind ??
+            (tr.id.includes("witch")
+              ? "witch"
+              : tr.id.includes("constable")
+                ? "constable"
+                : "innocent"),
+        })),
+      }
+    : null;
+  return {
+    ...raw,
+    deck_count: raw.deck_count ?? raw.deck_left,
+    log: raw.log ?? [],
+    you,
+    result: raw.result
+      ? {
+          ...raw.result,
+          winner: raw.result.winner ?? raw.result.winner_role,
+          ever_witch:
+            raw.result.ever_witch ??
+            (raw.result.roles
+              ? Object.entries(raw.result.roles)
+                  .filter(([, r]) => r === "witch" || r === "witches")
+                  .map(([s]) => Number(s))
+              : []),
+        }
+      : raw.result,
+  };
+}
+
+export type EnginePhase = SalemPhase;
 
 export function unrevealedIndexes(state: SalemState | null, seat: number): number[] {
-  const p = publicPlayer(state, seat);
-  if (p) return unrevealedTryalIndexes(p);
-  const info = publicTryalsOf(state, seat);
-  const known = new Set(info.revealed.map((r) => r.index).filter((i): i is number => typeof i === "number"));
-  if (known.size === info.revealed.length && info.total) {
-    return Array.from({ length: info.total }, (_, i) => i).filter((i) => !known.has(i));
-  }
-  return Array.from({ length: info.total }, (_, i) => i);
+  return unrevealedPublicIndexes(tryalsOf(state, seat));
 }

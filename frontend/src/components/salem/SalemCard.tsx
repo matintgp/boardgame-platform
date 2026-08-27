@@ -21,6 +21,8 @@ export interface SalemCardProps {
   className?: string;
   style?: CSSProperties;
   onClick?: () => void;
+  disabled?: boolean;
+  card?: { id: string; color?: SalemCardColor; title?: string; text?: string };
 }
 
 function TryalBack() {
@@ -143,8 +145,8 @@ const FACE_CAPTION: Record<Exclude<SalemCardFace, "play" | "tryal-back">, string
 };
 
 export default function SalemCard({
-  face = "tryal-back",
-  color = "green",
+  face,
+  color,
   flipped = false,
   selected = false,
   compact = false,
@@ -153,40 +155,46 @@ export default function SalemCard({
   className = "",
   style,
   onClick,
+  disabled,
+  card,
 }: SalemCardProps) {
-  const showFront = flipped && face !== "tryal-back";
-  const colorClass = face === "play" || color ? `is-${color}` : "";
+  const resolvedFace = face ?? (card ? "play" : "tryal-back");
+  const resolvedColor = color ?? card?.color ?? "green";
+  const resolvedTitle = title ?? card?.title;
+  const resolvedText = text ?? card?.text;
+  const showFront = flipped && resolvedFace !== "tryal-back";
+  const colorClass = resolvedFace === "play" || resolvedColor ? `is-${resolvedColor}` : "";
   let front: ReactNode;
-  if (face === "witch") {
+  if (resolvedFace === "witch") {
     front = (
       <>
         <WitchMark />
-        <span className="salem-card-title text-center tracking-wide">{title ?? FACE_CAPTION.witch}</span>
-        {text && <span className="salem-card-text text-center">{text}</span>}
+        <span className="salem-card-title text-center tracking-wide">{resolvedTitle ?? FACE_CAPTION.witch}</span>
+        {resolvedText && <span className="salem-card-text text-center">{resolvedText}</span>}
       </>
     );
-  } else if (face === "not-witch") {
+  } else if (resolvedFace === "not-witch") {
     front = (
       <>
         <NotWitchMark />
-        <span className="salem-card-title text-center tracking-wide">{title ?? FACE_CAPTION["not-witch"]}</span>
-        {text && <span className="salem-card-text text-center">{text}</span>}
+        <span className="salem-card-title text-center tracking-wide">{resolvedTitle ?? FACE_CAPTION["not-witch"]}</span>
+        {resolvedText && <span className="salem-card-text text-center">{resolvedText}</span>}
       </>
     );
-  } else if (face === "constable") {
+  } else if (resolvedFace === "constable") {
     front = (
       <>
         <ConstableMark />
-        <span className="salem-card-title text-center tracking-wide">{title ?? FACE_CAPTION.constable}</span>
-        {text && <span className="salem-card-text text-center">{text}</span>}
+        <span className="salem-card-title text-center tracking-wide">{resolvedTitle ?? FACE_CAPTION.constable}</span>
+        {resolvedText && <span className="salem-card-text text-center">{resolvedText}</span>}
       </>
     );
   } else {
     front = (
       <>
-        <PlayMark color={color} />
-        {title && <span className="salem-card-title">{title}</span>}
-        {text && <span className="salem-card-text">{text}</span>}
+        <PlayMark color={resolvedColor} />
+        {resolvedTitle && <span className="salem-card-title">{resolvedTitle}</span>}
+        {resolvedText && <span className="salem-card-text">{resolvedText}</span>}
       </>
     );
   }
@@ -200,7 +208,8 @@ export default function SalemCard({
         selected ? "is-selected" : ""
       } ${compact ? "is-compact" : ""} ${className}`}
       style={style}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
     >
       <div className="salem-card-inner">
         <div className="salem-card-face salem-card-back">
@@ -214,4 +223,27 @@ export default function SalemCard({
   );
 }
 
-export { default as SalemTryalCard };
+
+export function SalemTryalCard({
+  kind,
+  label,
+  onClick,
+}: {
+  kind?: "witch" | "town" | "constable" | "innocent" | null;
+  label: string;
+  index?: number;
+  onClick?: () => void;
+}) {
+  const face =
+    kind === "witch" ? "witch" : kind === "constable" ? "constable" : kind ? "not-witch" : "tryal-back";
+  return (
+    <SalemCard
+      face={face}
+      flipped={Boolean(kind)}
+      compact
+      title={label}
+      onClick={onClick}
+      className="salem-tryal-card"
+    />
+  );
+}
