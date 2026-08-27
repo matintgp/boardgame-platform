@@ -831,7 +831,7 @@ function TableCircle({
         const mate = showMafiaMarks && teammates.includes(slot.seat);
         const chip = (
           <div
-            className={`flex w-[4.6rem] flex-col items-center ${!alive ? "opacity-45" : ""}`}
+            className={`flex w-[7rem] flex-col items-center ${!alive ? "opacity-45" : ""}`}
           >
             <span
               className={`relative flex h-14 w-14 items-center justify-center rounded-full border-2 text-lg font-bold transition ${
@@ -855,7 +855,10 @@ function TableCircle({
               )}
               {p ? (p.user.username.slice(0, 1) || "?").toUpperCase() : "·"}
             </span>
-            <span className="mt-1 max-w-full truncate text-center text-[11px] leading-tight">
+            <span
+              className="mt-1 w-full text-center text-[10px] font-medium leading-tight break-all"
+              title={p?.user.username}
+            >
               {p ? p.user.username : emptyLabel}
             </span>
             {isSelf && p && <em className="muted text-[10px]">{youMarker}</em>}

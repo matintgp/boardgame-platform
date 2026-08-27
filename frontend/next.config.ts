@@ -8,10 +8,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   async rewrites() {
     const api = process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000";
-    return [
-      { source: "/favicon.ico", destination: "/icon.svg" },
-      { source: "/api/:path*", destination: `${api}/api/:path*` },
-    ];
+    return [{ source: "/api/:path*", destination: `${api}/api/:path*` }];
   },
 };
 
