@@ -40,6 +40,13 @@ const MODES = [
     tagKey: "gameRokuganTag" as const,
     createKey: "createRokugan" as const,
   },
+  {
+    id: "salem" as const,
+    cover: "/heroes/salem.jpg",
+    nameKey: "gameSalem" as const,
+    tagKey: "gameSalemTag" as const,
+    createKey: "createSalem" as const,
+  },
 ];
 
 function gameLabel(
@@ -53,6 +60,8 @@ function gameLabel(
       return { name: t("gameRokugan"), cover: "/heroes/rokugan.jpg" };
     case "chess":
       return { name: t("gameChess"), cover: "/heroes/chess.jpg" };
+    case "salem":
+      return { name: t("gameSalem"), cover: "/heroes/salem.jpg" };
     default:
       return { name: t("unknownGame"), cover: "" };
   }
@@ -82,8 +91,9 @@ export default function LobbyPage() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
   const [listLoading, setListLoading] = useState(true);
-  const [searching, setSearching] = useState<"chess" | "mafia" | "rokugan" | null>(null);
-  const searchRef = useRef<"chess" | "mafia" | "rokugan" | null>(null);
+  type ModeId = "chess" | "mafia" | "rokugan" | "salem";
+  const [searching, setSearching] = useState<ModeId | null>(null);
+  const searchRef = useRef<ModeId | null>(null);
 
   const refreshLists = useCallback(async () => {
     setListError(null);
@@ -112,7 +122,7 @@ export default function LobbyPage() {
     });
   }, [router, refreshLists]);
 
-  async function createTable(gameType: "chess" | "mafia" | "rokugan") {
+  async function createTable(gameType: ModeId) {
     setBusy(gameType);
     setJoinError(null);
     try {
@@ -170,7 +180,7 @@ export default function LobbyPage() {
     };
   }, [searching, router]);
 
-  function quickMatch(gameType: "chess" | "mafia" | "rokugan") {
+  function quickMatch(gameType: ModeId) {
     searchRef.current = gameType;
     setSearching(gameType);
   }
@@ -200,7 +210,7 @@ export default function LobbyPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {MODES.map((m, i) => {
           const isSearching = searching === m.id;
           return (

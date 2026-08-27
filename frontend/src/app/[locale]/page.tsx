@@ -20,6 +20,12 @@ const GAMES = [
     nameKey: "gameRokugan" as const,
     tagKey: "gameRokuganTag" as const,
   },
+  {
+    id: "salem",
+    cover: "/heroes/salem.jpg",
+    nameKey: "gameSalem" as const,
+    tagKey: "gameSalemTag" as const,
+  },
 ];
 
 export default function HomePage() {
@@ -44,7 +50,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {GAMES.map((g, i) => (
           <Link
             key={g.id}

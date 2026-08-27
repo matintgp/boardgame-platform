@@ -18,6 +18,7 @@ export default function ChatPanel({
   title,
   placeholder,
   sendLabel,
+  defaultCollapsed = false,
 }: {
   socket: GameSocket | null;
   selfName: string | undefined;
@@ -25,9 +26,11 @@ export default function ChatPanel({
   title: string;
   placeholder: string;
   sendLabel: string;
+  defaultCollapsed?: boolean;
 }) {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [text, setText] = useState("");
+  const [open, setOpen] = useState(!defaultCollapsed);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -65,9 +68,8 @@ export default function ChatPanel({
     setText("");
   }
 
-  return (
-    <div className="card flex max-h-96 flex-col p-4">
-      <h3 className="mb-2 font-semibold">💬 {title}</h3>
+  const body = (
+    <>
       <div ref={listRef} className="mb-2 max-h-64 flex-1 overflow-auto text-sm">
         {messages.length === 0 && <p className="muted">—</p>}
         {messages.map((m, i) => (
@@ -92,6 +94,31 @@ export default function ChatPanel({
           {sendLabel}
         </button>
       </div>
+    </>
+  );
+
+  if (defaultCollapsed) {
+    return (
+      <details
+        className="card h-fit self-start overflow-hidden"
+        open={open}
+        onToggle={(e) => setOpen(e.currentTarget.open)}
+      >
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold marker:content-none">
+          <span className="flex items-center justify-between gap-2">
+            <span>💬 {title}</span>
+            <span className="muted text-xs font-normal">{open ? "▴" : "▾"}</span>
+          </span>
+        </summary>
+        <div className="px-4 pb-4">{body}</div>
+      </details>
+    );
+  }
+
+  return (
+    <div className="card flex max-h-96 flex-col p-4">
+      <h3 className="mb-2 font-semibold">💬 {title}</h3>
+      {body}
     </div>
   );
 }

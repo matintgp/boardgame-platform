@@ -1,18 +1,19 @@
 "use client";
 
+import { playCardInfo, tryalKindFromId } from "./catalog";
 import {
-  ACCUSATION_THRESHOLD,
+  MARK_THRESHOLD,
   bluesOf,
   isSeatAlive,
   marksOf,
   polarOval,
-  publicTryalsOf,
   townHallOf,
+  tryalsOf,
   type PlayerInfo,
   type SalemPhase,
   type SalemState,
+  type TryalKind,
 } from "./types";
-import { tryalKind } from "./catalog";
 
 type Slot = { seat: number; player: PlayerInfo | null };
 
@@ -56,9 +57,9 @@ export default function SalemTable({
     phase === "night" || phase === "confess"
       ? "is-night"
       : phase === "conspiracy"
-        ? "is-dawn"
+        ? "is-conspiracy is-dawn"
         : phase === "day"
-          ? "is-turn"
+          ? "is-day is-turn"
           : phase === "over"
             ? "is-over"
             : "";
@@ -66,6 +67,7 @@ export default function SalemTable({
   return (
     <div className={`salem-table mx-auto aspect-[5/4] w-full max-w-[36rem] ${tableClass}`} dir="ltr">
       <div className="salem-table-felt" />
+      <div className="salem-night-fog" aria-hidden />
       <div className="salem-candle" aria-hidden>
         <span className="salem-flame" />
         <span className="salem-wick" />
@@ -76,14 +78,12 @@ export default function SalemTable({
           {phase === "night" || phase === "confess"
             ? "☾"
             : phase === "conspiracy"
-              ? "✦"
+              ? "↻"
               : phase === "over"
                 ? "⚖"
                 : "🕯"}
         </span>
-        {state && (
-          <span className="salem-deck-count">{state.deck_left ?? state.deck_count ?? 0}</span>
-        )}
+        {state && <span className="salem-deck-count">{state.deck_left}</span>}
       </div>
       {slots.map((slot, i) => {
         const pos = polarOval(i, n, n > 8 ? 44 : 42, n > 8 ? 38 : 34);
@@ -97,8 +97,8 @@ export default function SalemTable({
         const mate = showWitchMarks && teammates.includes(slot.seat);
         const current = state?.current_seat === slot.seat && phase === "day";
         const blues = bluesOf(state, slot.seat);
-        const catHere = blues.some((c) => /cat/i.test(c));
-        const tryals = publicTryalsOf(state, slot.seat);
+        const catHere = blues.includes("black_cat");
+        const pubTryals = tryalsOf(state, slot.seat);
         const acc = marksOf(state, slot.seat);
 
         const chip = (
@@ -117,37 +117,41 @@ export default function SalemTable({
             </span>
             {isSelf && p && <em className="salem-you">{youMarker}</em>}
             {!alive && p && <em className="salem-dead-label">— {deadLabel}</em>}
-            {hall && <span className="salem-nameplate">{hall.name ?? hall.label ?? hall.id}</span>}
-            {tryals.total > 0 && (
+            {hall && <span className="salem-nameplate">{hall.name}</span>}
+            {(pubTryals.revealed.length > 0 || pubTryals.facedown > 0) && (
               <div className="salem-tryals" aria-hidden>
-                {Array.from({ length: tryals.total }).map((_, ti) => {
-                  const rev = tryals.revealed[ti];
-                  const kind = rev ? tryalKind(rev.id) : null;
+                {pubTryals.revealed.map((id, ti) => {
+                  const kind: TryalKind = tryalKindFromId(id);
+                  const cls = kind === "innocent" ? "is-town is-innocent" : `is-${kind}`;
                   return (
                     <span
-                      key={ti}
-                      className={`salem-tryal ${kind ? `is-${kind}` : "is-hidden"}`}
+                      key={`r-${ti}-${id}`}
+                      className={`salem-tryal ${cls}`}
                       style={{ animationDelay: `${ti * 60}ms` }}
                     />
                   );
                 })}
+                {Array.from({ length: pubTryals.facedown }).map((_, ti) => (
+                  <span
+                    key={`h-${ti}`}
+                    className="salem-tryal is-hidden"
+                    style={{ animationDelay: `${(pubTryals.revealed.length + ti) * 60}ms` }}
+                  />
+                ))}
               </div>
             )}
             {p && (
-              <div
-                className="salem-wax-row"
-                title={`${accusationsLabel} ${acc}/${ACCUSATION_THRESHOLD}`}
-              >
-                {Array.from({ length: ACCUSATION_THRESHOLD }).map((_, wi) => (
+              <div className="salem-wax-row" title={`${accusationsLabel} ${acc}/${MARK_THRESHOLD}`}>
+                {Array.from({ length: MARK_THRESHOLD }).map((_, wi) => (
                   <span key={wi} className={`salem-wax ${wi < acc ? "is-lit" : ""}`} />
                 ))}
               </div>
             )}
             {blues.length > 0 && (
               <div className="salem-blues">
-                {blues.map((c, bi) => (
-                  <span key={`${c}-${bi}`} className="salem-blue-chip" title={c}>
-                    {c.replace(/_/g, " ")}
+                {blues.map((id, bi) => (
+                  <span key={`${id}-${bi}`} className="salem-blue-chip" title={playCardInfo(id).title}>
+                    {playCardInfo(id).title}
                   </span>
                 ))}
               </div>

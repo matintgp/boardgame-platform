@@ -58,7 +58,10 @@
     "statusActive": "Live",
     "statusFinished": "Finished",
     "matchmakingHint": "We'll seat you as soon as a match is found.",
-    "joinFailed": "Couldn't join that table."
+    "joinFailed": "Couldn't join that table.",
+    "createSalem": "Create Salem Table",
+    "gameSalem": "Salem",
+    "gameSalemTag": "Candlelight, wax seals, secret Tryals. 4 to 12 players."
   },
   "game": {
     "waiting": "Waiting for opponent...",
@@ -237,5 +240,189 @@
     "body": "The link is wrong, or this page no longer exists.",
     "home": "Home",
     "lobby": "Lobby"
+  },
+  "salem": {
+    "title": "Salem",
+    "tagline": "Accusations by candlelight. Tryals in the dark. 4 to 12 players.",
+    "waitingForPlayers": "Waiting for players...",
+    "needMinPlayers": "Need at least {count} players to start",
+    "hostCanStart": "Quorum reached — you can start the game",
+    "waitingForHost": "Waiting for the host to start...",
+    "youMarker": "(you)",
+    "emptySeat": "Empty",
+    "dead": "eliminated",
+    "accusations": "Accusations",
+    "playOn": "Play",
+    "placeCat": "Place the Black Cat",
+    "kill": "Night kill",
+    "protect": "Protect",
+    "reportPrompt": "Reason for report:",
+    "phaseDawn": "Dawn",
+    "phaseTurn": "Town Hall",
+    "phaseNight": "Night",
+    "phaseConfess": "Confess",
+    "gameOver": "Game over",
+    "round": "Round",
+    "seatTurn": "{name}'s turn",
+    "spectatorHint": "No actions, but chat and the log stay open.",
+    "spectatorBanner": "You are eliminated — spectating",
+    "waitingDawn": "Waiting for the other witches to place the cat...",
+    "dawnHintWitch": "Dawn. Living witches place the Black Cat on a player.",
+    "dawnHintTown": "Dawn. The witches move in secret.",
+    "yourTurnHint": "Play one card from your hand. You cannot target yourself except with Alibi.",
+    "waitingTurnResolve": "Waiting for this action to resolve...",
+    "waitingTurn": "Waiting for {name}...",
+    "waitingWitches": "Waiting for the other witches to agree on this target...",
+    "nightHintWitch": "Every living witch must agree on the same target. You cannot target yourself.",
+    "waitingNight": "Waiting for the rest of the night...",
+    "nightHintConstable": "Raise the gavel — protect someone (not yourself).",
+    "nightHintTown": "Night falls. If you are marked, you may confess a Tryal to survive.",
+    "confessHint": "Reveal one unrevealed Tryal. A Witch Tryal means death; otherwise you live.",
+    "waitingConfess": "Waiting for a confession...",
+    "yourAllegiance": "Your allegiance",
+    "roleWitch": "Witch",
+    "roleTown": "Town",
+    "roleConstable": "Constable",
+    "everWitchMark": "once a witch",
+    "teammates": "Coven",
+    "tryalWitch": "Witch",
+    "tryalConstable": "Constable",
+    "tryalTown": "Town",
+    "tryalHidden": "Tryal",
+    "nightResult": "The night ended:",
+    "someoneDied": "{name} did not see the dawn.",
+    "nobodyDied": "Nobody died.",
+    "handTitle": "Your hand",
+    "cancelCard": "Cancel",
+    "draw": "Draw",
+    "pickTarget": "Click a seat to play this card.",
+    "playHint": "Play one card. The next card is drawn for you.",
+    "playOrDraw": "Play a card. Black cards resolve at once.",
+    "emptyHand": "No cards in hand.",
+    "color": {
+      "red": "Accusation",
+      "green": "One-shot",
+      "blue": "Lasting",
+      "black": "Conspiracy"
+    },
+    "chatTitle": "Game Chat",
+    "chatPlaceholder": "Message...",
+    "chatSend": "Send",
+    "logTitle": "Game log",
+    "rulesBlurb": "Town wins when every Witch Tryal on the table is revealed. Witches win when every living player is witch-aligned. Seven wax seals force a Tryal. Play a card on your turn — Conspiracy and Night are black.",
+    "pickTryalTitle": "Choose a Tryal",
+    "pickTryalHint": "Pick one of {name}'s unrevealed Tryals.",
+    "pickOwnTryal": "Pick one of your unrevealed Tryals.",
+    "tryalN": "Tryal {n}",
+    "confessTitle": "Confess a Tryal",
+    "confessCountdown": "{seconds}s",
+    "noTryalsLeft": "No unrevealed Tryals left.",
+    "confessReveal": "Reveal Tryal {n} — {kind}",
+    "confess": "Confess",
+    "witchesWon": "The witches take Salem.",
+    "townWon": "The town is cleansed.",
+    "winnerTeam": "Winning side",
+    "youWon": "You won!",
+    "youLost": "You lost",
+    "everWitch": "Ever witch-aligned",
+    "logDraw": "{name} drew cards.",
+    "logPlay": "{name} played {card} on {target}",
+    "logReveal": "A Tryal of {name} was revealed.",
+    "logConfess": "{name} confessed a Tryal.",
+    "logCat": "The Black Cat sits with {name}.",
+    "phaseConspiracy": "Conspiracy",
+    "conspiracyHint": "Take one facedown Tryal from {name} (your left).",
+    "pickFrom": "First click whose marks to move.",
+    "playHintEngine": "Play one card. You draw after it resolves. Black cards start Conspiracy or Night.",
+    "confessSkip": "Remain silent",
+    "cards": {
+      "accusation": {
+        "title": "Accusation",
+        "text": "Place 1 mark on a living player."
+      },
+      "evidence": {
+        "title": "Evidence",
+        "text": "Place 2 marks on a living player."
+      },
+      "witness": {
+        "title": "Witness",
+        "text": "Place 3 marks on a living player."
+      },
+      "alibi": {
+        "title": "Alibi",
+        "text": "Clear all marks from a player."
+      },
+      "arson": {
+        "title": "Arson",
+        "text": "Burn the Black Cat from a player who holds it."
+      },
+      "robbery": {
+        "title": "Robbery",
+        "text": "Steal a random card from another player's hand."
+      },
+      "scapegoat": {
+        "title": "Scapegoat",
+        "text": "Move every mark from one player onto another."
+      },
+      "stocks": {
+        "title": "Stocks",
+        "text": "That player skips their next turn."
+      },
+      "curse": {
+        "title": "Curse",
+        "text": "That player discards a random card."
+      },
+      "black_cat": {
+        "title": "Black Cat",
+        "text": "Attach the cat. Conspiracy peeks their Tryals."
+      },
+      "conspiracy": {
+        "title": "Conspiracy",
+        "text": "Everyone takes one facedown Tryal from their left."
+      },
+      "night": {
+        "title": "Night",
+        "text": "Night falls. Witches strike; the Constable may gavel."
+      }
+    },
+    "cardText": {
+      "accusation": "+1 wax seal. At 7, a Tryal is revealed.",
+      "evidence": "+2 wax seals. At 7, a Tryal is revealed.",
+      "witness": "+3 wax seals. At 7, a Tryal is revealed.",
+      "alibi": "Wipe every wax seal from a player (including yourself).",
+      "arson": "Burn a Black Cat from a player.",
+      "robbery": "Steal a random card from another player.",
+      "scapegoat": "Move one player's seals onto another. At 7, a Tryal is revealed.",
+      "stocks": "That player skips their next turn.",
+      "curse": "They discard a random card.",
+      "black_cat": "A lasting mark. Conspiracy may force a Tryal from its holder.",
+      "conspiracy": "Every living player takes a facedown Tryal from the left.",
+      "night": "Night falls. Witches kill; the Constable may gavel; then confess."
+    },
+    "phaseDay": "Day",
+    "gavel": "Gavel",
+    "waitingConspiracy": "Waiting for the rest of the table to take a Tryal...",
+    "pickFromSeat": "Whose marks move?",
+    "logGavel": "{name} raised the gavel.",
+    "logConspiracy": "Tryals shifted around the table.",
+    "halls": {
+      "stern_accuser": "Stern Accuser",
+      "iron_will": "Iron Will",
+      "sealed_row": "Sealed Row",
+      "card_cache": "Card Cache",
+      "crowd_voice": "Crowd Voice",
+      "steady_hand": "Steady Hand",
+      "closed_purse": "Closed Purse",
+      "hex_ward": "Hex Ward",
+      "first_light": "First Light",
+      "last_word": "Last Word",
+      "town_crier": "Town Crier",
+      "marked_stranger": "Marked Stranger",
+      "village_healer": "Village Healer",
+      "watch_ally": "Watch Ally",
+      "kiln_guard": "Kiln Guard",
+      "quiet_bench": "Quiet Bench",
+      "unknownHall": "Town Hall"
+    }
   }
 }

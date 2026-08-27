@@ -213,3 +213,5 @@ export default function SalemCard({
     </Tag>
   );
 }
+
+export { default as SalemTryalCard };

@@ -7,6 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import ChessGame from "@/components/ChessGame";
 import MafiaGame from "@/components/MafiaGame";
 import RokuganGame from "@/components/RokuganGame";
+import SalemGame from "@/components/SalemGame";
 
 export default function GameRouter({ gameId }: { gameId: string }) {
   const t = useTranslations("game");
@@ -52,6 +53,7 @@ export default function GameRouter({ gameId }: { gameId: string }) {
     return <p className="muted text-center">{t("loadingGame")}</p>;
   }
 
+  if (gameType === "salem") return <SalemGame gameId={gameId} />;
   if (gameType === "rokugan") return <RokuganGame gameId={gameId} />;
   if (gameType === "mafia") return <MafiaGame gameId={gameId} />;
   if (gameType === "chess") return <ChessGame gameId={gameId} />;
