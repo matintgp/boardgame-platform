@@ -12,14 +12,10 @@ export default function Navbar() {
   const pathname = usePathname();
   const locale = useLocale();
   const [user, setUser] = useState<SessionUser | null>(() => getCurrentUser());
-  const [ready, setReady] = useState(() => getCurrentUser() != null);
 
   useEffect(() => {
     const unsub = onAuthChange(setUser);
-    ensureSession().then((u) => {
-      setUser(u);
-      setReady(true);
-    });
+    ensureSession().then(setUser);
     return unsub;
   }, []);
 
@@ -83,7 +79,7 @@ export default function Navbar() {
               EN
             </Link>
           </div>
-          {!ready ? null : user ? (
+          {user ? (
             <>
               <Link
                 href="/profile"

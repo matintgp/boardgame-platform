@@ -59,7 +59,8 @@ export default function FriendsPage() {
   async function search(q: string) {
     setQuery(q);
     if (q.length < 2) return setResults([]);
-    setResults(await api<Profile[]>(`/api/friends/search?q=${encodeURIComponent(q)}`));
+    const found = await api<Profile[]>(`/api/friends/search?q=${encodeURIComponent(q)}`);
+    setResults(found.filter((p) => p.id !== user?.id));
   }
 
   async function add(username: string) {
@@ -142,9 +143,9 @@ export default function FriendsPage() {
             autoComplete="off"
           />
         </label>
-        {results.length > 0 && (
+        {results.filter((r) => r.id !== user?.id).length > 0 && (
           <ul className="search-drop">
-            {results.map((r) => (
+            {results.filter((r) => r.id !== user?.id).map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-3 rounded-lg p-2 hover:bg-[rgba(212,162,78,0.08)]">
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar name={r.username} size="sm" />

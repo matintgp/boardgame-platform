@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   title: "BoardGame Platform",
   description: "Play classic board games online",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+  },
 };
 
 export const viewport: Viewport = {
