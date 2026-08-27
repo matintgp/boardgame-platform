@@ -10,7 +10,8 @@
     "logout": "Log out",
     "language": "Language",
     "kicker": "The game salon",
-    "playNow": "Enter the lobby"
+    "playNow": "Enter the lobby",
+    "profile": "Profile"
   },
   "auth": {
     "email": "Email",
@@ -309,7 +310,7 @@
     "chatPlaceholder": "Message...",
     "chatSend": "Send",
     "logTitle": "Game log",
-    "rulesBlurb": "Town wins when every Witch Tryal is revealed. Witches win when no town player is left alive. Seven wax seals force a Tryal. Conspiracy and Night are black cards.",
+    "rulesBlurb": "Town wins when every Witch Tryal is revealed. Witches win when no town player is left alive. Seven wax seals force a Tryal. The Turning and Night are ink cards.",
     "pickTryalTitle": "Choose a Tryal",
     "pickTryalHint": "Pick one of {name}'s unrevealed Tryals.",
     "pickOwnTryal": "Pick one of your unrevealed Tryals.",

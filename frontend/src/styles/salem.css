@@ -520,12 +520,28 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
   to { opacity: 1; }
 }
 
-.salem-hand { width: 100%; }
+.salem-hand { width: 100%; min-width: 0; }
 .salem-hand-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  justify-content: flex-start;
+  overflow-x: auto;
+  padding-block: 0.35rem 0.55rem;
+  scrollbar-width: thin;
+}
+.salem-hand-row .salem-card {
+  --card-w: 6.2rem;
+  min-height: 8.9rem;
+  flex: 0 0 auto;
+}
+@media (max-width: 1280px) {
+  .salem-hand-row .salem-card {
+    --card-w: 5.2rem;
+    min-height: 7.6rem;
+    padding: 0.4rem 0.35rem;
+    font-size: 0.74rem;
+  }
 }
 
 /* —— seats (engine table) —— */
@@ -556,6 +572,28 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
 }
 .salem-table.is-crowded .salem-blue-chip {
   font-size: 0.48rem;
+}
+.salem-table.is-crowded .salem-zone-deck {
+  inset-inline-start: 36%;
+  top: 44%;
+}
+.salem-table.is-crowded .salem-zone-discard {
+  inset-inline-end: 36%;
+  top: 44%;
+}
+.salem-table.is-crowded .salem-zone-accuse {
+  bottom: 22%;
+}
+.salem-table.is-crowded .salem-deck-stack,
+.salem-table.is-crowded .salem-discard-slot {
+  width: 32px;
+  height: 46px;
+}
+.salem-table.is-crowded .salem-zone-label {
+  max-width: 5.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .salem-avatar {
   width: 2.55rem;

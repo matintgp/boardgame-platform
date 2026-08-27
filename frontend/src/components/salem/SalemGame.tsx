@@ -747,7 +747,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               </div>
             )}
 
-            {state.last_night && (
+            {state.last_night && state.phase !== "night" && (
               <div className="card mb-4 p-4 text-sm">
                 ☾ {t("nightResult")}{" "}
                 {state.last_night.killed != null ? (

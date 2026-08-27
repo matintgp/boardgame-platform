@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import HomeHeroCtas from "@/components/HomeHeroCtas";
 
 const GAMES = [
   {
@@ -40,14 +41,7 @@ export default function HomePage() {
           {t("title")}
         </h1>
         <p className="muted mx-auto mt-4 max-w-xl text-lg">{t("tagline")}</p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/lobby" className="btn btn-primary">
-            {t("playNow")}
-          </Link>
-          <Link href="/register" className="btn btn-ghost">
-            {t("register")}
-          </Link>
-        </div>
+        <HomeHeroCtas />
       </section>
 
       <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
