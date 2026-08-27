@@ -30,6 +30,10 @@ export default function SalemTable({
   emptyLabel,
   deadLabel,
   accusationsLabel,
+  deckLabel = "Deck",
+  discardLabel = "Discard",
+  hourglass = false,
+  hourglassSeconds = 0,
   onActivate,
   onReport,
   showWitchMarks,
@@ -47,12 +51,17 @@ export default function SalemTable({
   emptyLabel: string;
   deadLabel: string;
   accusationsLabel: string;
+  deckLabel?: string;
+  discardLabel?: string;
+  hourglass?: boolean;
+  hourglassSeconds?: number;
   onActivate: (seat: number) => void;
   onReport: (p: PlayerInfo) => void;
   showWitchMarks: boolean;
   teammates: number[];
 }) {
   const n = slots.length;
+  const crowded = n >= 10;
   const tableClass =
     phase === "night" || phase === "confess"
       ? "is-night"
@@ -64,16 +73,74 @@ export default function SalemTable({
             ? "is-over"
             : "";
 
+  const marksTotal = state
+    ? Object.values(state.marks ?? {}).reduce((a, b) => a + (Number(b) || 0), 0)
+    : 0;
+  const chips = Math.max(0, Math.min(7, marksTotal));
+  const sand = String(Math.max(0, Math.min(1, hourglassSeconds / 30)));
+  const rx = crowded ? 41 : n > 8 ? 40 : 42;
+  const ry = crowded ? 33 : n > 8 ? 32 : 34;
+
   return (
-    <div className={`salem-table mx-auto aspect-[5/4] w-full max-w-[36rem] ${tableClass}`} dir="ltr">
+    <div
+      className={`salem-table mx-auto aspect-[5/4] w-full ${crowded ? "is-crowded max-w-[46rem]" : "max-w-[36rem]"} ${tableClass}`}
+      dir="ltr"
+    >
       <div className="salem-table-felt" />
       <div className="salem-night-fog" aria-hidden />
-      <div className="salem-candle" aria-hidden>
+      <div className="salem-candle salem-candle-left" aria-hidden>
         <span className="salem-flame" />
         <span className="salem-wick" />
         <span className="salem-holder" />
       </div>
-      <div className="pointer-events-none absolute inset-[34%] flex flex-col items-center justify-center text-center">
+      <div className="salem-candle salem-candle-right" aria-hidden>
+        <span className="salem-flame" />
+        <span className="salem-wick" />
+        <span className="salem-holder" />
+      </div>
+
+      <div className="salem-zone salem-zone-deck">
+        <div className="salem-deck-stack" aria-hidden />
+        <span className="salem-zone-label">
+          {deckLabel}
+          {state ? ` · ${state.deck_left}` : ""}
+        </span>
+      </div>
+      <div className="salem-zone salem-zone-discard">
+        <div className="salem-discard-slot" aria-hidden />
+        <span className="salem-zone-label">
+          {discardLabel}
+          {state?.discard_top ? ` · ${playCardInfo(state.discard_top).title}` : ""}
+        </span>
+      </div>
+      <div className="salem-zone salem-zone-accuse">
+        <div className={`salem-accusation ${chips > 0 ? "is-grow" : ""}`}>
+          {Array.from({ length: Math.min(4, chips) }).map((_, i) => (
+            <span key={i} className="salem-accusation-chip" />
+          ))}
+        </div>
+        <span className="salem-zone-label">
+          {accusationsLabel}
+          {state ? ` · ${marksTotal}` : ""}
+        </span>
+      </div>
+      <div className={`salem-gavel-token ${phase === "night" ? "is-strike" : ""}`} aria-hidden>
+        <img src="/salem/icons/gavel.svg" alt="" />
+      </div>
+      {hourglass && (
+        <div
+          className="salem-hourglass"
+          style={{ ["--sand" as string]: sand }}
+          aria-hidden
+        >
+          <div className="salem-hourglass-frame" />
+          <div className="salem-hourglass-sand-top" />
+          <div className="salem-hourglass-stream" />
+          <div className="salem-hourglass-sand-bot" />
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute inset-[34%] z-0 flex flex-col items-center justify-center text-center">
         <span className="salem-center-icon" aria-hidden>
           {phase === "night" || phase === "confess"
             ? "☾"
@@ -83,10 +150,9 @@ export default function SalemTable({
                 ? "⚖"
                 : "🕯"}
         </span>
-        {state && <span className="salem-deck-count">{state.deck_left}</span>}
       </div>
       {slots.map((slot, i) => {
-        const pos = polarOval(i, n, n > 8 ? 44 : 42, n > 8 ? 38 : 34);
+        const pos = polarOval(i, n, rx, ry);
         const p = slot.player;
         const hall = townHallOf(state, slot.seat);
         const isSelf =
@@ -163,7 +229,7 @@ export default function SalemTable({
         return (
           <div
             key={p ? `p-${p.seat}` : `empty-${slot.seat}`}
-            className="absolute z-[1] -translate-x-1/2 -translate-y-1/2"
+            className="absolute z-[5] -translate-x-1/2 -translate-y-1/2"
             style={pos}
           >
             {canHit ? (

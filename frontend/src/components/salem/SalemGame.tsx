@@ -586,6 +586,8 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                 emptyLabel={t("emptySeat")}
                 deadLabel={t("dead")}
                 accusationsLabel={t("accusations")}
+                deckLabel={t("deck")}
+                discardLabel={t("discard")}
                 onActivate={() => undefined}
                 onReport={reportPlayer}
                 showWitchMarks={false}
@@ -748,6 +750,12 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               emptyLabel={t("emptySeat")}
               deadLabel={t("dead")}
               accusationsLabel={t("accusations")}
+              deckLabel={t("deck")}
+              discardLabel={t("discard")}
+              hourglass={state.phase === "confess"}
+              hourglassSeconds={
+                confessUntil ? Math.max(0, Math.round((confessUntil - now) / 1000)) : 0
+              }
               onActivate={onSeatActivate}
               onReport={reportPlayer}
               showWitchMarks={!!you?.is_witch}
