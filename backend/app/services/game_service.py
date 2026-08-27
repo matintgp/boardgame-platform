@@ -221,6 +221,8 @@ async def apply_action(
 
     Returns (broadcast_message, events_for_client). Raises IllegalAction/ValueError.
     """
+    if game.status == GameStatus.finished.value:
+        raise IllegalAction("The game is over")
     if game.status != GameStatus.active.value:
         raise ValueError("Game is not active")
     seat = seat_of(game, user.id)
