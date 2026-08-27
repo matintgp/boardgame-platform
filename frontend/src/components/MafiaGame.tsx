@@ -20,7 +20,7 @@ interface MafiaState {
   phase: Phase;
   round: number;
   alive: Record<string, boolean>;
-  last_night: { killed: number | null; saved: boolean } | null;
+  last_night: { killed: number | null } | null;
   last_vote: {
     eliminated: number | null;
     tie: boolean;
@@ -386,9 +386,11 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
       : phase === "night"
         ? you.role === "citizen"
           ? t("nightHintCitizen")
-          : you.my_action != null
-            ? t("waitingNight")
-            : nightHint
+          : you.role === "mafia" && you.my_action != null && !you.team_ready
+            ? t("waitingMafiaAgree")
+            : you.my_action != null
+              ? t("waitingNight")
+              : nightHint
         : phase === "day"
           ? you.my_vote != null
             ? t("waitingVotes")

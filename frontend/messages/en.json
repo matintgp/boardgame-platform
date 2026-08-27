@@ -205,11 +205,11 @@
     "waitingForHost": "Waiting for the host to start...",
     "hostCanStart": "Quorum reached — you can start the game",
     "sleeping": "Night falls — the town is asleep...",
-    "nightHintMafia": "Pick someone to kill. You cannot target a teammate.",
+    "nightHintMafia": "Every living mafia must agree on the same target. You cannot target a teammate.",
     "nightHintDoctor": "Pick someone to save (including yourself).",
     "nightHintCitizen": "It's night. You have no action — wait for dawn.",
     "dayHint": "Vote for a living player.",
-    "teamReady": "Mafia target is locked",
+    "teamReady": "Mafia agreed on one target",
     "spectatorBanner": "You are eliminated — spectating",
     "spectatorHint": "No actions, but chat and the log stay open.",
     "voteProgress": "{current} / {needed} votes",
@@ -221,7 +221,8 @@
     "gameOver": "Game over",
     "waitingNight": "Waiting for the rest of the night roles...",
     "waitingVotes": "Waiting for remaining votes...",
-    "winnerTeam": "Winning team"
+    "winnerTeam": "Winning team",
+    "waitingMafiaAgree": "Waiting for the other mafia to agree on this target..."
   },
   "voice": {
     "join": "Join Voice",
