@@ -41,59 +41,69 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   }
 
   return (
-    <div className="card mx-auto max-w-sm p-6">
-      <h1 className="mb-4 text-xl font-bold">{mode === "login" ? t("loginTitle") : t("registerTitle")}</h1>
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <label className="text-sm">
-          {t("email")}
-          <input
-            className="input mt-1"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
-        {mode === "register" && (
+    <div className="enter mx-auto max-w-md">
+      <div className="mb-6 text-center">
+        <p className="kicker">{t("kicker")}</p>
+        <h1 className="mt-2 text-2xl font-bold">
+          {mode === "login" ? t("loginTitle") : t("registerTitle")}
+        </h1>
+        <p className="muted mt-2 text-sm">
+          {mode === "login" ? t("subtitleLogin") : t("subtitleRegister")}
+        </p>
+      </div>
+      <div className="card p-6 sm:p-7">
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <label className="text-sm">
-            {t("username")}
+            {t("email")}
             <input
               className="input mt-1"
+              type="email"
               required
-              minLength={3}
-              maxLength={32}
-              pattern="[A-Za-z0-9_]+"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </label>
-        )}
-        <label className="text-sm">
-          {t("password")}
-          <input
-            className="input mt-1"
-            type="password"
-            required
-            minLength={8}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        <button className="btn btn-primary" disabled={busy}>
-          {mode === "login" ? t("submitLogin") : t("submitRegister")}
-        </button>
-      </form>
-      <p className="muted mt-4 text-sm">
-        {mode === "login" ? (
-          <Link href="/register" className="hover:text-[var(--accent)]">{t("noAccount")}</Link>
-        ) : (
-          <Link href="/login" className="hover:text-[var(--accent)]">{t("haveAccount")}</Link>
-        )}
-      </p>
+          {mode === "register" && (
+            <label className="text-sm">
+              {t("username")}
+              <input
+                className="input mt-1"
+                required
+                minLength={3}
+                maxLength={32}
+                pattern="[A-Za-z0-9_]+"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </label>
+          )}
+          <label className="text-sm">
+            {t("password")}
+            <input
+              className="input mt-1"
+              type="password"
+              required
+              minLength={8}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <button className="btn btn-primary mt-1" disabled={busy}>
+            {mode === "login" ? t("submitLogin") : t("submitRegister")}
+          </button>
+        </form>
+        <p className="muted mt-4 text-sm">
+          {mode === "login" ? (
+            <Link href="/register" className="hover:text-[var(--accent)]">{t("noAccount")}</Link>
+          ) : (
+            <Link href="/login" className="hover:text-[var(--accent)]">{t("haveAccount")}</Link>
+          )}
+        </p>
+      </div>
     </div>
   );
 }

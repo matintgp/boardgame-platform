@@ -2,9 +2,24 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 const GAMES = [
-  { id: "chess", icon: "♞", nameKey: "gameChess" as const, tagKey: "gameChessTag" as const },
-  { id: "mafia", icon: "🕵", nameKey: "gameMafia" as const, tagKey: "gameMafiaTag" as const },
-  { id: "rokugan", icon: "⚔", nameKey: "gameRokugan" as const, tagKey: "gameRokuganTag" as const },
+  {
+    id: "chess",
+    cover: "/heroes/chess.jpg",
+    nameKey: "gameChess" as const,
+    tagKey: "gameChessTag" as const,
+  },
+  {
+    id: "mafia",
+    cover: "/heroes/mafia.jpg",
+    nameKey: "gameMafia" as const,
+    tagKey: "gameMafiaTag" as const,
+  },
+  {
+    id: "rokugan",
+    cover: "/heroes/rokugan.jpg",
+    nameKey: "gameRokugan" as const,
+    tagKey: "gameRokuganTag" as const,
+  },
 ];
 
 export default function HomePage() {
@@ -12,13 +27,16 @@ export default function HomePage() {
   const tl = useTranslations("lobby");
 
   return (
-    <div>
-      <section className="py-14 text-center">
-        <h1 className="text-4xl font-extrabold">{t("title")}</h1>
-        <p className="muted mt-3 text-lg">{t("tagline")}</p>
-        <div className="mt-6 flex justify-center gap-3">
+    <div className="flex flex-col gap-10">
+      <section className="hero-panel enter px-6 py-16 text-center sm:px-14">
+        <p className="kicker">{t("kicker")}</p>
+        <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
+          {t("title")}
+        </h1>
+        <p className="muted mx-auto mt-4 max-w-xl text-lg">{t("tagline")}</p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link href="/lobby" className="btn btn-primary">
-            ♟ {t("lobby")}
+            {t("playNow")}
           </Link>
           <Link href="/register" className="btn btn-ghost">
             {t("register")}
@@ -26,16 +44,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {GAMES.map((g) => (
+      <section className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        {GAMES.map((g, i) => (
           <Link
             key={g.id}
             href="/lobby"
-            className="card group p-5 text-center transition-colors hover:border-[var(--accent)] hover:bg-[rgba(212,162,78,0.07)]"
+            className={`card card-lift enter enter-d${i + 1} group overflow-hidden`}
           >
-            <div className="text-4xl">{g.icon}</div>
-            <div className="mt-2 font-bold">{tl(g.nameKey)}</div>
-            <p className="muted mt-1 text-sm">{tl(g.tagKey)}</p>
+            <div className="game-cover aspect-[16/10]">
+              <img src={g.cover} alt={tl(g.nameKey)} />
+              <div className="cover-shade" />
+              <div className="absolute inset-x-0 bottom-0 p-4 text-start">
+                <div className="text-lg font-bold">{tl(g.nameKey)}</div>
+                <p className="muted mt-1 text-sm">{tl(g.tagKey)}</p>
+              </div>
+            </div>
           </Link>
         ))}
       </section>

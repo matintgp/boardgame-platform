@@ -1,15 +1,18 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { api, ensureSession } from "@/lib/api";
 import { useRouter } from "@/i18n/navigation";
+import Avatar from "@/components/Avatar";
 
 interface FriendEntry {
   request_id: string;
   user_id: string;
   status: string;
   direction: string;
+  username?: string;
+  rating?: number;
 }
 interface Profile {
   id: string;
@@ -85,68 +88,136 @@ export default function FriendsPage() {
     (e) => e.status === "pending" && e.direction === "outgoing"
   );
 
-  const nameOf = (id: string) =>
-    profiles[id]?.username ?? (id === user?.id ? user.username : `#${id.slice(0, 6)}`);
+  const nameOf = (e: FriendEntry) =>
+    e.username ??
+    profiles[e.user_id]?.username ??
+    (e.user_id === user?.id ? user.username : `#${e.user_id.slice(0, 6)}`);
+
+  const ratingOf = (e: FriendEntry) =>
+    e.rating ?? profiles[e.user_id]?.rating;
+
+  function PersonRow({
+    name,
+    rating,
+    children,
+  }: {
+    name: string;
+    rating?: number;
+    children?: ReactNode;
+  }) {
+    return (
+      <div className="card flex items-center justify-between gap-3 p-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar name={name} />
+          <div className="min-w-0">
+            <div className="truncate font-semibold">{name}</div>
+            {rating != null && (
+              <div className="muted text-xs">
+                {t("rating")} · {rating}
+              </div>
+            )}
+          </div>
+        </div>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-2xl font-bold">{t("title")}</h1>
-
-      <div className="card flex gap-2 p-4">
-        <input
-          className="input"
-          placeholder={t("addPlaceholder")}
-          value={query}
-          onChange={(e) => search(e.target.value)}
-        />
+      <div className="enter">
+        <p className="kicker">{t("kicker")}</p>
+        <h1 className="mt-1 text-3xl font-bold">{t("title")}</h1>
+        <p className="muted mt-1 text-sm">{t("subtitle")}</p>
       </div>
-      {results.length > 0 && (
-        <ul className="flex flex-col gap-2">
-          {results.map((r) => (
-            <li key={r.id} className="card flex items-center justify-between p-3">
-              <span>{r.username} · {r.rating}</span>
-              <button className="btn btn-ghost" onClick={() => add(r.username)}>
-                {t("add")}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
 
-      <section>
+      <div className="card enter enter-d1 relative z-20 p-4">
+        <label className="text-sm">
+          {t("searchLabel")}
+          <input
+            className="input mt-1"
+            placeholder={t("addPlaceholder")}
+            value={query}
+            onChange={(e) => search(e.target.value)}
+            autoComplete="off"
+          />
+        </label>
+        {results.length > 0 && (
+          <ul className="search-drop">
+            {results.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 rounded-lg p-2 hover:bg-[rgba(212,162,78,0.08)]">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar name={r.username} size="sm" />
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold">{r.username}</div>
+                    <div className="muted text-xs">
+                      {t("rating")} · {r.rating}
+                    </div>
+                  </div>
+                </div>
+                <button className="btn btn-primary !py-1.5 !px-3" onClick={() => add(r.username)}>
+                  {t("add")}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {query.length >= 2 && results.length === 0 && (
+          <p className="muted mt-2 text-sm">{t("noResults")}</p>
+        )}
+      </div>
+
+      <section className="enter enter-d2">
         <h2 className="mb-2 font-semibold">{t("incoming")}</h2>
-        {incoming.map((e) => (
-          <div key={e.request_id} className="card mb-2 flex items-center justify-between p-3">
-            <span>{nameOf(e.user_id)}</span>
-            <span className="flex gap-2">
-              <button className="btn btn-primary" onClick={() => respond(e.request_id, true)}>
-                ✓ {t("accept")}
-              </button>
-              <button className="btn btn-ghost" onClick={() => respond(e.request_id, false)}>
-                ✕ {t("reject")}
-              </button>
-            </span>
+        <div className="enter-stagger flex flex-col gap-2">
+          {incoming.map((e) => (
+            <PersonRow key={e.request_id} name={nameOf(e)} rating={ratingOf(e)}>
+              <span className="flex shrink-0 gap-2">
+                <button className="btn btn-primary !py-1.5 !px-3" onClick={() => respond(e.request_id, true)}>
+                  {t("accept")}
+                </button>
+                <button className="btn btn-ghost !py-1.5 !px-3" onClick={() => respond(e.request_id, false)}>
+                  {t("reject")}
+                </button>
+              </span>
+            </PersonRow>
+          ))}
+        </div>
+        {incoming.length === 0 && (
+          <div className="card empty-state">
+            <p>{t("emptyIncoming")}</p>
           </div>
-        ))}
-        {incoming.length === 0 && <p className="muted text-sm">—</p>}
+        )}
       </section>
 
-      <section>
+      <section className="enter enter-d3">
         <h2 className="mb-2 font-semibold">{t("outgoing")}</h2>
-        {outgoing.map((e) => (
-          <div key={e.request_id} className="card mb-2 p-3">{nameOf(e.user_id)} ⏳</div>
-        ))}
-        {outgoing.length === 0 && <p className="muted text-sm">—</p>}
+        <div className="enter-stagger flex flex-col gap-2">
+          {outgoing.map((e) => (
+            <PersonRow key={e.request_id} name={nameOf(e)} rating={ratingOf(e)}>
+              <span className="pill pill-wait">{t("pending")}</span>
+            </PersonRow>
+          ))}
+        </div>
+        {outgoing.length === 0 && (
+          <div className="card empty-state">
+            <p>{t("emptyOutgoing")}</p>
+          </div>
+        )}
       </section>
 
-      <section>
+      <section className="enter enter-d4">
         <h2 className="mb-2 font-semibold">{t("accepted")}</h2>
-        {accepted.length === 0 && <p className="muted">{t("noFriends")}</p>}
-        {accepted.map((e) => (
-          <div key={e.request_id} className="card mb-2 p-3">
-            {nameOf(e.user_id)}
+        {accepted.length === 0 && (
+          <div className="card empty-state">
+            <p>{t("noFriends")}</p>
           </div>
-        ))}
+        )}
+        <div className="enter-stagger flex flex-col gap-2">
+          {accepted.map((e) => (
+            <PersonRow key={e.request_id} name={nameOf(e)} rating={ratingOf(e)} />
+          ))}
+        </div>
       </section>
     </div>
   );

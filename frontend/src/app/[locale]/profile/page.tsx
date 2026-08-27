@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { FormEvent, useEffect, useState } from "react";
 import { api, ensureSession, type SessionUser } from "@/lib/api";
 import { useRouter } from "@/i18n/navigation";
+import Avatar from "@/components/Avatar";
 
 export default function ProfilePage() {
   const t = useTranslations("profile");
@@ -46,24 +47,25 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-md">
-      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
-      <div className="card mb-6 p-5">
-        <div className="flex justify-between py-1 text-sm">
-          <span className="muted">{t("username")}</span>
-          <span className="font-semibold">{user.username}</span>
+    <div className="mx-auto flex max-w-lg flex-col gap-6">
+      <div className="enter">
+        <p className="kicker">{t("kicker")}</p>
+        <h1 className="mt-1 text-3xl font-bold">{t("title")}</h1>
+      </div>
+
+      <div className="card enter enter-d1 flex items-center gap-5 p-6">
+        <Avatar name={user.username} size="lg" />
+        <div className="min-w-0 flex-1">
+          <div className="text-xl font-bold">{user.username}</div>
+          <div className="muted mt-1 truncate text-sm">{user.email}</div>
         </div>
-        <div className="flex justify-between py-1 text-sm">
-          <span className="muted">{t("email")}</span>
-          <span>{user.email}</span>
-        </div>
-        <div className="flex justify-between py-1 text-sm">
-          <span className="muted">{t("rating")}</span>
-          <span className="font-bold text-[var(--accent)]">{user.rating}</span>
+        <div className="stat-feature">
+          <span className="muted text-xs">{t("rating")}</span>
+          <strong>{user.rating}</strong>
         </div>
       </div>
 
-      <div className="card p-5">
+      <div className="card enter enter-d2 p-6">
         <h2 className="mb-3 font-semibold">{t("changePassword")}</h2>
         <form onSubmit={changePassword} className="flex flex-col gap-3">
           <label className="text-sm">

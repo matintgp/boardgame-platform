@@ -18,20 +18,58 @@ interface MyGame {
   status: string;
 }
 
+const MODES = [
+  {
+    id: "chess" as const,
+    cover: "/heroes/chess.jpg",
+    nameKey: "gameChess" as const,
+    tagKey: "gameChessTag" as const,
+    createKey: "createChess" as const,
+  },
+  {
+    id: "mafia" as const,
+    cover: "/heroes/mafia.jpg",
+    nameKey: "gameMafia" as const,
+    tagKey: "gameMafiaTag" as const,
+    createKey: "createMafia" as const,
+  },
+  {
+    id: "rokugan" as const,
+    cover: "/heroes/rokugan.jpg",
+    nameKey: "gameRokugan" as const,
+    tagKey: "gameRokuganTag" as const,
+    createKey: "createRokugan" as const,
+  },
+];
+
 function gameLabel(
   t: ReturnType<typeof useTranslations>,
   gameType: string
-): { icon: string; name: string } {
+): { name: string; cover: string } {
   switch (gameType) {
     case "mafia":
-      return { icon: "🎭", name: t("gameMafia") };
+      return { name: t("gameMafia"), cover: "/heroes/mafia.jpg" };
     case "rokugan":
-      return { icon: "⚔", name: t("gameRokugan") };
+      return { name: t("gameRokugan"), cover: "/heroes/rokugan.jpg" };
     case "chess":
-      return { icon: "♞", name: t("gameChess") };
+      return { name: t("gameChess"), cover: "/heroes/chess.jpg" };
     default:
-      return { icon: "♟", name: t("unknownGame") };
+      return { name: t("unknownGame"), cover: "" };
   }
+}
+
+function statusPill(t: ReturnType<typeof useTranslations>, status: string) {
+  const s = status.toLowerCase();
+  if (s === "waiting" || s === "queued" || s === "open") {
+    return { cls: "pill pill-wait", label: t("statusWaiting") };
+  }
+  if (s === "active" || s === "in_progress" || s === "playing" || s === "started") {
+    return { cls: "pill pill-live", label: t("statusActive") };
+  }
+  if (s === "finished" || s === "completed" || s === "ended") {
+    return { cls: "pill pill-done", label: t("statusFinished") };
+  }
+  return { cls: "pill pill-done", label: status };
 }
 
 export default function LobbyPage() {
@@ -96,7 +134,7 @@ export default function LobbyPage() {
       await api(`/api/games/${id}/join`, { method: "POST" });
       router.push(`/game/${id}`);
     } catch (e) {
-      setJoinError(e instanceof Error ? e.message : "join failed");
+      setJoinError(e instanceof Error ? e.message : t("joinFailed"));
       void refreshLists();
     }
   }
@@ -149,8 +187,12 @@ export default function LobbyPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("title")}</h1>
+      <div className="enter flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="kicker">{t("kicker")}</p>
+          <h1 className="mt-1 text-3xl font-bold">{t("title")}</h1>
+          <p className="muted mt-1 text-sm">{t("subtitle")}</p>
+        </div>
         {user && (
           <span className="muted text-sm">
             {user.username} · {user.rating}
@@ -159,53 +201,56 @@ export default function LobbyPage() {
       </div>
 
       {searching ? (
-        <div className="card flex items-center justify-between p-4">
-          <span className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 animate-ping rounded-full bg-[var(--accent)]" />
-            {t("searching")} · {gameLabel(t, searching).icon} {gameLabel(t, searching).name}
-          </span>
+        <div className="card enter mm-wrap flex-wrap justify-between p-5" aria-live="polite">
+          <div className="flex items-center gap-4">
+            <div className="mm-orb" aria-hidden="true">
+              <span className="mm-ring" />
+              <span className="mm-ring delay" />
+              <span className="mm-orb-core" />
+            </div>
+            <div>
+              <div className="font-semibold">
+                {t("searching")} · {gameLabel(t, searching).name}
+              </div>
+              <p className="muted mt-0.5 text-sm">{t("matchmakingHint")}</p>
+            </div>
+          </div>
           <button className="btn btn-ghost" onClick={cancelSearch}>
             {t("cancel")}
           </button>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-3">
-          <button className="btn btn-primary" onClick={() => quickMatch("chess")}>
-            ⚡ {t("quickMatch")} {t("gameChess")}
-          </button>
-          <button className="btn btn-primary" onClick={() => quickMatch("mafia")}>
-            ⚡ {t("quickMatch")} {t("gameMafia")}
-          </button>
-          <button className="btn btn-primary" onClick={() => quickMatch("rokugan")}>
-            ⚡ {t("quickMatch")} {t("gameRokugan")}
-          </button>
-          <button
-            className="btn btn-ghost"
-            onClick={() => createTable("chess")}
-            disabled={busy !== null}
-          >
-            ♞ {t("createChess")}
-          </button>
-          <button
-            className="btn btn-ghost"
-            onClick={() => createTable("mafia")}
-            disabled={busy !== null}
-          >
-            🎭 {t("createMafia")}
-          </button>
-          <button
-            className="btn btn-ghost"
-            onClick={() => createTable("rokugan")}
-            disabled={busy !== null}
-          >
-            ⚔ {t("createRokugan")}
-          </button>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {MODES.map((m, i) => (
+            <article key={m.id} className={`card card-lift overflow-hidden enter enter-d${i + 1}`}>
+              <div className="game-cover h-28">
+                <img src={m.cover} alt={t(m.nameKey)} />
+                <div className="cover-shade" />
+                <div className="absolute inset-x-0 bottom-0 p-3 text-start">
+                  <h2 className="font-bold">{t(m.nameKey)}</h2>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 p-4">
+                <p className="muted text-sm">{t(m.tagKey)}</p>
+                <button className="btn btn-primary" onClick={() => quickMatch(m.id)}>
+                  {t("quickMatch")}
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => createTable(m.id)}
+                  disabled={busy !== null}
+                >
+                  {t(m.createKey)}
+                </button>
+              </div>
+            </article>
+          ))}
         </div>
       )}
 
       {joinError && <p className="text-sm text-red-400">{joinError}</p>}
 
-      <section>
+      <section className="enter enter-d4">
         <h2 className="mb-3 font-semibold">{t("openLobbies")}</h2>
         {listLoading && <p className="muted">{t("loading")}</p>}
         {listError && (
@@ -217,22 +262,34 @@ export default function LobbyPage() {
           </p>
         )}
         {!listLoading && !listError && lobbies.length === 0 && (
-          <p className="muted">{t("empty")}</p>
+          <div className="card empty-state">
+            <p>{t("empty")}</p>
+          </div>
         )}
-        <div className="flex flex-col gap-2">
+        <div className="enter-stagger flex flex-col gap-2">
           {lobbies.map((l) => {
-            const { icon, name } = gameLabel(t, l.game_type);
+            const { name } = gameLabel(t, l.game_type);
+            const pill = statusPill(t, l.status || "waiting");
+            const pct = l.max_players
+              ? Math.min(100, Math.round((l.players.length / l.max_players) * 100))
+              : 0;
             return (
-              <div key={l.id} className="card flex items-center justify-between p-4">
-                <div>
-                  <span className="font-semibold">
-                    {icon} {name}
-                  </span>
-                  <span className="muted ms-3 text-sm">
-                    {t("players")}: {l.players.length}/{l.max_players}
-                  </span>
+              <div key={l.id} className="card card-lift flex flex-wrap items-center justify-between gap-3 p-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{name}</span>
+                    <span className={pill.cls}>{pill.label}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="seat-bar w-32 sm:w-44">
+                      <span style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="muted text-sm">
+                      {t("players")}: {l.players.length}/{l.max_players}
+                    </span>
+                  </div>
                 </div>
-                <button className="btn btn-ghost" onClick={() => join(l.id)}>
+                <button className="btn btn-primary" onClick={() => join(l.id)}>
                   {t("join")}
                 </button>
               </div>
@@ -242,21 +299,20 @@ export default function LobbyPage() {
       </section>
 
       {myGames.length > 0 && (
-        <section>
+        <section className="enter enter-d5">
           <h2 className="mb-3 font-semibold">{t("yourGames")}</h2>
-          <div className="flex flex-col gap-2">
+          <div className="enter-stagger flex flex-col gap-2">
             {myGames.map((g) => {
-              const { icon, name } = gameLabel(t, g.game_type);
+              const { name } = gameLabel(t, g.game_type);
+              const pill = statusPill(t, g.status);
               return (
                 <Link
                   key={g.id}
                   href={`/game/${g.id}`}
-                  className="card flex items-center justify-between p-3 hover:border-[var(--accent)]"
+                  className="card card-lift flex items-center justify-between p-3"
                 >
-                  <span>
-                    {icon} {name}
-                  </span>
-                  <span className="muted text-sm">{g.status}</span>
+                  <span className="font-semibold">{name}</span>
+                  <span className={pill.cls}>{pill.label}</span>
                 </Link>
               );
             })}

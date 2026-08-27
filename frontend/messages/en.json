@@ -8,7 +8,9 @@
     "login": "Log in",
     "register": "Sign up",
     "logout": "Log out",
-    "language": "Language"
+    "language": "Language",
+    "kicker": "The game salon",
+    "playNow": "Enter the lobby"
   },
   "auth": {
     "email": "Email",
@@ -20,7 +22,10 @@
     "submitRegister": "Sign up",
     "noAccount": "No account? Sign up",
     "haveAccount": "Have an account? Log in",
-    "genericError": "Something went wrong. Please try again."
+    "genericError": "Something went wrong. Please try again.",
+    "kicker": "Board-game salon",
+    "subtitleLogin": "Welcome back to the tables.",
+    "subtitleRegister": "Take a seat at the salon."
   },
   "lobby": {
     "title": "Game Lobby",
@@ -46,7 +51,14 @@
     "unknownGame": "Game",
     "gameChessTag": "Classic 1v1 on the sixty-four squares",
     "gameMafiaTag": "Deduce, deceive, survive the night",
-    "gameRokuganTag": "Secret plans. Razed provinces."
+    "gameRokuganTag": "Secret plans. Razed provinces.",
+    "kicker": "Tables",
+    "subtitle": "Queue up, open a table, or join a room.",
+    "statusWaiting": "Waiting",
+    "statusActive": "Live",
+    "statusFinished": "Finished",
+    "matchmakingHint": "We'll seat you as soon as a match is found.",
+    "joinFailed": "Couldn't join that table."
   },
   "game": {
     "waiting": "Waiting for opponent...",
@@ -106,7 +118,15 @@
     "accepted": "Friends",
     "accept": "Accept",
     "reject": "Reject",
-    "noFriends": "No friends yet."
+    "noFriends": "No friends yet.",
+    "kicker": "Your circle",
+    "subtitle": "Find players, send requests, keep your table full.",
+    "emptyIncoming": "No new friend requests.",
+    "emptyOutgoing": "No pending requests out.",
+    "pending": "Pending",
+    "noResults": "No players match that name.",
+    "searchLabel": "Find a player",
+    "rating": "Rating"
   },
   "profile": {
     "title": "Profile",
@@ -119,7 +139,8 @@
     "save": "Save",
     "passwordChanged": "Password changed",
     "failed": "Something went wrong",
-    "logoutEverywhere": "Changing your password logs out all devices."
+    "logoutEverywhere": "Changing your password logs out all devices.",
+    "kicker": "Player identity"
   },
   "rokugan": {
     "title": "Rokugan Duel",
