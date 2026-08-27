@@ -1,6 +1,7 @@
 "use client";
 
-import { playCardInfo, tryalKindFromId } from "./catalog";
+import { useTranslations } from "next-intl";
+import { playCardInfo, tryalKindFromId, townHallI18nKey } from "./catalog";
 import {
   MARK_THRESHOLD,
   bluesOf,
@@ -34,6 +35,7 @@ export default function SalemTable({
   discardLabel = "Discard",
   hourglass = false,
   hourglassSeconds = 0,
+  hourglassLabel,
   onActivate,
   onReport,
   showWitchMarks,
@@ -55,11 +57,13 @@ export default function SalemTable({
   discardLabel?: string;
   hourglass?: boolean;
   hourglassSeconds?: number;
+  hourglassLabel?: string;
   onActivate: (seat: number) => void;
   onReport: (p: PlayerInfo) => void;
   showWitchMarks: boolean;
   teammates: number[];
 }) {
+  const t = useTranslations("salem");
   const n = slots.length;
   const crowded = n >= 10;
   const tableClass =
@@ -128,15 +132,18 @@ export default function SalemTable({
         <img src="/salem/icons/gavel.svg" alt="" />
       </div>
       {hourglass && (
-        <div
-          className="salem-hourglass"
-          style={{ ["--sand" as string]: sand }}
-          aria-hidden
-        >
-          <div className="salem-hourglass-frame" />
-          <div className="salem-hourglass-sand-top" />
-          <div className="salem-hourglass-stream" />
-          <div className="salem-hourglass-sand-bot" />
+        <div className="salem-hourglass-wrap" aria-live="polite">
+          <div
+            className="salem-hourglass"
+            style={{ ["--sand" as string]: sand }}
+            aria-hidden
+          >
+            <div className="salem-hourglass-frame" />
+            <div className="salem-hourglass-sand-top" />
+            <div className="salem-hourglass-stream" />
+            <div className="salem-hourglass-sand-bot" />
+          </div>
+          {hourglassLabel && <span className="salem-hourglass-label">{hourglassLabel}</span>}
         </div>
       )}
 
@@ -183,7 +190,7 @@ export default function SalemTable({
             </span>
             {isSelf && p && <em className="salem-you">{youMarker}</em>}
             {!alive && p && <em className="salem-dead-label">— {deadLabel}</em>}
-            {hall && <span className="salem-nameplate">{hall.name}</span>}
+            {hall && <span className="salem-nameplate">{t(`halls.${townHallI18nKey(hall.id)}`)}</span>}
             {(pubTryals.revealed.length > 0 || pubTryals.facedown > 0) && (
               <div className="salem-tryals" aria-hidden>
                 {pubTryals.revealed.map((id, ti) => {
@@ -206,7 +213,7 @@ export default function SalemTable({
                 ))}
               </div>
             )}
-            {p && (
+            {p && phase != null && (
               <div className="salem-wax-row" title={`${accusationsLabel} ${acc}/${MARK_THRESHOLD}`}>
                 {Array.from({ length: MARK_THRESHOLD }).map((_, wi) => (
                   <span key={wi} className={`salem-wax ${wi < acc ? "is-lit" : ""}`} />

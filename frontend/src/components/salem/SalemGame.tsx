@@ -756,6 +756,11 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               hourglassSeconds={
                 confessUntil ? Math.max(0, Math.round((confessUntil - now) / 1000)) : 0
               }
+              hourglassLabel={
+                secondsLeft != null
+                  ? t("confessCountdown", { seconds: secondsLeft })
+                  : t("confessTitle")
+              }
               onActivate={onSeatActivate}
               onReport={reportPlayer}
               showWitchMarks={!!you?.is_witch}

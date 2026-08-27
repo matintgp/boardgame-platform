@@ -300,10 +300,10 @@
     "playOrDraw": "Play a card. Black cards resolve at once.",
     "emptyHand": "No cards in hand.",
     "color": {
-      "red": "Accusation",
+      "red": "Wax",
       "green": "One-shot",
       "blue": "Lasting",
-      "black": "Conspiracy"
+      "black": "Ink"
     },
     "chatTitle": "Game Chat",
     "chatPlaceholder": "Message...",
@@ -315,7 +315,7 @@
     "pickOwnTryal": "Pick one of your unrevealed Tryals.",
     "tryalN": "Tryal {n}",
     "confessTitle": "Confess a Tryal",
-    "confessCountdown": "{seconds}s",
+    "confessCountdown": "{seconds}s to confess",
     "noTryalsLeft": "No unrevealed Tryals left.",
     "confessReveal": "Reveal Tryal {n} — {kind}",
     "confess": "Confess",
@@ -330,58 +330,58 @@
     "logReveal": "A Tryal of {name} was revealed.",
     "logConfess": "{name} confessed a Tryal.",
     "logCat": "The Black Cat sits with {name}.",
-    "phaseConspiracy": "Conspiracy",
+    "phaseConspiracy": "The Turning",
     "conspiracyHint": "Choose an unrevealed Tryal from the player on your left.",
     "pickFrom": "First click whose marks to move.",
     "playHintEngine": "Play one card. You draw after it resolves. Black cards start Conspiracy or Night.",
     "confessSkip": "Do not confess",
     "cards": {
       "accusation": {
-        "title": "Accusation",
-        "text": "+1 mark."
+        "title": "Writ",
+        "text": "+1 wax seal."
       },
       "evidence": {
-        "title": "Evidence",
-        "text": "+2 marks."
+        "title": "Proof",
+        "text": "+2 wax seals."
       },
       "witness": {
-        "title": "Witness",
-        "text": "+3 marks."
+        "title": "Oath",
+        "text": "+3 wax seals."
       },
       "alibi": {
-        "title": "Alibi",
-        "text": "Clear a player's marks."
+        "title": "Clean Hands",
+        "text": "Wipe a player's seals."
       },
       "arson": {
-        "title": "Arson",
-        "text": "Burn a Black Cat."
+        "title": "Hearthfire",
+        "text": "Burn a Night Familiar."
       },
       "robbery": {
-        "title": "Robbery",
+        "title": "Cutpurse",
         "text": "Steal a random card. Not self."
       },
       "scapegoat": {
-        "title": "Scapegoat",
-        "text": "Move your marks onto another player."
+        "title": "Shifted Blame",
+        "text": "Move seals onto another player."
       },
       "stocks": {
-        "title": "Stocks",
+        "title": "Pillory",
         "text": "They skip their next turn. Not self."
       },
       "curse": {
-        "title": "Curse",
+        "title": "Hex",
         "text": "They discard a random card."
       },
       "black_cat": {
-        "title": "Black Cat",
-        "text": "A lasting hex. Conspiracy peeks."
+        "title": "Night Familiar",
+        "text": "A lasting hex. The Turning peeks."
       },
       "conspiracy": {
-        "title": "Conspiracy",
-        "text": "Each living player passes a Tryal."
+        "title": "The Turning",
+        "text": "Each living player passes a sealed trial."
       },
       "night": {
-        "title": "Night",
+        "title": "Nightfall",
         "text": "Night falls."
       }
     },

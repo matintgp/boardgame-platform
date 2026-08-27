@@ -22,18 +22,18 @@ export interface PlayCardInfo {
 }
 
 export const CARD_CATALOG: Record<string, Omit<PlayCardInfo, "id">> = {
-  accusation: { color: "red", title: "Accusation", text: "+1 mark." },
-  evidence: { color: "red", title: "Evidence", text: "+2 marks." },
-  witness: { color: "red", title: "Witness", text: "+3 marks." },
-  alibi: { color: "green", title: "Alibi", text: "Clear a player's marks." },
-  arson: { color: "green", title: "Arson", text: "Burn a Black Cat." },
-  robbery: { color: "green", title: "Robbery", text: "Steal a random card. Not self." },
-  scapegoat: { color: "green", title: "Scapegoat", text: "Move your marks onto another player." },
-  stocks: { color: "green", title: "Stocks", text: "They skip their next turn. Not self." },
-  curse: { color: "green", title: "Curse", text: "They discard a random card." },
-  black_cat: { color: "blue", title: "Black Cat", text: "A lasting hex. Conspiracy peeks." },
-  conspiracy: { color: "black", title: "Conspiracy", text: "Each living player passes a Tryal." },
-  night: { color: "black", title: "Night", text: "Night falls." },
+  accusation: { color: "red", title: "Writ", text: "+1 wax seal." },
+  evidence: { color: "red", title: "Proof", text: "+2 wax seals." },
+  witness: { color: "red", title: "Oath", text: "+3 wax seals." },
+  alibi: { color: "green", title: "Clean Hands", text: "Wipe a player's seals." },
+  arson: { color: "green", title: "Hearthfire", text: "Burn a Night Familiar." },
+  robbery: { color: "green", title: "Cutpurse", text: "Steal a random card. Not self." },
+  scapegoat: { color: "green", title: "Shifted Blame", text: "Move seals onto another player." },
+  stocks: { color: "green", title: "Pillory", text: "They skip their next turn. Not self." },
+  curse: { color: "green", title: "Hex", text: "They discard a random card." },
+  black_cat: { color: "blue", title: "Night Familiar", text: "A lasting hex. The Turning peeks." },
+  conspiracy: { color: "black", title: "The Turning", text: "Each living player passes a sealed trial." },
+  night: { color: "black", title: "Nightfall", text: "Night falls." },
 };
 
 export const TOWN_HALL_NAMES: Record<string, string> = {
