@@ -172,6 +172,8 @@ async def ws_endpoint(websocket: WebSocket) -> None:
                                 )
                         events = await game_service.missed_events(db, game, last_seq)
                         for ev in events:
+                            if not game_service.event_visible_to(ev, seat):
+                                continue
                             await websocket.send_json(game_service.event_envelope(room, ev))
                         if game.state:
 

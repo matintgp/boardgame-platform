@@ -157,6 +157,28 @@ def started_payload(engine: BaseEngine, game: Game, users_by_id: dict) -> dict:
     }
 
 
+# Night actions and day votes are simultaneous + secret. Broadcasting the
+# actor seat (or the event itself) to the rest of the table leaks role.
+SECRET_EVENT_TYPES = frozenset({"night_action", "vote_cast"})
+
+
+def events_for_viewer(events: list[dict], viewer_seat: int | None) -> list[dict]:
+    """Drop secret events the viewer is not the actor of."""
+    out: list[dict] = []
+    for ev in events:
+        if ev.get("type") in SECRET_EVENT_TYPES:
+            if viewer_seat is None or ev.get("seat") != viewer_seat:
+                continue
+        out.append(ev)
+    return out
+
+
+def event_visible_to(ev: GameEvent, viewer_seat: int | None) -> bool:
+    if ev.action_type not in SECRET_EVENT_TYPES:
+        return True
+    return viewer_seat is not None and ev.payload.get("seat") == viewer_seat
+
+
 def build_state_message(
     engine, game: Game, state: dict, events: list[dict], seq: int | None = None
 ) -> dict:
@@ -169,7 +191,7 @@ def build_state_message(
             "type": "state",
             "room": game_room(game.id),
             "seq": last_seq,
-            "payload": {"events": events, "state": vis},
+            "payload": {"events": events_for_viewer(events, s.seat), "state": vis},
         }
     return {
         "room": game_room(game.id),
@@ -178,7 +200,10 @@ def build_state_message(
             "type": "state",
             "room": game_room(game.id),
             "seq": last_seq,
-            "payload": {"events": events, "state": engine.visible_state(state, None)},
+            "payload": {
+                "events": events_for_viewer(events, None),
+                "state": engine.visible_state(state, None),
+            },
         },
     }
 
