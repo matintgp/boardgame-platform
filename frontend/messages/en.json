@@ -185,5 +185,11 @@
     "unmute": "Unmute",
     "title": "Voice Chat",
     "micError": "Microphone permission denied"
+  },
+  "notFound": {
+    "title": "This page could not be found",
+    "body": "The link is wrong, or this page no longer exists.",
+    "home": "Home",
+    "lobby": "Lobby"
   }
 }
