@@ -1,13 +1,17 @@
 """WebSocket endpoint.
 
-Client -> server:  {"type": "subscribe"|"unsubscribe"|"sync"|"action",
+Client -> server:  {"type": "auth"|"subscribe"|"unsubscribe"|"sync"|"action",
                     "room": "...", "last_seq": n, "payload": {...}}
 Server -> client:  envelopes {"type": ..., "room": ..., "seq": ..., "payload": ...}
 
-Auth happens on the handshake via ?token=JWT. Rooms are authorized against
-game membership; actions are re-validated by the engine server-side.
+Auth: the client connects with no credentials on the URL, then MUST send
+{"type":"auth","token":"<access JWT>"} as the first message. Query-string
+tokens are ignored. Unauthenticated sockets are closed (4401).
+Rooms are authorized against game membership; actions are re-validated
+by the engine server-side.
 """
 
+import asyncio
 import copy
 import json
 import logging
@@ -16,16 +20,20 @@ import uuid
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.games.base import IllegalAction
 from app.games.registry import get_engine
 
 logger = logging.getLogger(__name__)
 
-from app.core.deps import MAX_WS_MESSAGE_BYTES, get_current_user_ws, get_db
+from app.core.deps import MAX_WS_MESSAGE_BYTES, user_from_access_token
 from app.db.session import SessionLocal
-from app.realtime import bus
+from app.models.user import User
+from app.realtime import bus, presence
 from app.services import game_service
 
 router = APIRouter()
+
+AUTH_TIMEOUT_SECONDS = 10.0
 
 
 async def _authorize_room(db: AsyncSession, user_id: uuid.UUID, game_id: uuid.UUID) -> int | None:
@@ -36,16 +44,47 @@ async def _authorize_room(db: AsyncSession, user_id: uuid.UUID, game_id: uuid.UU
     return game_service.seat_of(game, user_id)
 
 
+async def wait_for_auth(websocket: WebSocket) -> User | None:
+    """Consume the first frame. Only {"type":"auth","token":"..."} is accepted.
+
+    Query-string tokens are deliberately ignored so JWTs never land in logs/history.
+    """
+    try:
+        raw = await asyncio.wait_for(
+            websocket.receive_text(), timeout=AUTH_TIMEOUT_SECONDS
+        )
+    except (TimeoutError, WebSocketDisconnect):
+        return None
+    if len(raw.encode()) > MAX_WS_MESSAGE_BYTES:
+        return None
+    try:
+        msg = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(msg, dict) or msg.get("type") != "auth":
+        return None
+    token = msg.get("token")
+    if not isinstance(token, str) or not token:
+        return None
+    return await user_from_access_token(token)
+
+
 @router.websocket("/ws")
 async def ws_endpoint(websocket: WebSocket) -> None:
-    user = await get_current_user_ws(websocket)
+    await websocket.accept()
+    user = await wait_for_auth(websocket)
     if user is None:
-        await websocket.close(code=4401)
+        try:
+            await websocket.close(code=4401)
+        except Exception:
+            pass
         return
 
     from app.realtime.hub import hub
 
+    conn_id = uuid.uuid4()
     await hub.connect(user.id, websocket)
+    await presence.touch(user.id, conn_id)
 
     # NOTE: Redis fan-out is handled by the single app-level listener in
     # main.py's lifespan - do NOT add a per-connection listener here or every
@@ -66,6 +105,7 @@ async def ws_endpoint(websocket: WebSocket) -> None:
             room = msg.get("room", "")
             try:
                 if mtype == "ping":
+                    await presence.touch(user.id, conn_id)
                     await websocket.send_json({"type": "pong"})
                     continue
 
@@ -146,6 +186,11 @@ async def ws_endpoint(websocket: WebSocket) -> None:
                 elif mtype == "action":
                     payload = msg.get("payload") or {}
                     action_type = msg.get("action", "move")
+                    # Nested envelope: {action, payload:{action, payload:{...}}}
+                    if isinstance(payload, dict) and "action" in payload and "payload" in payload:
+                        action_type = payload["action"]
+                        inner = payload["payload"]
+                        payload = inner if isinstance(inner, dict) else {}
                     async with SessionLocal() as db:
                         seat = await _authorize_room(db, user.id, game_id)
                         if seat is None:
@@ -201,7 +246,7 @@ async def ws_endpoint(websocket: WebSocket) -> None:
                 else:
                     raise ValueError(f"unknown type {mtype!r}")
 
-            except (ValueError, KeyError, PermissionError) as e:
+            except (ValueError, KeyError, PermissionError, IllegalAction) as e:
                 await websocket.send_json(
                     {"type": "error", "room": room, "payload": {"message": str(e)}}
                 )
@@ -216,5 +261,8 @@ async def ws_endpoint(websocket: WebSocket) -> None:
     except WebSocketDisconnect:
         pass
     finally:
+        try:
+            await presence.drop(user.id, conn_id)
+        except Exception:
+            logger.exception("presence drop failed")
         await hub.disconnect(user.id, websocket)
-

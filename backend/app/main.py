@@ -9,6 +9,7 @@ from app.api.routes import auth, friends, games, moderation, users, ws
 from app.core.config import settings
 from app.realtime import bus
 from app.realtime.hub import hub as connection_hub
+from app.realtime.timers import start_supervisor, stop_supervisor
 
 
 @asynccontextmanager
@@ -16,7 +17,9 @@ async def lifespan(app: FastAPI):
     await bus.init_redis()
     await _promote_admin()
     listener = asyncio.create_task(bus.listen(connection_hub.broadcast_internal))
+    start_supervisor()
     yield
+    stop_supervisor()
     listener.cancel()
     await bus.close_redis()
 
@@ -66,6 +69,6 @@ async def health() -> JSONResponse:
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(friends.router, prefix="/api")
-app.include_router(moderation.router, prefix="/api")
 app.include_router(games.router, prefix="/api")
+app.include_router(moderation.router, prefix="/api")
 app.include_router(ws.router, prefix="/api")

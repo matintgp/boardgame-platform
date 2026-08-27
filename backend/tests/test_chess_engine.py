@@ -77,3 +77,25 @@ def test_spectator_gets_no_legal_moves_midgame(engine, state):
     engine.apply_action(state, 0, "move", {"move": "e2e4"})
     vis = engine.visible_state(state, None)
     assert vis["legal_moves"] is None or vis["legal_moves"] == []
+
+
+def test_apply_action_does_not_resubtract_elapsed_wall_time(engine, state):
+    """Timer already ticks clocks; a move must not subtract now - turn_started_at."""
+    import time
+
+    state["clocks"] = {"0": 500.0, "1": 600.0}
+    state["turn_started_at"] = time.time() - 90  # as if the player thought for 90s
+    result = engine.apply_action(state, 0, "move", {"move": "e2e4"})
+    assert not result.finished
+    assert state["clocks"]["0"] == 500.0
+    assert state["clocks"]["1"] == 600.0
+    assert state["turn_started_at"] > time.time() - 2
+
+
+def test_apply_action_timeouts_when_clock_already_zero(engine, state):
+    state["clocks"] = {"0": 0.0, "1": 600.0}
+    result = engine.apply_action(state, 0, "move", {"move": "e2e4"})
+    assert result.finished
+    assert result.result == {"reason": "timeout", "winner_seat": 1}
+    # Move must not have been applied.
+    assert state["fen"].split()[1] == "w"

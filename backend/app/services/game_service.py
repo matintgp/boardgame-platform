@@ -79,6 +79,10 @@ async def game_view(db: AsyncSession, game: Game, user: User | None = None) -> d
     if user is not None:
         payload["your_seat"] = seat_of(game, user.id)
         payload["is_host"] = user.id == game.created_by
+    if game.state:
+        engine = get_engine(game.game_type)()
+        viewer_seat = seat_of(game, user.id) if user is not None else None
+        payload["state"] = engine.visible_state(game.state, viewer_seat)
     return payload
 
 

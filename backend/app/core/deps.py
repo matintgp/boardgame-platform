@@ -1,8 +1,6 @@
-import asyncio
-import uuid
 from collections.abc import AsyncGenerator
 
-from fastapi import Depends, HTTPException, Request, WebSocket, status
+from fastapi import Depends, HTTPException, Request, status
 from jwt import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,11 +17,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-async def get_current_user_ws(websocket: WebSocket) -> User | None:
-    """Resolve user from ?token= on the WS handshake. Returns None if invalid."""
-    token = websocket.query_params.get("token")
-    if not token:
-        return None
+async def user_from_access_token(token: str) -> User | None:
+    """Resolve a user from a raw access JWT. Returns None if invalid."""
     try:
         user_id = decode_access_token(token)
     except PyJWTError:

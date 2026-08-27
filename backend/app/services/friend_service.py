@@ -30,16 +30,33 @@ async def request_friend(db: AsyncSession, requester: User, addressee: User) -> 
 
 async def list_friends(db: AsyncSession, user_id: uuid.UUID) -> list[dict]:
     """Accepted friends + incoming/outgoing pending requests."""
-    rows = await db.scalars(
+    rows = list(await db.scalars(
         select(Friendship).where(
             or_(Friendship.requester_id == user_id, Friendship.addressee_id == user_id)
         )
-    )
+    ))
+    other_ids = [
+        fr.addressee_id if fr.requester_id == user_id else fr.requester_id
+        for fr in rows
+    ]
+    users: dict[uuid.UUID, User] = {}
+    if other_ids:
+        user_rows = await db.scalars(select(User).where(User.id.in_(other_ids)))
+        users = {u.id: u for u in user_rows}
     out = []
     for fr in rows:
         other_id = fr.addressee_id if fr.requester_id == user_id else fr.requester_id
         direction = "outgoing" if fr.requester_id == user_id else "incoming"
-        out.append({"request_id": str(fr.id), "user_id": str(other_id), "status": fr.status.value, "direction": direction})
+        other = users.get(other_id)
+        profile = other.public_profile() if other is not None else {}
+        out.append({
+            "request_id": str(fr.id),
+            "user_id": str(other_id),
+            "status": fr.status.value,
+            "direction": direction,
+            "username": profile.get("username"),
+            "rating": profile.get("rating"),
+        })
     return out
 
 

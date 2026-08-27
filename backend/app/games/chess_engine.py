@@ -63,9 +63,17 @@ class ChessEngine(BaseEngine):
         if state.get("result"):
             raise IllegalAction("The game is over")
 
-        # Clock first: if the mover ran out of time, the move is rejected.
-        timeout = self._settle_clock(state)
-        if timeout is not None:
+        # Timer loop is the sole ticker: it subtracts 1s/tick without updating
+        # turn_started_at. Do NOT re-subtract wall time on a player move.
+        turn = str(self.turn_seat(state))
+        remaining = (state.get("clocks") or {}).get(turn, self.CLOCK_SECONDS)
+        if remaining <= 0:
+            clocks = state.setdefault(
+                "clocks", {"0": self.CLOCK_SECONDS, "1": self.CLOCK_SECONDS}
+            )
+            clocks[turn] = 0
+            timeout = {"reason": "timeout", "winner_seat": 1 - int(turn)}
+            state["result"] = timeout
             return ApplyResult(
                 events=[{"type": "game_over", "seat": None, "payload": timeout}],
                 finished=True,

@@ -3,6 +3,9 @@
 Tracks local connections per user and room subscriptions. Combined with the
 Redis bus this forms a scalable fan-out layer: each node only touches sockets
 that connected to it.
+
+Presence (is the user online anywhere?) is Redis-backed so chess timers on
+any worker see the same truth. See `app.realtime.presence`.
 """
 
 import asyncio
@@ -19,7 +22,7 @@ class ConnectionHub:
         self._lock = asyncio.Lock()
 
     async def connect(self, user_id: uuid.UUID, ws: WebSocket) -> None:
-        await ws.accept()
+        """Register an already-accepted socket. Caller must `await ws.accept()`."""
         async with self._lock:
             self._users.setdefault(user_id, set()).add(ws)
 
@@ -54,9 +57,11 @@ class ConnectionHub:
     def MISSING(self) -> object:
         return _MISSING
 
-    def user_online(self, user_id: uuid.UUID) -> bool:
-        """True if the user has at least one live WebSocket on this node."""
-        return bool(self._users.get(user_id))
+    async def user_online(self, user_id: uuid.UUID) -> bool:
+        """True if the user has a live WebSocket on any worker (Redis presence)."""
+        from app.realtime.presence import is_online
+
+        return await is_online(user_id)
 
     async def send_to_user(self, user_id: uuid.UUID, envelope: dict) -> None:
         dead = []
