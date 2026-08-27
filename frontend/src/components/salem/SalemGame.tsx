@@ -30,8 +30,10 @@ import {
   SALEM_MIN_PLAYERS,
   extractState,
   isSeatAlive,
+  leftSeat,
   marksOf,
   nameOf,
+  seatCount,
   unrevealedOwnIndexes,
   unrevealedPublicIndexes,
   tryalsOf,
@@ -463,6 +465,13 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   const alreadyConspiracy = you?.my_conspiracy_pick != null;
   const showConfessOverlay = phase === "confess" && !!you && youAlive;
   const showConspiracyOverlay = phase === "conspiracy" && !!you && youAlive;
+  const nSeats = seatCount(state);
+  const conspiracySource =
+    you != null && nSeats > 0 ? leftSeat(you.seat, nSeats) : null;
+  const conspiracyIndexes =
+    conspiracySource != null
+      ? unrevealedPublicIndexes(tryalsOf(state, conspiracySource))
+      : [];
 
   const phaseTitle =
     phase === "day"
@@ -862,14 +871,18 @@ export default function SalemGame({ gameId }: { gameId: string }) {
           <div className="result-pop salem-parchment-card relative w-full max-w-sm p-6 text-center">
             <h2 className="text-xl font-extrabold">↻ {t("phaseConspiracy")}</h2>
             <p className="muted mt-2 text-sm">
-              {alreadyConspiracy ? t("waitingConspiracy") : t("conspiracyHint")}
+              {alreadyConspiracy
+                ? t("waitingConspiracy")
+                : conspiracySource != null
+                  ? t("pickTryalHint", { name: nameOf(players, conspiracySource) })
+                  : t("conspiracyHint")}
             </p>
             {!alreadyConspiracy && (
               <div className="mt-4 flex flex-col gap-2">
-                {remainingTryals.length === 0 && (
+                {conspiracyIndexes.length === 0 && (
                   <p className="muted text-sm">{t("noTryalsLeft")}</p>
                 )}
-                {remainingTryals.map((idx) => (
+                {conspiracyIndexes.map((idx) => (
                   <button
                     key={idx}
                     className="btn btn-primary"
@@ -878,7 +891,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                       sendAction("conspiracy_take", { tryal_index: idx });
                     }}
                   >
-                    {t("tryalN", { n: idx + 1 })} — {tryalLabel(you!.tryals[idx].id)}
+                    {t("tryalN", { n: idx + 1 })}
                   </button>
                 ))}
               </div>
