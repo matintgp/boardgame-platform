@@ -200,6 +200,25 @@ async def start_game(db: AsyncSession, game: Game, actor: User) -> dict:
     return started_payload(engine_cls(), game, users)
 
 
+async def offer_rematch(db: AsyncSession, game: Game, user: User) -> tuple[Game, list[uuid.UUID]]:
+    """Open a new waiting table with only the requester seated.
+
+    Former opponents are invited over WS; they join themselves. Auto-seating
+    them was seating without consent.
+    """
+    if seat_of(game, user.id) is None:
+        raise PermissionError("Not a member")
+    if game.status != GameStatus.finished.value:
+        raise ValueError("Game is not finished")
+    invitees = [s.user_id for s in game.seats if s.user_id != user.id]
+    if not invitees:
+        raise ValueError("No opponent to rematch")
+    new_game = await create_game(
+        db, user, get_engine(game.game_type), dict(game.settings or {})
+    )
+    return new_game, invitees
+
+
 def started_payload(engine: BaseEngine, game: Game, users_by_id: dict) -> dict:
     per_seat = {}
     for s in game.seats:

@@ -85,38 +85,27 @@ async def queue_leave(game_type: str = "chess",
 @router.post("/{game_id}/rematch")
 async def rematch(game_id: uuid.UUID, user: User = Depends(get_current_user),
                   db: AsyncSession = Depends(get_db)) -> dict:
-    """Create a new table with both players seated (seats swapped) and ping the opponent."""
+    """Open a new waiting table for the requester and ping former opponents."""
     game = await game_service.get_game(db, game_id)
     if game is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Game not found")
-    seat = game_service.seat_of(game, user.id)
-    if seat is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not a member")
-    opponents = [s for s in game.seats if s.user_id != user.id]
-    if not opponents:
-        raise HTTPException(status.HTTP_409_CONFLICT, "No opponent to rematch")
-    opponent_id = opponents[0].user_id
-
-    new_game = await game_service.create_game(
-        db, user, get_engine(game.game_type), dict(game.settings or {})
-    )
-    # create_game seated the requester at 0; move opponent to seat 1.
-    from app.models.game import GameSeat
-
-    db.add(GameSeat(game_id=new_game.id, user_id=opponent_id, seat=1))
-    await db.commit()
+    try:
+        new_game, invitees = await game_service.offer_rematch(db, game, user)
+    except PermissionError as e:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
 
     from app.realtime import bus
 
+    payload = {"game_id": str(new_game.id), "by": user.username}
     await bus.publish_internal({
         "room": "",
         "per_seat": {},
         "spectator": None,
         "direct": {
-            str(opponent_id): {
-                "type": "rematch",
-                "payload": {"game_id": str(new_game.id), "by": user.username},
-            }
+            str(uid): {"type": "rematch", "payload": payload}
+            for uid in invitees
         },
     })
     return {"game_id": str(new_game.id)}
