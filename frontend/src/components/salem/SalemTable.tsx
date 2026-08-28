@@ -66,6 +66,7 @@ export default function SalemTable({
   const t = useTranslations("salem");
   const n = slots.length;
   const crowded = n >= 10;
+  const intimate = n > 0 && n <= 6;
   const tableClass =
     phase === "night" || phase === "confess"
       ? "is-night"
@@ -87,7 +88,7 @@ export default function SalemTable({
 
   return (
     <div
-      className={`salem-table mx-auto aspect-[5/4] w-full ${crowded ? "is-crowded" : "max-w-[36rem]"} ${tableClass}`}
+      className={`salem-table mx-auto aspect-[5/4] w-full ${crowded ? "is-crowded" : intimate ? "is-intimate max-w-[34rem]" : "max-w-[36rem]"} ${tableClass}`}
       dir="ltr"
     >
       <div className="salem-table-felt" />

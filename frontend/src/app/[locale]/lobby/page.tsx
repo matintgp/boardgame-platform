@@ -88,7 +88,7 @@ function statusPill(t: ReturnType<typeof useTranslations>, status: string) {
     return { cls: "pill pill-done", label: t("statusFinished") };
   }
   if (s === "aborted" || s === "cancelled" || s === "expired") {
-    return { cls: "pill pill-done", label: t("statusAborted") };
+    return { cls: "pill pill-abort", label: t("statusAborted") };
   }
   return { cls: "pill pill-done", label: status };
 }
@@ -229,6 +229,10 @@ export default function LobbyPage() {
   const visibleLobbies = lobbies
     .map((l) => ({ l, clock: remainingLobby(parseExpiryMs(l), now) }))
     .filter(({ clock }) => !clock?.expired);
+  const hostedCount = user
+    ? lobbies.filter((l) => l.created_by === user.id && l.status === "waiting").length
+    : 0;
+  const atCap = hostedCount >= MAX_OPEN_LOBBIES;
 
   return (
     <div className="flex flex-col gap-8">
@@ -239,9 +243,14 @@ export default function LobbyPage() {
           <p className="muted mt-1 text-sm">{t("subtitle")}</p>
         </div>
         {user && (
-          <span className="muted text-sm">
-            {user.username} · {user.rating}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`host-cap ${atCap ? "is-full" : ""}`}>
+              {t("hostCap", { n: hostedCount, max: MAX_OPEN_LOBBIES })}
+            </span>
+            <span className="muted text-sm">
+              {user.username} · {user.rating}
+            </span>
+          </div>
         )}
       </div>
 
@@ -288,7 +297,7 @@ export default function LobbyPage() {
                     <button
                       className="btn btn-ghost"
                       onClick={() => createTable(m.id)}
-                      disabled={busy !== null || searching !== null}
+                      disabled={busy !== null || searching !== null || atCap}
                     >
                       {t(m.createKey)}
                     </button>
@@ -300,7 +309,7 @@ export default function LobbyPage() {
         })}
       </div>
 
-      {joinError && <p className="text-sm text-red-400">{joinError}</p>}
+      {joinError && <p className="lobby-alert" role="alert">{joinError}</p>}
 
       <section className="enter enter-d4">
         <h2 className="mb-3 font-semibold">{t("openLobbies")}</h2>
@@ -332,7 +341,11 @@ export default function LobbyPage() {
                     <span className="font-semibold">{name}</span>
                     <span className={pill.cls}>{pill.label}</span>
                     {clock && (
-                      <span className="muted text-xs">⏳ {t("expiresIn", { time: clock.label })}</span>
+                      <span
+                        className={`lobby-ttl ${clock.urgent ? "is-urgent" : ""} ${clock.expired ? "is-expired" : ""}`}
+                      >
+                        ⏳ {t("expiresIn", { time: clock.label })}
+                      </span>
                     )}
                   </div>
                   <div className="mt-2 flex items-center gap-3">

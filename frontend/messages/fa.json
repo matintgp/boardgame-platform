@@ -66,7 +66,8 @@
     "expiresIn": "انقضا تا {time}",
     "expired": "منقضی",
     "tooManyLobbies": "حداکثر ۲ لابی باز هم‌زمان می‌توانی داشته باشی.",
-    "statusAborted": "لغو شد"
+    "statusAborted": "لغو شد",
+    "hostCap": "میز میزبان: {n} از {max}"
   },
   "game": {
     "waiting": "در انتظار حریف...",

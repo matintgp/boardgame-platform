@@ -22,6 +22,8 @@ export function parseExpiryMs(row: {
 export function remainingLobby(expiryMs: number | null, now = Date.now()): {
   expired: boolean;
   label: string;
+  seconds: number;
+  urgent: boolean;
 } | null {
   if (expiryMs == null) return null;
   const left = Math.max(0, expiryMs - now);
@@ -31,6 +33,8 @@ export function remainingLobby(expiryMs: number | null, now = Date.now()): {
   return {
     expired: left <= 0,
     label: `${m}:${String(r).padStart(2, "0")}`,
+    seconds: s,
+    urgent: left > 0 && left <= 120_000,
   };
 }
 

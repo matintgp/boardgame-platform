@@ -606,6 +606,15 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
 .salem-table.is-crowded {
   max-width: min(38rem, calc(54vh * 5 / 4));
 }
+.salem-table.is-intimate .salem-avatar {
+  width: 2.85rem;
+  height: 2.85rem;
+  font-size: 1.05rem;
+}
+.salem-table.is-intimate .salem-seat {
+  min-width: 5rem;
+  max-width: 7rem;
+}
 .salem-avatar {
   width: 2.55rem;
   height: 2.55rem;

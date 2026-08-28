@@ -638,7 +638,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                 ⏳ {t("waitingForPlayers")} ({players.length}/{maxPlayers})
               </p>
               {lobbyClock && (
-                <p className={`mb-1 text-xs ${lobbyClock.expired ? "text-red-400" : "muted"}`}>
+                <p
+                  className={`lobby-ttl mb-2 ${lobbyClock.expired ? "is-expired" : lobbyClock.urgent ? "is-urgent" : ""}`}
+                >
                   {lobbyClock.expired
                     ? t("lobbyExpired")
                     : t("expiresIn", { time: lobbyClock.label })}

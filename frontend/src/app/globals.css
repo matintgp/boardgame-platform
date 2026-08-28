@@ -230,6 +230,63 @@ html[dir="rtl"] .kicker {
   background: rgba(154, 160, 171, 0.14);
   color: var(--muted);
 }
+.pill-abort {
+  background: rgba(180, 70, 70, 0.16);
+  color: #e8a0a0;
+}
+.lobby-ttl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  background: rgba(24, 18, 12, 0.55);
+  border: 1px solid rgba(212, 162, 78, 0.28);
+  color: var(--accent);
+}
+.lobby-ttl.is-urgent {
+  color: #f0b0a8;
+  border-color: rgba(200, 70, 70, 0.45);
+  background: rgba(80, 20, 18, 0.45);
+  animation: lobby-ttl-pulse 1.4s ease-in-out infinite;
+}
+.lobby-ttl.is-expired {
+  color: #e8a0a0;
+  border-color: rgba(180, 70, 70, 0.35);
+}
+.host-cap {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  border: 1px solid rgba(212, 162, 78, 0.28);
+  background: rgba(24, 27, 34, 0.55);
+}
+.host-cap.is-full {
+  border-color: rgba(200, 70, 70, 0.4);
+  color: #e8a0a0;
+}
+.lobby-alert {
+  border: 1px solid rgba(200, 70, 70, 0.35);
+  background: rgba(80, 20, 18, 0.28);
+  color: #f0c0b8;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.85rem;
+  font-size: 0.875rem;
+}
+@keyframes lobby-ttl-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200, 70, 70, 0.0); }
+  50% { box-shadow: 0 0 0 4px rgba(200, 70, 70, 0.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lobby-ttl.is-urgent { animation: none; }
+}
 
 .seat-bar {
   height: 0.35rem;

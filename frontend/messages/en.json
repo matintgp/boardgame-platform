@@ -66,7 +66,8 @@
     "expiresIn": "Expires in {time}",
     "expired": "Expired",
     "tooManyLobbies": "You can host at most 2 open lobbies at a time.",
-    "statusAborted": "Cancelled"
+    "statusAborted": "Cancelled",
+    "hostCap": "Hosting {n} of {max} tables"
   },
   "game": {
     "waiting": "Waiting for opponent...",
