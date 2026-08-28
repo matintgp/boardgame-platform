@@ -23,7 +23,7 @@ celery_app.conf.update(
         },
         "cleanup-stale-lobbies": {
             "task": "app.workers.tasks.cleanup_stale_lobbies",
-            "schedule": crontab(minute="*/30"),
+            "schedule": crontab(minute="*"),
         },
     },
 )

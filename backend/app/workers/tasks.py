@@ -1,11 +1,9 @@
 import logging
-from datetime import timedelta
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete
 
 from app.db.base import utcnow
 from app.db.session import SessionLocal
-from app.models.game import Game, GameSeat, GameStatus
 from app.models.refresh_token import RefreshToken
 from app.workers.celery_app import celery_app, run_async
 
@@ -29,24 +27,13 @@ def cleanup_expired_refresh_tokens() -> int:
 
 @celery_app.task(name="app.workers.tasks.cleanup_stale_lobbies")
 def cleanup_stale_lobbies() -> int:
-    """Abort lobbies that sat empty for over a day."""
+    """Abort waiting lobbies past the 10-minute TTL."""
 
     async def _run() -> int:
-        cutoff = utcnow() - timedelta(hours=24)
+        from app.services.game_service import abort_expired_lobbies
+
         async with SessionLocal() as db:
-            stale_ids = (
-                select(Game.id)
-                .where(Game.status == GameStatus.waiting.value, Game.created_at < cutoff)
-                .subquery()
-            )
-            await db.execute(delete(GameSeat).where(GameSeat.game_id.in_(stale_ids)))
-            result = await db.execute(
-                update(Game)
-                .where(Game.status == GameStatus.waiting.value, Game.created_at < cutoff)
-                .values(status=GameStatus.aborted.value)
-            )
-            await db.commit()
-            return result.rowcount or 0
+            return await abort_expired_lobbies(db)
 
     aborted = run_async(_run())
     logger.info("Aborted %s stale lobbies", aborted)

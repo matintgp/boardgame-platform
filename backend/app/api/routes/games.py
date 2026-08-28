@@ -42,8 +42,17 @@ async def create(body: CreateGameIn, user: User = Depends(get_current_user),
         engine_cls = get_engine(body.game_type)
     except KeyError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
-    game = await game_service.create_game(db, user, engine_cls, body.settings)
-    return {"id": str(game.id), "game_type": game.game_type, "status": game.status}
+    try:
+        game = await game_service.create_game(db, user, engine_cls, body.settings)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
+    return {
+        "id": str(game.id),
+        "game_type": game.game_type,
+        "status": game.status,
+        "created_at": game_service._iso(game.created_at),
+        "expires_at": game_service._iso(game_service.lobby_expires_at(game)),
+    }
 
 
 @router.get("/{game_id}")

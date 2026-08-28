@@ -3,8 +3,9 @@ logging, snapshots and broadcasting stay consistent."""
 
 import copy
 import uuid
+from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -22,7 +23,55 @@ def game_room(game_id: uuid.UUID) -> str:
     return f"game:{game_id}"
 
 
+LOBBY_TTL = timedelta(minutes=10)
+MAX_OPEN_LOBBIES = 2
+
+
+def _iso(dt) -> str | None:
+    if dt is None:
+        return None
+    return dt.isoformat()
+
+
+def lobby_expires_at(game: Game):
+    created = game.created_at
+    if created is None:
+        return None
+    return created + LOBBY_TTL
+
+
+async def abort_expired_lobbies(db: AsyncSession) -> int:
+    """Waiting tables past TTL become aborted so the lobby list stays short."""
+    cutoff = utcnow() - LOBBY_TTL
+    result = await db.execute(
+        update(Game)
+        .where(Game.status == GameStatus.waiting.value, Game.created_at < cutoff)
+        .values(status=GameStatus.aborted.value)
+    )
+    if result.rowcount:
+        await db.commit()
+    return result.rowcount or 0
+
+
+def _lobby_expired(game: Game) -> bool:
+    created = game.created_at
+    if created is None:
+        return False
+    return utcnow() >= created + LOBBY_TTL
+
+
 async def create_game(db: AsyncSession, user: User, engine_cls: type[BaseEngine], config: dict) -> Game:
+    await abort_expired_lobbies(db)
+    open_count = await db.scalar(
+        select(func.count())
+        .select_from(Game)
+        .where(
+            Game.created_by == user.id,
+            Game.status == GameStatus.waiting.value,
+        )
+    )
+    if int(open_count or 0) >= MAX_OPEN_LOBBIES:
+        raise ValueError("Too many open lobbies")
     extra = engine_cls().validate_config(config)
     game = Game(
         game_type=engine_cls.game_id,
@@ -61,6 +110,8 @@ def lobby_payload(game: Game, users_by_id: dict[uuid.UUID, User]) -> dict:
         "status": game.status,
         "max_players": game.max_players,
         "created_by": str(game.created_by),
+        "created_at": _iso(game.created_at),
+        "expires_at": _iso(lobby_expires_at(game)),
         "players": [
             {
                 "seat": s.seat,
@@ -90,6 +141,10 @@ async def join_game(db: AsyncSession, game: Game, user: User) -> dict:
     """Join a waiting lobby. Returns broadcast payload on success."""
     if game.status != GameStatus.waiting.value:
         raise ValueError("Game already started")
+    if _lobby_expired(game):
+        game.status = GameStatus.aborted.value
+        await db.commit()
+        raise ValueError("Lobby expired")
     if seat_of(game, user.id) is not None:
         raise ValueError("Already joined")
     if len(game.seats) >= game.max_players:
@@ -112,6 +167,10 @@ async def join_game(db: AsyncSession, game: Game, user: User) -> dict:
 async def start_game(db: AsyncSession, game: Game, actor: User) -> dict:
     if game.status != GameStatus.waiting.value:
         raise ValueError("Game already started")
+    if _lobby_expired(game):
+        game.status = GameStatus.aborted.value
+        await db.commit()
+        raise ValueError("Lobby expired")
     if actor.id != game.created_by:
         raise PermissionError("Only the host can start")
     engine_cls = get_engine(game.game_type)
@@ -310,6 +369,7 @@ def event_envelope(room: str, ev: GameEvent) -> dict:
 
 
 async def open_lobbies(db: AsyncSession, game_type: str | None = None) -> list[dict]:
+    await abort_expired_lobbies(db)
     q = (
         select(Game)
         .where(Game.status == GameStatus.waiting.value)

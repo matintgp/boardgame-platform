@@ -513,9 +513,12 @@ class SalemEngine(BaseEngine):
                 raise IllegalAction("That player has no cards to steal")
             return
         if card_id == "scapegoat":
-            from_raw = extra.get("from_seat", seat)
-            from_seat = _as_int(from_raw, "from_seat")
+            if "from_seat" not in extra:
+                raise IllegalAction("from_seat is required")
+            from_seat = _as_int(extra.get("from_seat"), "from_seat")
             if from_seat < 0 or from_seat >= state["n"]:
+                raise IllegalAction("Invalid from_seat")
+            if not state["alive"].get(str(from_seat)):
                 raise IllegalAction("Invalid from_seat")
             return
         if card_id == "stocks":
@@ -546,7 +549,7 @@ class SalemEngine(BaseEngine):
             state["hands"][str(seat)].append(stolen)
             return
         if card_id == "scapegoat":
-            from_seat = _as_int(extra.get("from_seat", seat), "from_seat")
+            from_seat = _as_int(extra.get("from_seat"), "from_seat")
             moved = int(state["marks"].get(str(from_seat), 0))
             state["marks"][str(from_seat)] = 0
             state["marks"][str(target)] = int(state["marks"].get(str(target), 0)) + moved

@@ -547,3 +547,37 @@ def test_resolve_if_ready_helper_is_callable(engine):
     res = engine.resolve_if_ready(state, [])
     assert res.finished is False
     assert state["phase"] == "conspiracy"
+
+
+def test_scapegoat_moves_marks_from_from_seat(engine):
+    state = make_game(engine, 4, seed=11)
+    strip_abilities(state)
+    actor = state["current_seat"]
+    source = (actor + 1) % 4
+    dest = (actor + 2) % 4
+    state["marks"][str(source)] = 4
+    state["marks"][str(dest)] = 1
+    play(engine, state, actor, "scapegoat", target=dest, extra={"from_seat": source})
+    assert state["marks"][str(source)] == 0
+    assert state["marks"][str(dest)] == 5
+
+
+def test_scapegoat_requires_from_seat(engine):
+    state = make_game(engine, 4, seed=12)
+    actor = state["current_seat"]
+    dest = (actor + 1) % 4
+    with pytest.raises(IllegalAction, match="from_seat"):
+        play(engine, state, actor, "scapegoat", target=dest)
+
+
+def test_constable_can_gavel_self(engine):
+    state = make_game(engine, 4, seed=13)
+    strip_abilities(state)
+    constable = engine._constable_seat(state)
+    witch = witches_of(state)[0]
+    play(engine, state, state["current_seat"], "night")
+    engine.apply_action(state, witch, "night_kill", {"target": constable})
+    engine.apply_action(state, constable, "gavel", {"target": constable})
+    skip_all_confess(engine, state)
+    assert state["alive"][str(constable)] is True
+    assert state["last_night"]["killed"] is None
