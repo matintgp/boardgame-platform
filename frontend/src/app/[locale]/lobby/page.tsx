@@ -4,12 +4,21 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ensureSession, type SessionUser } from "@/lib/api";
 import { Link, useRouter } from "@/i18n/navigation";
+import {
+  MAX_OPEN_LOBBIES,
+  isTooManyLobbies,
+  parseExpiryMs,
+  remainingLobby,
+} from "@/lib/lobbyExpiry";
 
 interface LobbyInfo {
   id: string;
   game_type: string;
   status: string;
   max_players: number;
+  created_by?: string;
+  created_at?: string | number | null;
+  expires_at?: string | number | null;
   players: { seat: number; user: { id: string; username: string } }[];
 }
 interface MyGame {
@@ -78,6 +87,9 @@ function statusPill(t: ReturnType<typeof useTranslations>, status: string) {
   if (s === "finished" || s === "completed" || s === "ended") {
     return { cls: "pill pill-done", label: t("statusFinished") };
   }
+  if (s === "aborted" || s === "cancelled" || s === "expired") {
+    return { cls: "pill pill-done", label: t("statusAborted") };
+  }
   return { cls: "pill pill-done", label: status };
 }
 
@@ -91,6 +103,7 @@ export default function LobbyPage() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
   const [listLoading, setListLoading] = useState(true);
+  const [now, setNow] = useState(() => Date.now());
   type ModeId = "chess" | "mafia" | "rokugan" | "salem";
   const [searching, setSearching] = useState<ModeId | null>(null);
   const searchRef = useRef<ModeId | null>(null);
@@ -122,9 +135,26 @@ export default function LobbyPage() {
     });
   }, [router, refreshLists]);
 
+  useEffect(() => {
+    const tick = window.setInterval(() => setNow(Date.now()), 1000);
+    const poll = window.setInterval(() => void refreshLists(), 15000);
+    return () => {
+      window.clearInterval(tick);
+      window.clearInterval(poll);
+    };
+  }, [refreshLists]);
+
   async function createTable(gameType: ModeId) {
     setBusy(gameType);
     setJoinError(null);
+    const hosted = user
+      ? lobbies.filter((l) => l.created_by === user.id && l.status === "waiting").length
+      : 0;
+    if (hosted >= MAX_OPEN_LOBBIES) {
+      setJoinError(t("tooManyLobbies"));
+      setBusy(null);
+      return;
+    }
     try {
       const g = await api<{ id: string }>("/api/games", {
         method: "POST",
@@ -132,7 +162,8 @@ export default function LobbyPage() {
       });
       router.push(`/game/${g.id}`);
     } catch (e) {
-      setJoinError(e instanceof Error ? e.message : t("loadError"));
+      const msg = e instanceof Error ? e.message : t("loadError");
+      setJoinError(isTooManyLobbies(msg) ? t("tooManyLobbies") : msg);
     } finally {
       setBusy(null);
     }
@@ -194,6 +225,10 @@ export default function LobbyPage() {
       () => undefined
     );
   }
+
+  const visibleLobbies = lobbies
+    .map((l) => ({ l, clock: remainingLobby(parseExpiryMs(l), now) }))
+    .filter(({ clock }) => !clock?.expired);
 
   return (
     <div className="flex flex-col gap-8">
@@ -278,13 +313,13 @@ export default function LobbyPage() {
             </button>
           </p>
         )}
-        {!listLoading && !listError && lobbies.length === 0 && (
+        {!listLoading && !listError && visibleLobbies.length === 0 && (
           <div className="card empty-state">
             <p>{t("empty")}</p>
           </div>
         )}
         <div className="enter-stagger flex flex-col gap-2">
-          {lobbies.map((l) => {
+          {visibleLobbies.map(({ l, clock }) => {
             const { name } = gameLabel(t, l.game_type);
             const pill = statusPill(t, l.status || "waiting");
             const pct = l.max_players
@@ -296,6 +331,9 @@ export default function LobbyPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{name}</span>
                     <span className={pill.cls}>{pill.label}</span>
+                    {clock && (
+                      <span className="muted text-xs">⏳ {t("expiresIn", { time: clock.label })}</span>
+                    )}
                   </div>
                   <div className="mt-2 flex items-center gap-3">
                     <div className="seat-bar w-32 sm:w-44">

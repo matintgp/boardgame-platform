@@ -62,7 +62,11 @@
     "joinFailed": "Couldn't join that table.",
     "createSalem": "Open a Salem Table",
     "gameSalem": "Salem 1692",
-    "gameSalemTag": "Candlelit tryals. Wax-sealed accusations. Lasting blessings."
+    "gameSalemTag": "Candlelit tryals. Wax-sealed accusations. Lasting blessings.",
+    "expiresIn": "Expires in {time}",
+    "expired": "Expired",
+    "tooManyLobbies": "You can host at most 2 open lobbies at a time.",
+    "statusAborted": "Cancelled"
   },
   "game": {
     "waiting": "Waiting for opponent...",
@@ -430,6 +434,8 @@
     "lastReveal": "A Tryal of {name} was revealed:",
     "kicker": "The year 1692",
     "deck": "Draw",
-    "discard": "Discard"
+    "discard": "Discard",
+    "expiresIn": "Expires in {time}",
+    "lobbyExpired": "This lobby expired."
   }
 }

@@ -108,6 +108,9 @@ export interface GameView {
   players: PlayerInfo[];
   your_seat: number | null;
   is_host?: boolean;
+  created_by?: string;
+  created_at?: string | number | null;
+  expires_at?: string | number | null;
   state?: SalemState;
 }
 

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, ensureSession, type SessionUser } from "@/lib/api";
+import { parseExpiryMs, remainingLobby } from "@/lib/lobbyExpiry";
 import { Link, useRouter } from "@/i18n/navigation";
 import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import { playGameEndSound } from "@/lib/sounds";
@@ -76,6 +77,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     target: number;
     extra: Record<string, unknown>;
   } | null>(null);
+  const [scapegoatFrom, setScapegoatFrom] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const socketRef = useRef<GameSocket | null>(null);
   const prevStateRef = useRef<SalemState | null>(null);
@@ -315,6 +317,14 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   const you = state?.you ?? null;
   const status = view?.status ?? "waiting";
   const waiting = status === "waiting" && !state;
+  const aborted = status === "aborted";
+  const lobbyExpiryMs = parseExpiryMs(view ?? {});
+  const lobbyClock = remainingLobby(lobbyExpiryMs, now);
+  useEffect(() => {
+    if (!waiting || lobbyExpiryMs == null) return;
+    const id = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(id);
+  }, [waiting, lobbyExpiryMs]);
   const maxPlayers = view?.max_players ?? SALEM_MAX_FALLBACK;
   const minPlayers = view?.min_players ?? SALEM_MIN_PLAYERS;
   const mySeat = view?.your_seat ?? null;
@@ -329,6 +339,10 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   const teammates = you?.is_witch ? (you.teammates ?? []) : [];
   const selectedCardId =
     selectedHandIndex != null && you ? you.hand[selectedHandIndex] ?? null : null;
+
+  useEffect(() => {
+    if (selectedCardId !== "scapegoat") setScapegoatFrom(null);
+  }, [selectedCardId]);
   const myDay = phase === "day" && you != null && youAlive && you.seat === state?.current_seat;
 
   const myPick =
@@ -345,21 +359,20 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     if (!isSeatAlive(state, seat)) return false;
     if (phase === "day" && myDay && selectedCardId) {
       if (cardForbidsSelf(selectedCardId) && seat === you.seat) return false;
+      if (selectedCardId === "scapegoat" && scapegoatFrom != null) return seat !== scapegoatFrom;
       return true;
     }
     if (phase === "night") {
-      if (you.is_witch && you.is_constable) {
-        if (nightTool === "gavel") return seat !== you.seat;
-        return true;
-      }
+      if (you.is_witch && you.is_constable) return true;
       if (you.is_witch) return true;
-      if (you.is_constable) return seat !== you.seat;
+      if (you.is_constable) return true;
       return false;
     }
     return false;
   }
 
   function actionLabel(): string {
+    if (selectedCardId === "scapegoat" && scapegoatFrom == null) return t("pickFromSeat");
     if (selectedCardId) return t("playOn");
     if (phase === "night" && you?.is_witch && you?.is_constable) {
       return nightTool === "gavel" ? t("gavel") : t("kill");
@@ -377,18 +390,34 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     sendAction("play_card", payload);
     setSelectedHandIndex(null);
     setTryalPrompt(null);
+    setScapegoatFrom(null);
   }
 
   function onSeatActivate(seat: number) {
     if (!canTargetSeat(seat) || !you) return;
     if (phase === "day" && selectedCardId) {
+      if (selectedCardId === "scapegoat") {
+        if (scapegoatFrom == null) {
+          setScapegoatFrom(seat);
+          return;
+        }
+        const extra: Record<string, unknown> = { from_seat: scapegoatFrom };
+        const moved = marksOf(state, scapegoatFrom);
+        const newMarks = marksOf(state, seat) + moved;
+        if (newMarks >= MARK_THRESHOLD) {
+          const open = openPublicTryals(seat);
+          if (open.length) {
+            setTryalPrompt({ cardId: selectedCardId, target: seat, extra });
+            return;
+          }
+        }
+        finishPlay(selectedCardId, seat, extra);
+        return;
+      }
       const extra: Record<string, unknown> = {};
-      if (selectedCardId === "scapegoat") extra.from_seat = you.seat;
       const add = accusationValue(selectedCardId);
-      const fromMarks = selectedCardId === "scapegoat" ? marksOf(state, you.seat) : marksOf(state, seat);
-      const newMarks = selectedCardId === "scapegoat" ? fromMarks : fromMarks + add;
-      const wouldReveal =
-        (add > 0 || selectedCardId === "scapegoat") && newMarks >= MARK_THRESHOLD;
+      const newMarks = marksOf(state, seat) + add;
+      const wouldReveal = add > 0 && newMarks >= MARK_THRESHOLD;
       if (wouldReveal) {
         const open = openPublicTryals(seat);
         if (open.length) {
@@ -522,7 +551,11 @@ export default function SalemGame({ gameId }: { gameId: string }) {
       ? t("spectatorHint")
       : phase === "day"
         ? state?.current_seat === you.seat
-          ? t("yourTurnHint")
+          ? selectedCardId === "scapegoat" && scapegoatFrom == null
+            ? t("pickFrom")
+            : selectedCardId
+              ? t("pickTarget")
+              : t("yourTurnHint")
           : t("waitingTurn", { name: nameOf(players, state?.current_seat ?? -1) })
         : phase === "conspiracy"
           ? alreadyConspiracy
@@ -582,7 +615,15 @@ export default function SalemGame({ gameId }: { gameId: string }) {
           )}
         </p>
 
-        {waiting ? (
+        {aborted ? (
+          <div className="salem-lobby card overflow-hidden p-6 text-center">
+            <h2 className="text-xl font-bold">🕯 {t("title")}</h2>
+            <p className="muted mt-2">{t("lobbyExpired")}</p>
+            <Link href="/lobby" className="btn btn-primary mt-4">
+              {tg("backToLobby")}
+            </Link>
+          </div>
+        ) : waiting ? (
           <div className="salem-lobby card overflow-hidden">
             <div className="salem-lobby-hero">
               <img src="/salem/hero.jpg" alt="" />
@@ -596,6 +637,13 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               <p className="muted mb-1 text-sm">
                 ⏳ {t("waitingForPlayers")} ({players.length}/{maxPlayers})
               </p>
+              {lobbyClock && (
+                <p className={`mb-1 text-xs ${lobbyClock.expired ? "text-red-400" : "muted"}`}>
+                  {lobbyClock.expired
+                    ? t("lobbyExpired")
+                    : t("expiresIn", { time: lobbyClock.label })}
+                </p>
+              )}
               <p className="muted mb-4 text-xs">
                 {players.length < minPlayers
                   ? t("needMinPlayers", { count: minPlayers })
@@ -623,12 +671,12 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                 showWitchMarks={false}
                 teammates={[]}
               />
-              {view && mySeat == null && (
+              {view && mySeat == null && !(lobbyClock?.expired) && (
                 <button className="btn btn-primary mt-4 w-full" onClick={joinTable}>
                   {tg("join")}
                 </button>
               )}
-              {canStart && (
+              {canStart && !(lobbyClock?.expired) && (
                 <button className="btn btn-primary mt-4 w-full" onClick={start}>
                   ▶ {tg("start")}
                 </button>
@@ -773,7 +821,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               phase={state.phase}
               youSeat={you?.seat ?? mySeat}
               userId={user?.id}
-              selected={myPick}
+              selected={scapegoatFrom ?? myPick}
               targetable={canTargetSeat}
               actionLabel={youAlive ? actionLabel() : ""}
               youMarker={t("youMarker")}
