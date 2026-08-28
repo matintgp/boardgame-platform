@@ -171,7 +171,8 @@
     "defeat": "Defeat",
     "drawTitle": "Draw!",
     "resultLine": "The result was decided by razed provinces.",
-    "youMarker": "(you)"
+    "youMarker": "(you)",
+    "sameToken": "You cannot use the same token for attack and defense."
   },
   "chat": {
     "title": "Game Chat",

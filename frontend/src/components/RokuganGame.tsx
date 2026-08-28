@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
+import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
 import {
   playCaptureSound,
   playCheckSound,
@@ -37,6 +38,8 @@ interface GameView {
   players: PlayerInfo[];
   your_seat: number | null;
   is_host?: boolean;
+  created_at?: string | number | null;
+  expires_at?: string | number | null;
 }
 
 const TOKENS = [1, 2, 3, 4, 5];
@@ -47,6 +50,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
   const tc = useTranslations("chat");
   const tv = useTranslations("voice");
   const tg = useTranslations("game");
+  const tl = useTranslations("lobby");
   const [user, setUser] = useState<SessionUser | null>(null);
   const [view, setView] = useState<GameView | null>(null);
   const [state, setState] = useState<RokuganState | null>(null);
@@ -163,6 +167,10 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
       setError(t("pickBoth"));
       return;
     }
+    if (attack.token === defense.token) {
+      setError(t("sameToken"));
+      return;
+    }
     try {
       await api(`/api/games/${gameId}/action`, {
         method: "POST",
@@ -225,8 +233,9 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
     state?.phase === "choose" && mySeat != null && conn === "open";
   const alreadySubmitted = state?.you?.plan != null;
   const waiting = (view?.status ?? "waiting") === "waiting" || !state || players.length < 2;
+  const timedOut = lobbyTimedOut(view?.status, view?.expires_at, view?.created_at);
   const maxPlayers = view?.max_players ?? 2;
-  const canStart = (view?.is_host ?? false) && waiting && players.length >= maxPlayers;
+  const canStart = (view?.is_host ?? false) && waiting && players.length >= maxPlayers && !timedOut;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
@@ -275,9 +284,18 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
         {waiting ? (
           <div className="card w-full max-w-md p-5">
             <h2 className="mb-3 text-xl font-bold">⚔ {t("title")}</h2>
-            <p className="muted mb-4 text-sm">
+            <p className="muted mb-2 text-sm">
               ⏳ {tg("waiting")} ({players.length}/{maxPlayers})
             </p>
+            <div className="mb-4">
+              <LobbyExpiryNote
+                expiresAt={view?.expires_at}
+                createdAt={view?.created_at}
+                status={view?.status}
+                expiredLabel={tl("expired")}
+                expiresIn={(p) => tl("expiresIn", p)}
+              />
+            </div>
             <div className="flex flex-col gap-2 text-sm">
               {players.map((p) => (
                 <div key={p.seat} className="flex justify-between rounded-lg border border-[var(--border)] p-2">
@@ -288,7 +306,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                 </div>
               ))}
             </div>
-            {view && mySeat == null && (
+            {view && mySeat == null && !timedOut && (
               <button className="btn btn-primary mt-4 w-full" onClick={joinTable}>
                 {tg("join")}
               </button>
@@ -319,7 +337,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                 key={i}
                 ownerSeat={oppSeat}
                 idx={i}
-                clickable={canPlan && !alreadySubmitted}
+                clickable={canPlan && !alreadySubmitted && !razed}
                 selected={attack?.target === i}
                 razed={razed}
                 label={`${t("province")} ${i + 1}`}
@@ -337,7 +355,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                 key={i}
                 ownerSeat={mySeat ?? 0}
                 idx={i}
-                clickable={canPlan && !alreadySubmitted}
+                clickable={canPlan && !alreadySubmitted && !razed}
                 selected={defense?.target === i}
                 razed={razed}
                 label={`${t("province")} ${i + 1}`}
@@ -400,7 +418,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                 {TOKENS.map((v) => (
                   <button
                     key={v}
-                    disabled={!canPlan || !alreadySubmitted === false ? !canPlan : !canPlan}
+                    disabled={!canPlan || alreadySubmitted || defense?.token === v}
                     onClick={() => setAttack((a) => ({ target: a?.target ?? 0, token: v }))}
                     className={`h-9 w-9 rounded-full border text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                       attack?.token === v
@@ -424,7 +442,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                 {TOKENS.map((v) => (
                   <button
                     key={v}
-                    disabled={!canPlan}
+                    disabled={!canPlan || alreadySubmitted || attack?.token === v}
                     onClick={() => setDefense((d) => ({ target: d?.target ?? 0, token: v }))}
                     className={`h-9 w-9 rounded-full border text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
                       defense?.token === v

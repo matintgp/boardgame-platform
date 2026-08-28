@@ -8,6 +8,7 @@ import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import { playCaptureSound, playCheckSound, playGameEndSound } from "@/lib/sounds";
 import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
+import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
 
 /** Engine MafiaEngine.min_players — start is allowed at min, seats go up to view.max_players. */
 const MAFIA_MIN_PLAYERS = 4;
@@ -63,6 +64,8 @@ interface GameView {
   players: PlayerInfo[];
   your_seat: number | null;
   is_host?: boolean;
+  created_at?: string | number | null;
+  expires_at?: string | number | null;
   state?: MafiaState;
 }
 
@@ -114,6 +117,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
   const router = useRouter();
   const tv = useTranslations("voice");
   const tg = useTranslations("game");
+  const tl = useTranslations("lobby");
   const [user, setUser] = useState<SessionUser | null>(null);
   const [view, setView] = useState<GameView | null>(null);
   const [state, setState] = useState<MafiaState | null>(null);
@@ -290,11 +294,12 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
   const you = state?.you ?? null;
   const status = view?.status ?? "waiting";
   const waiting = status === "waiting" && !state;
+  const timedOut = lobbyTimedOut(status, view?.expires_at, view?.created_at);
   const maxPlayers = view?.max_players ?? MAFIA_MAX_FALLBACK;
   const minPlayers = view?.min_players ?? MAFIA_MIN_PLAYERS;
   const mySeat = view?.your_seat ?? null;
   const isHost = view?.is_host ?? false;
-  const canStart = isHost && waiting && players.length >= minPlayers;
+  const canStart = isHost && waiting && players.length >= minPlayers && !timedOut;
   const phase: Phase | null = state?.phase ?? null;
 
   const connLabel =
@@ -465,6 +470,13 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
             <p className="muted mb-1 text-sm">
               ⏳ {t("waitingForPlayers")} ({players.length}/{maxPlayers})
             </p>
+            <LobbyExpiryNote
+              expiresAt={view?.expires_at}
+              createdAt={view?.created_at}
+              status={status}
+              expiredLabel={tl("expired")}
+              expiresIn={(p) => tl("expiresIn", p)}
+            />
             <p className="muted mb-4 text-xs">
               {players.length < minPlayers
                 ? t("needMinPlayers", { count: minPlayers })
@@ -488,7 +500,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
               onActivate={() => undefined}
               onReport={reportPlayer}
             />
-            {view && mySeat == null && (
+            {view && mySeat == null && !timedOut && (
               <button className="btn btn-primary mt-4 w-full" onClick={joinTable}>
                 {tg("join")}
               </button>

@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
+import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
 import {
   playCaptureSound,
   playCheckSound,
@@ -55,6 +56,8 @@ interface GameView {
   status: string;
   max_players: number;
   created_by: string;
+  created_at?: string | number | null;
+  expires_at?: string | number | null;
   players: PlayerInfo[];
   your_seat: number | null;
   is_host?: boolean;
@@ -83,6 +86,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
   const router = useRouter();
   const tc = useTranslations("chat");
   const tv = useTranslations("voice");
+  const tl = useTranslations("lobby");
   const [user, setUser] = useState<SessionUser | null>(null);
   const [view, setView] = useState<GameView | null>(null);
   const [state, setState] = useState<ChessState | null>(null);
@@ -358,7 +362,8 @@ export default function GamePage({ gameId }: { gameId: string }) {
     };
   }
 
-  const canStart = isHost && status === "waiting" && players.length >= 2;
+  const timedOut = lobbyTimedOut(view?.status, view?.expires_at, view?.created_at);
+  const canStart = isHost && status === "waiting" && players.length >= 2 && !timedOut;
 
   async function rematch() {
     try {
@@ -675,7 +680,14 @@ export default function GamePage({ gameId }: { gameId: string }) {
               ⏳ {t("waiting")} ({players.length}/{view?.max_players ?? 2})
             </p>
           )}
-          {view && mySeat == null && view.status === "waiting" && (
+          <LobbyExpiryNote
+            expiresAt={view?.expires_at}
+            createdAt={view?.created_at}
+            status={view?.status}
+            expiredLabel={tl("expired")}
+            expiresIn={(p) => tl("expiresIn", p)}
+          />
+          {view && mySeat == null && view.status === "waiting" && !timedOut && (
             <button className="btn btn-primary mt-3 w-full" onClick={joinTable}>
               {t("join")}
             </button>
