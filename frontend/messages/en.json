@@ -281,7 +281,7 @@
     "waitingWitches": "Waiting for the other witches to agree on this target...",
     "nightHintWitch": "Every living witch must agree on the same target.",
     "waitingNight": "Waiting for the rest of the night...",
-    "nightHintConstable": "Raise the gavel — protect someone (not yourself).",
+    "nightHintConstable": "Raise the gavel — protect anyone, including yourself.",
     "nightHintTown": "Night falls. Witches choose a victim; the Constable may gavel.",
     "confessHint": "Reveal one unrevealed Tryal, or skip. Then the night kill resolves.",
     "waitingConfess": "Waiting for a confession...",

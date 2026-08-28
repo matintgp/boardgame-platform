@@ -312,7 +312,11 @@ export default function LobbyPage() {
         })}
       </div>
 
-      {joinError && <p className="lobby-alert" role="alert">{joinError}</p>}
+      {(joinError || atCap) && (
+        <p className="lobby-alert" role="alert">
+          {joinError || t("tooManyLobbies")}
+        </p>
+      )}
 
       <section className="enter enter-d4">
         <h2 className="mb-3 font-semibold">{t("openLobbies")}</h2>
