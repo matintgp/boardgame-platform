@@ -148,7 +148,10 @@ export default function LobbyPage() {
     setBusy(gameType);
     setJoinError(null);
     const hosted = user
-      ? lobbies.filter((l) => l.created_by === user.id && l.status === "waiting").length
+      ? lobbies.filter((l) => {
+          if (l.created_by !== user.id || l.status !== "waiting") return false;
+          return !remainingLobby(parseExpiryMs(l), Date.now())?.expired;
+        }).length
       : 0;
     if (hosted >= MAX_OPEN_LOBBIES) {
       setJoinError(t("tooManyLobbies"));
@@ -230,7 +233,7 @@ export default function LobbyPage() {
     .map((l) => ({ l, clock: remainingLobby(parseExpiryMs(l), now) }))
     .filter(({ clock }) => !clock?.expired);
   const hostedCount = user
-    ? lobbies.filter((l) => l.created_by === user.id && l.status === "waiting").length
+    ? visibleLobbies.filter(({ l }) => l.created_by === user.id && l.status === "waiting").length
     : 0;
   const atCap = hostedCount >= MAX_OPEN_LOBBIES;
 
