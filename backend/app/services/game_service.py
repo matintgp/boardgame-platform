@@ -60,6 +60,17 @@ def _lobby_expired(game: Game) -> bool:
     return utcnow() >= created + LOBBY_TTL
 
 
+def lobby_closed_reason(game: Game) -> str | None:
+    """Message for join/start when the table is not a live waiting lobby."""
+    if game.status == GameStatus.aborted.value:
+        return "Lobby expired"
+    if game.status == GameStatus.waiting.value and _lobby_expired(game):
+        return "Lobby expired"
+    if game.status != GameStatus.waiting.value:
+        return "Game already started"
+    return None
+
+
 async def create_game(db: AsyncSession, user: User, engine_cls: type[BaseEngine], config: dict) -> Game:
     await abort_expired_lobbies(db)
     open_count = await db.scalar(
@@ -139,12 +150,12 @@ async def game_view(db: AsyncSession, game: Game, user: User | None = None) -> d
 
 async def join_game(db: AsyncSession, game: Game, user: User) -> dict:
     """Join a waiting lobby. Returns broadcast payload on success."""
-    if game.status != GameStatus.waiting.value:
-        raise ValueError("Game already started")
-    if _lobby_expired(game):
-        game.status = GameStatus.aborted.value
-        await db.commit()
-        raise ValueError("Lobby expired")
+    reason = lobby_closed_reason(game)
+    if reason:
+        if game.status == GameStatus.waiting.value:
+            game.status = GameStatus.aborted.value
+            await db.commit()
+        raise ValueError(reason)
     if seat_of(game, user.id) is not None:
         raise ValueError("Already joined")
     if len(game.seats) >= game.max_players:
@@ -165,12 +176,12 @@ async def join_game(db: AsyncSession, game: Game, user: User) -> dict:
 
 
 async def start_game(db: AsyncSession, game: Game, actor: User) -> dict:
-    if game.status != GameStatus.waiting.value:
-        raise ValueError("Game already started")
-    if _lobby_expired(game):
-        game.status = GameStatus.aborted.value
-        await db.commit()
-        raise ValueError("Lobby expired")
+    reason = lobby_closed_reason(game)
+    if reason:
+        if game.status == GameStatus.waiting.value:
+            game.status = GameStatus.aborted.value
+            await db.commit()
+        raise ValueError(reason)
     if actor.id != game.created_by:
         raise PermissionError("Only the host can start")
     engine_cls = get_engine(game.game_type)
