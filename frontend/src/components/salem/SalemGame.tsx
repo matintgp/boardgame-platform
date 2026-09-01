@@ -361,13 +361,19 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     if (!isSeatAlive(state, seat)) return false;
     if (phase === "day" && myDay && selectedCardId) {
       if (cardForbidsSelf(selectedCardId) && seat === you.seat) return false;
-      if (selectedCardId === "scapegoat" && scapegoatFrom != null) return seat !== scapegoatFrom;
+      if (selectedCardId === "scapegoat") {
+        if (seat === you.seat) return false;
+        if (scapegoatFrom != null) return seat !== scapegoatFrom;
+      }
       return true;
     }
     if (phase === "night") {
-      if (you.is_witch && you.is_constable) return true;
+      if (you.is_witch && you.is_constable) {
+        if (nightTool === "gavel") return seat !== you.seat;
+        return true;
+      }
       if (you.is_witch) return true;
-      if (you.is_constable) return true;
+      if (you.is_constable) return seat !== you.seat;
       return false;
     }
     return false;
@@ -1030,7 +1036,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                       sendAction("choose_town_hall", { character_id: opt.id });
                     }}
                   >
-                    <span className="salem-hall-choice-kicker">{t("phaseTownHall")}</span>
+                    <span className="salem-hall-choice-kicker">{t(`hallRoles.${townHallI18nKey(opt.id)}`)}</span>
                     <span className="salem-hall-choice-title">{t(`halls.${townHallI18nKey(opt.id)}`)}</span>
                   </button>
                 ))}

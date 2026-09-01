@@ -191,7 +191,14 @@ export default function SalemTable({
             </span>
             {isSelf && p && <em className="salem-you">{youMarker}</em>}
             {!alive && p && <em className="salem-dead-label">— {deadLabel}</em>}
-            {hall && <span className="salem-nameplate">{t(`halls.${townHallI18nKey(hall.id)}`)}</span>}
+            {hall && (
+              <span
+                className="salem-nameplate"
+                title={t(`hallRoles.${townHallI18nKey(hall.id)}`)}
+              >
+                {t(`halls.${townHallI18nKey(hall.id)}`)}
+              </span>
+            )}
             {(pubTryals.revealed.length > 0 || pubTryals.facedown > 0) && (
               <div className="salem-tryals" aria-hidden>
                 {pubTryals.revealed.map((id, ti) => {

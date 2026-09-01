@@ -12,7 +12,7 @@ export const BLUE_CARDS = ["black_cat"] as const;
 export const BLACK_CARDS = ["conspiracy", "night"] as const;
 
 const TARGET_CARDS = new Set<string>([...RED_CARDS, ...GREEN_CARDS, ...BLUE_CARDS]);
-const NO_SELF_CARDS = new Set<string>(["robbery", "stocks"]);
+const NO_SELF_CARDS = new Set<string>([...RED_CARDS, ...GREEN_CARDS, ...BLUE_CARDS]);
 
 export interface PlayCardInfo {
   id: string;
@@ -37,22 +37,22 @@ export const CARD_CATALOG: Record<string, Omit<PlayCardInfo, "id">> = {
 };
 
 export const TOWN_HALL_NAMES: Record<string, string> = {
-  stern_accuser: "Stern Accuser",
-  iron_will: "Iron Will",
-  sealed_row: "Sealed Row",
-  card_cache: "Card Cache",
-  crowd_voice: "Crowd Voice",
-  steady_hand: "Steady Hand",
-  closed_purse: "Closed Purse",
-  hex_ward: "Hex Ward",
-  first_light: "First Light",
-  last_word: "Last Word",
-  town_crier: "Town Crier",
-  marked_stranger: "Marked Stranger",
-  village_healer: "Village Healer",
-  watch_ally: "Watch Ally",
-  kiln_guard: "Kiln Guard",
-  quiet_bench: "Quiet Bench",
+  stern_accuser: "Abigail Williams",
+  iron_will: "George Burroughs",
+  sealed_row: "Giles Corey",
+  card_cache: "Cotton Mather",
+  crowd_voice: "Ann Putnam",
+  steady_hand: "Rebecca Nurse",
+  closed_purse: "John Proctor",
+  hex_ward: "Tituba",
+  first_light: "Samuel Parris",
+  last_word: "Martha Corey",
+  town_crier: "Will Griggs",
+  marked_stranger: "Sarah Good",
+  village_healer: "Mary Warren",
+  watch_ally: "Thomas Danforth",
+  kiln_guard: "William Phips",
+  quiet_bench: "Elizabeth Proctor",
 };
 
 export function playCardInfo(id: string): PlayCardInfo {
@@ -112,7 +112,7 @@ export function cardMeta(id: string): {
     color: cardColor(id),
     marks: RED_MARKS[id],
     needsTarget: cardNeedsTargets(id) > 0,
-    allowSelf: id === "alibi",
+    allowSelf: false,
     needsFromSeat: id === "scapegoat",
     needsTryalOnThreshold: (RED_CARDS as readonly string[]).includes(id) || id === "scapegoat",
   };
