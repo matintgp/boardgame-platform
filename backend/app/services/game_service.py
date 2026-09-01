@@ -254,6 +254,7 @@ SECRET_EVENT_TYPES = frozenset({
     "night_kill",
     "gavel",
     "conspiracy_take",
+    "dawn_cat",
 })
 
 

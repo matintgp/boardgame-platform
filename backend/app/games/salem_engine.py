@@ -16,6 +16,7 @@ from typing import Any, ClassVar
 from app.games.base import ApplyResult, BaseEngine, IllegalAction
 from app.games.salem_data import (
     ALL_PLAY_CARDS,
+    BLACK_CARDS,
     BLUE_CARDS,
     CONFESS_SECONDS,
     GREEN_CARDS,
@@ -118,6 +119,8 @@ class SalemEngine(BaseEngine):
             "current_seat": 0,
             "skip_turns": {},
             "conspiracy_picks": {},
+            "dawn_cats": {},
+            "played_this_turn": False,
             "night_kills": {},
             "gavel_target": None,
             "gavel_submitted": False,
@@ -128,8 +131,9 @@ class SalemEngine(BaseEngine):
             "last_reveal": None,
             "result": None,
         }
-        if phase == "day":
+        if n > 7:
             self._apply_town_hall_setup(state)
+            self._enter_dawn(state)
         return state
 
     # ---- queries ------------------------------------------------------------
@@ -163,6 +167,14 @@ class SalemEngine(BaseEngine):
             if ability == "goes_first":
                 current_seat = i
         state["current_seat"] = current_seat
+
+    def _enter_dawn(self, state: dict) -> None:
+        """Witches secretly place the Black Cat; its recipient opens the day."""
+        state["phase"] = "dawn"
+        state["dawn_cats"] = {}
+        state["played_this_turn"] = False
+        if not self._alive_witches(state):
+            state["phase"] = "day"
 
     def _is_witch(self, state: dict, seat: int) -> bool:
         return seat in state["witches"]
@@ -202,12 +214,23 @@ class SalemEngine(BaseEngine):
         if not state["alive"].get(str(seat)):
             raise IllegalAction("Dead players cannot act")
 
-    def _require_target(self, state: dict, payload: dict, *, living: bool = True) -> int:
+    def _require_target(
+        self,
+        state: dict,
+        payload: dict,
+        *,
+        living: bool = True,
+        actor: int | None = None,
+        allow_self: bool = False,
+        self_message: str = "You cannot play a card on yourself",
+    ) -> int:
         target = _as_int(payload.get("target"), "target")
         if target < 0 or target >= state["n"]:
             raise IllegalAction("Invalid target")
         if living and not state["alive"].get(str(target)):
             raise IllegalAction("Invalid target")
+        if not allow_self and actor is not None and target == actor:
+            raise IllegalAction(self_message)
         return target
 
     def _extra(self, payload: dict) -> dict:
@@ -310,18 +333,20 @@ class SalemEngine(BaseEngine):
                 state["skip_turns"][str(cand)] = skips - 1
                 continue
             state["current_seat"] = cand
+            state["played_this_turn"] = False
             return
         state["current_seat"] = from_seat
+        state["played_this_turn"] = False
 
     def _after_day_card(self, state: dict, seat: int, events: list[dict]) -> ApplyResult:
         done = self._maybe_finish(state, events)
         if done is not None:
             return done
-        self._draw(state, seat, 1)
         if state["phase"] == "day":
-            self._advance_turn(state, seat)
+            # Play path: stay on this seat until end_turn (may play more cards).
+            state["played_this_turn"] = True
         else:
-            # Conspiracy / night: resume day with the next living seat.
+            # Black card started conspiracy/night — that used the turn.
             self._advance_turn(state, seat)
         return ApplyResult(events=events, finished=False)
 
@@ -388,6 +413,12 @@ class SalemEngine(BaseEngine):
 
         if action_type == "play_card":
             return self._play_card(state, seat, payload)
+        if action_type == "draw_two":
+            return self._draw_two(state, seat)
+        if action_type == "end_turn":
+            return self._end_turn(state, seat)
+        if action_type == "dawn_cat":
+            return self._dawn_cat(state, seat, payload)
         if action_type == "conspiracy_take":
             return self._conspiracy_take(state, seat, payload)
         if action_type == "night_kill":
@@ -430,6 +461,86 @@ class SalemEngine(BaseEngine):
             state["confessed"].setdefault(str(s), "skip")
         return self.resolve_if_ready(state, [])
 
+    def _dawn_cat(self, state: dict, seat: int, payload: dict) -> ApplyResult:
+        if state["phase"] != "dawn":
+            raise IllegalAction("Dawn has already passed")
+        self._require_alive(state, seat)
+        if not self._is_witch(state, seat):
+            raise IllegalAction("Only witches place the Black Cat at dawn")
+        target = self._require_target(
+            state, payload, actor=seat, allow_self=True
+        )
+        state["dawn_cats"][str(seat)] = target
+        events = [{"type": "dawn_cat", "seat": seat, "payload": {}}]
+        witches = self._alive_witches(state)
+        if witches and all(str(s) in state["dawn_cats"] for s in witches):
+            targets = {state["dawn_cats"][str(s)] for s in witches}
+            if len(targets) == 1:
+                cat_seat = next(iter(targets))
+                blues = state["blues"].setdefault(str(cat_seat), [])
+                if "black_cat" not in blues:
+                    blues.append("black_cat")
+                state["current_seat"] = cat_seat
+                state["dawn_cats"] = {}
+                state["phase"] = "day"
+                state["played_this_turn"] = False
+                events.append(
+                    {
+                        "type": "dawn_resolved",
+                        "seat": None,
+                        "payload": {"target": cat_seat},
+                    }
+                )
+        return ApplyResult(events=events, finished=False)
+
+    def _draw_two(self, state: dict, seat: int) -> ApplyResult:
+        if state["phase"] != "day":
+            raise IllegalAction("You can only draw during the day")
+        self._require_alive(state, seat)
+        if seat != state["current_seat"]:
+            raise IllegalAction("It is not your turn")
+        if state.get("played_this_turn"):
+            raise IllegalAction("You already played this turn")
+        events: list[dict] = [{"type": "drew_two", "seat": seat, "payload": {}}]
+        for _ in range(2):
+            before = list(state["hands"][str(seat)])
+            self._draw(state, seat, 1)
+            after = state["hands"][str(seat)]
+            if len(after) <= len(before):
+                break
+            drawn = after[-1]
+            if drawn in BLACK_CARDS:
+                after.remove(drawn)
+                events.append(
+                    {
+                        "type": "card_played",
+                        "seat": seat,
+                        "payload": {"card_id": drawn, "target": None},
+                    }
+                )
+                self._discard(state, drawn)
+                if drawn == "conspiracy":
+                    self._start_conspiracy(state, seat, {}, events)
+                elif drawn == "night":
+                    self._start_night(state)
+                break
+        if state["phase"] != "day":
+            self._advance_turn(state, seat)
+        else:
+            self._advance_turn(state, seat)
+        return ApplyResult(events=events, finished=False)
+
+    def _end_turn(self, state: dict, seat: int) -> ApplyResult:
+        if state["phase"] != "day":
+            raise IllegalAction("It is not day")
+        self._require_alive(state, seat)
+        if seat != state["current_seat"]:
+            raise IllegalAction("It is not your turn")
+        if not state.get("played_this_turn"):
+            raise IllegalAction("Play at least one card or draw two")
+        self._advance_turn(state, seat)
+        return ApplyResult(events=[{"type": "turn_ended", "seat": seat, "payload": {}}], finished=False)
+
     def _choose_town_hall(self, state: dict, seat: int, payload: dict) -> ApplyResult:
         if state["phase"] != "town_hall":
             raise IllegalAction("Town Hall is already assigned")
@@ -454,9 +565,9 @@ class SalemEngine(BaseEngine):
         ]
         if all(state["town_hall"].get(str(s)) is not None for s in range(state["n"])):
             self._apply_town_hall_setup(state)
-            state["phase"] = "day"
             state["town_hall_options"] = {}
-            events.append({"type": "day_started", "seat": None, "payload": {}})
+            self._enter_dawn(state)
+            events.append({"type": "dawn_started", "seat": None, "payload": {}})
         return ApplyResult(events=events, finished=False)
 
     def _play_card(self, state: dict, seat: int, payload: dict) -> ApplyResult:
@@ -478,7 +589,7 @@ class SalemEngine(BaseEngine):
         if needs_target:
             if payload.get("target") is None:
                 raise IllegalAction("That card needs a target")
-            target = self._require_target(state, payload)
+            target = self._require_target(state, payload, actor=seat, allow_self=False)
 
         if card_id in RED_CARDS and target is not None:
             self._validate_red(state, seat, card_id, target, extra)
@@ -575,6 +686,10 @@ class SalemEngine(BaseEngine):
                 raise IllegalAction("Invalid from_seat")
             if not state["alive"].get(str(from_seat)):
                 raise IllegalAction("Invalid from_seat")
+            if from_seat == seat or target == seat:
+                raise IllegalAction("You cannot play a card on yourself")
+            if from_seat == target:
+                raise IllegalAction("Scapegoat must involve two other players")
             return
         if card_id == "stocks":
             if target == seat:
@@ -740,7 +855,7 @@ class SalemEngine(BaseEngine):
         self._require_alive(state, seat)
         if not self._is_witch(state, seat):
             raise IllegalAction("Only witches can choose a night target")
-        target = self._require_target(state, payload)
+        target = self._require_target(state, payload, actor=seat, allow_self=True)
         state["night_kills"][str(seat)] = target
         events = [{"type": "night_kill", "seat": seat, "payload": {}}]
         return self._maybe_enter_confess(state, events)
@@ -751,7 +866,13 @@ class SalemEngine(BaseEngine):
         self._require_alive(state, seat)
         if not self._is_constable(state, seat):
             raise IllegalAction("Only the Constable can use the gavel")
-        target = self._require_target(state, payload)
+        target = self._require_target(
+            state,
+            payload,
+            actor=seat,
+            allow_self=False,
+            self_message="You cannot use the gavel on yourself",
+        )
         state["gavel_target"] = target
         state["gavel_submitted"] = True
         events = [{"type": "gavel", "seat": seat, "payload": {}}]
@@ -879,7 +1000,16 @@ class SalemEngine(BaseEngine):
         if is_witch:
             you["teammates"] = self._alive_witches(state)
         if alive:
+            you["played_this_turn"] = bool(state.get("played_this_turn")) and seat == state.get("current_seat")
             you["my_conspiracy_pick"] = state.get("conspiracy_picks", {}).get(str(seat))
+            if state["phase"] == "dawn":
+                you["my_dawn_cat"] = (
+                    state.get("dawn_cats", {}).get(str(seat))
+                    if self._is_witch(state, seat)
+                    else None
+                )
+            else:
+                you["my_dawn_cat"] = None
             if state["phase"] == "night":
                 you["my_night_kill"] = state.get("night_kills", {}).get(str(seat))
                 you["my_gavel"] = (

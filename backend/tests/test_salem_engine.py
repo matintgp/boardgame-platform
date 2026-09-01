@@ -17,6 +17,17 @@ def engine():
     return SalemEngine()
 
 
+def _resolve_dawn(engine: SalemEngine, state: dict) -> None:
+    if state["phase"] != "dawn":
+        return
+    witches = list(state["witches"]) or [0]
+    target = witches[0]
+    for w in witches:
+        if state["phase"] != "dawn":
+            break
+        engine.apply_action(state, w, "dawn_cat", {"target": target})
+
+
 def make_game(engine: SalemEngine, n: int = 4, seed: int = 1):
     seats = [f"user-{i}" for i in range(n)]
     state = engine.init_state({"seed": seed}, seats)
@@ -26,6 +37,7 @@ def make_game(engine: SalemEngine, n: int = 4, seed: int = 1):
             engine.apply_action(
                 state, s, "choose_town_hall", {"character_id": opts[0]["id"]}
             )
+    _resolve_dawn(engine, state)
     return state
 
 
@@ -60,7 +72,10 @@ def play(engine, state, seat, card_id, target=None, extra=None):
         payload["target"] = target
     if extra is not None:
         payload["extra"] = extra
-    return engine.apply_action(state, seat, "play_card", payload)
+    res = engine.apply_action(state, seat, "play_card", payload)
+    if state["phase"] == "day" and state.get("played_this_turn"):
+        engine.apply_action(state, seat, "end_turn", {})
+    return res
 
 
 def skip_all_confess(engine, state):
@@ -279,6 +294,7 @@ def test_witch_sticky_after_conspiracy(engine):
         ],
     }
     state["witches"] = [0]
+    state["blues"] = {str(i): [] for i in range(4)}
     play(engine, state, state["current_seat"], "conspiracy")
     assert state["phase"] == "conspiracy"
     # Each living player takes index 0 from the left.
@@ -320,6 +336,7 @@ def test_constable_follows_the_card(engine):
         ],
     }
     state["witches"] = [3]
+    state["blues"] = {str(i): [] for i in range(4)}
     assert engine._constable_seat(state) == 2
     play(engine, state, state["current_seat"], "conspiracy")
     # Seat 3 takes from seat 2 → receives constable at index 0
@@ -333,6 +350,7 @@ def test_constable_follows_the_card(engine):
 
 def test_conspiracy_take_is_secret_event(engine):
     state = make_game(engine, 4, seed=10)
+    state["blues"] = {str(i): [] for i in range(4)}
     play(engine, state, state["current_seat"], "conspiracy")
     res = engine.apply_action(state, 0, "conspiracy_take", {"tryal_index": 0})
     assert res.events[0]["type"] == "conspiracy_take"
@@ -443,7 +461,7 @@ def test_town_wins_when_every_witch_tryal_is_revealed(engine):
     state = make_game(engine, 4, seed=16)
     strip_abilities(state)
     witch_seat, idx = find_tryal(state, TRYAL_WITCH)
-    actor = state["current_seat"]
+    actor = next(s for s in range(4) if s != witch_seat)
     state["marks"][str(witch_seat)] = 6
     res = play(
         engine, state, actor, "accusation", target=witch_seat, extra={"tryal_index": idx}
@@ -576,17 +594,15 @@ def test_scapegoat_requires_from_seat(engine):
         play(engine, state, actor, "scapegoat", target=dest)
 
 
-def test_constable_can_gavel_self(engine):
+def test_constable_cannot_gavel_self(engine):
     state = make_game(engine, 4, seed=13)
     strip_abilities(state)
     constable = engine._constable_seat(state)
     witch = witches_of(state)[0]
     play(engine, state, state["current_seat"], "night")
     engine.apply_action(state, witch, "night_kill", {"target": constable})
-    engine.apply_action(state, constable, "gavel", {"target": constable})
-    skip_all_confess(engine, state)
-    assert state["alive"][str(constable)] is True
-    assert state["last_night"]["killed"] is None
+    with pytest.raises(IllegalAction, match="gavel on yourself"):
+        engine.apply_action(state, constable, "gavel", {"target": constable})
 
 
 # ---- Town Hall 2-pick (n<=7) ------------------------------------------------
@@ -594,7 +610,7 @@ def test_constable_can_gavel_self(engine):
 
 def test_n8_auto_assigns_town_hall(engine):
     state = engine.init_state({"seed": 80}, [f"u{i}" for i in range(8)])
-    assert state["phase"] == "day"
+    assert state["phase"] == "dawn"
     assert all(state["town_hall"][str(i)] is not None for i in range(8))
     vis = engine.visible_state(state, 0)
     assert vis["you"]["town_hall_options"] == []
@@ -640,8 +656,8 @@ def test_choose_town_hall_resolves_to_day(engine):
             assert any(e["type"] == "town_hall_chosen" for e in res.events)
             assert not any(e["type"] == "day_started" for e in res.events)
         else:
-            assert state["phase"] == "day"
-            assert any(e["type"] == "day_started" for e in res.events)
+            assert state["phase"] == "dawn"
+            assert any(e["type"] == "dawn_started" for e in res.events)
     assert [state["town_hall"][str(s)]["id"] for s in range(4)] == picks
     vis = engine.visible_state(state, 0)
     assert vis["you"]["town_hall_options"] == []
@@ -658,6 +674,70 @@ def test_first_light_applies_after_all_picks(engine):
         if pick == "first_light":
             first_light_seat = s
         engine.apply_action(state, s, "choose_town_hall", {"character_id": pick})
+    assert state["phase"] == "dawn"
+    witches = list(state["witches"])
+    target = witches[0]
+    for w in witches:
+        engine.apply_action(state, w, "dawn_cat", {"target": target})
     assert state["phase"] == "day"
-    if first_light_seat is not None:
-        assert state["current_seat"] == first_light_seat
+    assert state["current_seat"] == target
+    assert "black_cat" in state["blues"][str(target)]
+
+
+def test_town_hall_uses_historical_names(engine):
+    from app.games.salem_data import TOWN_HALL
+
+    assert TOWN_HALL["stern_accuser"]["name"] == "Abigail Williams"
+    assert TOWN_HALL["hex_ward"]["name"] == "Tituba"
+    assert TOWN_HALL["closed_purse"]["name"] == "John Proctor"
+    state = make_game(engine, 8, seed=80)
+    names = {state["town_hall"][str(i)]["name"] for i in range(8)}
+    assert names <= {meta["name"] for meta in TOWN_HALL.values()}
+
+
+def test_cannot_play_a_card_on_yourself(engine):
+    state = make_game(engine, 4, seed=14)
+    actor = state["current_seat"]
+    with pytest.raises(IllegalAction, match="on yourself"):
+        play(engine, state, actor, "accusation", target=actor)
+
+
+def test_dawn_allows_witches_to_take_the_black_cat(engine):
+    state = engine.init_state({"seed": 4}, [f"u{i}" for i in range(4)])
+    for s in range(4):
+        opts = state["town_hall_options"][str(s)]
+        engine.apply_action(state, s, "choose_town_hall", {"character_id": opts[0]["id"]})
+    assert state["phase"] == "dawn"
+    witch = state["witches"][0]
+    town = next(s for s in range(4) if s not in state["witches"])
+    vis_town = engine.visible_state(state, town)
+    vis_witch = engine.visible_state(state, witch)
+    assert vis_town["you"]["my_dawn_cat"] is None
+    assert vis_witch["you"]["is_witch"] is True
+    engine.apply_action(state, witch, "dawn_cat", {"target": witch})
+    assert state["phase"] == "day"
+    assert "black_cat" in state["blues"][str(witch)]
+    assert state["current_seat"] == witch
+
+
+def test_draw_two_or_play_many(engine):
+    state = make_game(engine, 4, seed=15)
+    seat = state["current_seat"]
+    before = len(state["hands"][str(seat)])
+    engine.apply_action(state, seat, "draw_two", {})
+    # Turn ended; either this seat drew 2 and passed, or a black card interrupted.
+    assert state["current_seat"] != seat or state["phase"] != "day"
+    if state["phase"] == "day":
+        assert len(state["hands"][str(seat)]) >= before
+
+    state = make_game(engine, 4, seed=16)
+    actor = state["current_seat"]
+    other = (actor + 1) % 4
+    give_card(state, actor, "accusation")
+    engine.apply_action(state, actor, "play_card", {"card_id": "accusation", "target": other})
+    assert state["current_seat"] == actor
+    assert state["played_this_turn"] is True
+    give_card(state, actor, "accusation")
+    engine.apply_action(state, actor, "play_card", {"card_id": "accusation", "target": other})
+    engine.apply_action(state, actor, "end_turn", {})
+    assert state["current_seat"] != actor
