@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { playCardInfo, tryalKindFromId, townHallI18nKey } from "./catalog";
+import { hallPortrait, playCardInfo, tryalKindFromId, townHallI18nKey } from "./catalog";
 import {
   MARK_THRESHOLD,
   bluesOf,
@@ -182,9 +182,13 @@ export default function SalemTable({
                 picked ? "is-picked" : isSelf ? "is-self" : mate ? "is-mate" : p ? "" : "is-empty"
               } ${canHit ? "is-target" : ""}`}
             >
+              {hall && hallPortrait(hall.id) ? (
+                <img className="salem-portrait" src={hallPortrait(hall.id)!} alt="" />
+              ) : (
+                p ? (p.user.username.slice(0, 1) || "?").toUpperCase() : "·"
+              )}
               {!alive && <span className="salem-dead-mark">✝</span>}
               {catHere && <img className="salem-cat-badge" src="/salem/icons/cat.svg" alt="" />}
-              {p ? (p.user.username.slice(0, 1) || "?").toUpperCase() : "·"}
             </span>
             <span className="salem-name" title={p?.user.username}>
               {p ? p.user.username : emptyLabel}
@@ -199,7 +203,7 @@ export default function SalemTable({
                 {t(`halls.${townHallI18nKey(hall.id)}`)}
               </span>
             )}
-            {(pubTryals.revealed.length > 0 || pubTryals.facedown > 0) && (
+            {p && phase != null && (
               <div className="salem-tryals" aria-hidden>
                 {pubTryals.revealed.map((id, ti) => {
                   const kind: TryalKind = tryalKindFromId(id);
@@ -218,6 +222,11 @@ export default function SalemTable({
                     className="salem-tryal is-hidden"
                     style={{ animationDelay: `${(pubTryals.revealed.length + ti) * 60}ms` }}
                   />
+                ))}
+                {Array.from({
+                  length: Math.max(0, 5 - pubTryals.revealed.length - pubTryals.facedown),
+                }).map((_, ti) => (
+                  <span key={`e-${ti}`} className="salem-tryal is-empty" />
                 ))}
               </div>
             )}

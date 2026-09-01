@@ -9,10 +9,10 @@ html.salem .salem-table {
   --salem-ink-soft: #4a3420;
   --salem-wax: #9a1c2a;
   --salem-wax-hot: #d44545;
-  --salem-wood: #2a160c;
-  --salem-wood-rim: #5c3820;
-  --salem-wood-hi: #7a4a24;
-  --salem-felt: #d7c08a;
+  --salem-wood: #3a2414;
+  --salem-wood-rim: #8a5a28;
+  --salem-wood-hi: #c4a06a;
+  --salem-felt: #c4a66a;
   --salem-night: #0c0818;
   --salem-fog: #2a1c58;
   --salem-blessing: #2f6a88;
@@ -66,10 +66,12 @@ html[lang="fa"] .salem-root {
   border-radius: 46% / 50%;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 32%, #f3e4bc 0%, #dcc58c 48%, #b89558 100%);
+    radial-gradient(ellipse at 50% 38%, rgba(20, 12, 8, 0.18), rgba(12, 8, 6, 0.55)),
+    url("/salem/portraits/village.jpg") center / cover no-repeat,
+    radial-gradient(ellipse at 50% 32%, #e8d09a 0%, #c4a060 55%, #8a6030 100%);
   box-shadow:
-    inset 0 0 48px rgba(70, 36, 8, 0.32),
-    inset 0 0 0 1px rgba(255, 236, 190, 0.28);
+    inset 0 0 48px rgba(40, 20, 8, 0.5),
+    inset 0 0 0 1px rgba(196, 162, 78, 0.28);
 }
 .salem-table-felt::after {
   content: "";
@@ -257,9 +259,9 @@ html[lang="fa"] .salem-root {
   inset: 0;
   border-radius: 4px;
   background:
-    linear-gradient(180deg, #6a3e18, #3a2010);
+    linear-gradient(180deg, #2a2a2e, #0a0a0c);
   clip-path: polygon(8% 0, 92% 0, 92% 10%, 58% 46%, 92% 90%, 92% 100%, 8% 100%, 8% 90%, 42% 54%, 8% 10%);
-  box-shadow: inset 0 0 0 1px #d4a24e;
+  box-shadow: inset 0 0 0 1px #8a8a92;
 }
 .salem-hourglass-sand-top,
 .salem-hourglass-sand-bot {
@@ -577,7 +579,9 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
   font-size: 0.6rem;
 }
 .salem-table.is-crowded .salem-nameplate {
-  display: none;
+  font-size: 0.5rem;
+  max-width: 4.2rem;
+  padding: 0.02rem 0.25rem;
 }
 .salem-table.is-crowded .salem-blue-chip {
   font-size: 0.48rem;
@@ -616,8 +620,8 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
   max-width: 7rem;
 }
 .salem-avatar {
-  width: 2.55rem;
-  height: 2.55rem;
+  width: 2.8rem;
+  height: 2.8rem;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -626,6 +630,13 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
   background: radial-gradient(circle at 40% 32%, #5a3a1c, #1a0e08);
   border: 1px solid var(--salem-gold);
   position: relative;
+  overflow: hidden;
+}
+.salem-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: sepia(0.28) contrast(1.08) saturate(0.85);
 }
 .salem-avatar.is-self { box-shadow: 0 0 0 2px var(--salem-candle); }
 .salem-avatar.is-picked { box-shadow: 0 0 0 3px var(--salem-wax-hot); }
@@ -670,18 +681,29 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
 }
 .salem-nameplate {
   font-size: 0.58rem;
-  padding: 0.05rem 0.35rem;
-  border-radius: 999px;
-  background: rgba(90, 50, 16, 0.15);
-  border: 1px solid rgba(196, 162, 78, 0.35);
+  padding: 0.08rem 0.4rem;
+  border-radius: 3px;
+  background: rgba(232, 208, 154, 0.82);
+  border: 1px solid rgba(138, 90, 32, 0.55);
+  color: #1a1208;
+  max-width: 6.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.salem-tryals { display: flex; gap: 3px; margin-top: 2px; }
+.salem-tryals { display: flex; gap: 2px; margin-top: 3px; }
 .salem-tryal {
-  width: 10px;
-  height: 14px;
+  width: 11px;
+  height: 16px;
   border-radius: 2px;
   background: #1c1430;
   border: 1px solid #d4a24e;
+  box-shadow: 0 1px 0 #0a0610;
+}
+.salem-tryal.is-empty {
+  opacity: 0.28;
+  border-style: dashed;
+  background: transparent;
 }
 .salem-tryal.is-witch { background: #4a1020; border-color: #c44545; }
 .salem-tryal.is-town { background: #e6d3a8; border-color: #3d5c38; }
@@ -913,4 +935,14 @@ html[dir="rtl"] .salem-hall-choice-kicker {
 }
 @media (prefers-reduced-motion: reduce) {
   .salem-hall-choice { transition: none; }
+}
+
+.salem-hall-choice-face {
+  width: 100%;
+  height: 5.4rem;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  border: 1px solid #8a6a32;
+  filter: sepia(0.25) contrast(1.05);
+  background: #1a1208;
 }

@@ -98,6 +98,15 @@ export function townHallI18nKey(id: string): string {
   return "unknownHall";
 }
 
+const HALL_PHOTO = new Set(["card_cache", "kiln_guard", "first_light"]);
+
+/** Period portrait (PD photo) or original woodcut plate. Never Facade card art. */
+export function hallPortrait(id: string): string | null {
+  const k = townHallI18nKey(id);
+  if (k === "unknownHall") return null;
+  return HALL_PHOTO.has(k) ? `/salem/portraits/${k}.jpg` : `/salem/portraits/${k}.svg`;
+}
+
 export function cardMeta(id: string): {
   id: string;
   color: CardColor;

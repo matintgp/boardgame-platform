@@ -18,6 +18,7 @@ import {
   cardI18nKey,
   cardNeedsTarget,
   playCardInfo,
+  hallPortrait,
   townHallI18nKey,
   tryalKindFromId,
 } from "./catalog";
@@ -1036,6 +1037,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                       sendAction("choose_town_hall", { character_id: opt.id });
                     }}
                   >
+                    {hallPortrait(opt.id) && (
+                      <img className="salem-hall-choice-face" src={hallPortrait(opt.id)!} alt="" />
+                    )}
                     <span className="salem-hall-choice-kicker">{t(`hallRoles.${townHallI18nKey(opt.id)}`)}</span>
                     <span className="salem-hall-choice-title">{t(`halls.${townHallI18nKey(opt.id)}`)}</span>
                   </button>
