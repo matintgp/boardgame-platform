@@ -18,6 +18,7 @@ import {
   cardI18nKey,
   cardNeedsTarget,
   playCardInfo,
+  townHallI18nKey,
   tryalKindFromId,
 } from "./catalog";
 import {
@@ -356,7 +357,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   function canTargetSeat(seat: number) {
     if (conn !== "open") return false;
     if (!you || !youAlive) return false;
-    if (!phase || phase === "over" || phase === "confess" || phase === "conspiracy") return false;
+    if (!phase || phase === "over" || phase === "confess" || phase === "conspiracy" || phase === "town_hall") return false;
     if (!isSeatAlive(state, seat)) return false;
     if (phase === "day" && myDay && selectedCardId) {
       if (cardForbidsSelf(selectedCardId) && seat === you.seat) return false;
@@ -542,9 +543,11 @@ export default function SalemGame({ gameId }: { gameId: string }) {
           ? t("phaseNight")
           : phase === "confess"
             ? t("phaseConfess")
-            : phase === "over"
-              ? t("gameOver")
-              : "";
+            : phase === "town_hall"
+              ? t("phaseTownHall")
+              : phase === "over"
+                ? t("gameOver")
+                : "";
 
   const phaseHint = !you
     ? t("spectatorHint")
@@ -576,7 +579,11 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               ? alreadyConfessed
                 ? t("waitingConfess")
                 : t("confessHint")
-              : "";
+              : phase === "town_hall"
+                ? (you.town_hall_options ?? []).length
+                  ? t("hallPickHint")
+                  : t("hallPickedWait")
+                : "";
 
   const winnerRole = state?.result?.winner_role;
   const iWon =
@@ -996,6 +1003,35 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                     }}
                   >
                     {t("tryalN", { n: idx + 1 })}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {phase === "town_hall" && you && youAlive && (
+        <div className="salem-overlay">
+          <div className="result-pop salem-parchment-card relative w-full max-w-md p-6 text-center">
+            <h2 className="text-xl font-extrabold">🕯 {t("hallPickTitle")}</h2>
+            <p className="muted mt-2 text-sm">
+              {(you.town_hall_options ?? []).length ? t("hallPickHint") : t("hallPickedWait")}
+            </p>
+            {(you.town_hall_options ?? []).length > 0 && (
+              <div className="salem-hall-pick">
+                {(you.town_hall_options ?? []).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className="salem-hall-choice"
+                    onClick={() => {
+                      playSalemCard();
+                      sendAction("choose_town_hall", { character_id: opt.id });
+                    }}
+                  >
+                    <span className="salem-hall-choice-kicker">{t("phaseTownHall")}</span>
+                    <span className="salem-hall-choice-title">{t(`halls.${townHallI18nKey(opt.id)}`)}</span>
                   </button>
                 ))}
               </div>

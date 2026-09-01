@@ -11,10 +11,11 @@ import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
 import { joinRematchTable } from "@/lib/rematch";
 import {
   playCaptureSound,
-  playCheckSound,
   playGameEndSound,
   playMoveSound,
 } from "@/lib/sounds";
+import "@/styles/rokugan.css";
+import { playRokuganLock, playRokuganRaze, playRokuganToken } from "@/components/rokugan/rokuganSounds";
 
 interface RokuganState {
   round: number;
@@ -105,8 +106,11 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
           const reveal = payload.events?.some((e) => e.type === "reveal");
           if (isLive) {
             if (over) playGameEndSound();
-            else if (reveal) playCaptureSound();
-            else playMoveSound(true);
+            else if (reveal) {
+              const last = payload.state.log?.at(-1);
+              if (last?.outcomes?.some((o) => o.razed)) playRokuganRaze();
+              else playCaptureSound();
+            } else playMoveSound(true);
           }
           setState(payload.state);
           hydratedRef.current = true;
@@ -186,6 +190,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
           payload: { attack, defense },
         }),
       });
+      playRokuganLock();
       setAttack(null);
       setDefense(null);
     } catch (e) {
@@ -218,18 +223,10 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
             setDefense((d) => ({ target: idx, token: d?.token ?? 3 }));
           }
         }}
-        className={`relative flex h-20 w-[4.6rem] flex-col items-center justify-center rounded-md border-2 text-2xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
-          razed
-            ? "border-red-800 bg-[#2a1616] text-red-300/90"
-            : selected
-              ? "border-[var(--accent)] bg-[#3d4a2c] shadow-[0_0_0_2px_rgba(212,162,78,0.4)]"
-              : "border-[#5a4a32] bg-[#2a241c]"
-        } ${clickable ? "cursor-pointer hover:border-[var(--accent)]" : "opacity-80"}`}
+        className={`rk-province ${razed ? "is-razed" : ""} ${selected ? "is-picked" : ""} ${clickable ? "is-live" : ""}`}
       >
-        <span>{razed ? "💥" : "⛩"}</span>
-        <span className={`mt-0.5 text-[11px] font-semibold leading-tight ${razed ? "text-red-300/80" : ""}`}>
-          {label}
-        </span>
+        <img src={razed ? "/rokugan/icons/ash.svg" : "/rokugan/icons/shrine.svg"} alt="" />
+        <span className="rk-province-label">{label}</span>
       </button>
     );
   }
@@ -310,8 +307,15 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
       {/* Battle board */}
       <div className="mx-auto flex flex-col items-center gap-4">
         {waiting ? (
-          <div className="card w-full max-w-md p-5">
-            <h2 className="mb-3 text-xl font-bold">⚔ {t("title")}</h2>
+          <div className="rk-lobby card w-full max-w-md">
+            <div className="rk-lobby-hero">
+              <img src="/heroes/rokugan.jpg" alt="" />
+              <div className="rk-lobby-shade" />
+              <div className="relative z-[1] p-5">
+                <h2 className="text-xl font-bold">⚔ {t("title")}</h2>
+              </div>
+            </div>
+            <div className="p-5">
             <p className="muted mb-2 text-sm">
               ⏳ {tg("waiting")} ({players.length}/{maxPlayers})
             </p>
@@ -345,21 +349,25 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
               </button>
             )}
             {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+            </div>
           </div>
         ) : (
         <>
-        <div className="card flex items-center gap-2 p-3 text-sm">
-          <span className="font-bold">{players.find((p) => p.seat === oppSeat)?.user.username ?? "..."}</span>
-          <span className="muted">
+        <div className="rk-banner">
+          <span className="flex items-center gap-2 font-bold">
+            <img className="rk-crest" src="/rokugan/icons/crest.svg" alt="" />
+            {players.find((p) => p.seat === oppSeat)?.user.username ?? "..."}
+          </span>
+          <span className="muted text-xs">
             {state?.opponent?.submitted ? `✍️ ${t("opponentReady")}` : t("opponentThinking")}
           </span>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#3d3428] bg-[#14110d] p-4 shadow-[inset_0_0_48px_rgba(0,0,0,0.5)]">
+        <div className="rk-table">
           <p className="mb-2 text-center text-xs font-semibold tracking-wide text-[var(--muted)]">
             {players.find((p) => p.seat === oppSeat)?.user.username ?? "..."}
           </p>
-          <div className="flex justify-center gap-3">
+          <div className="rk-row">
             {oppProvinces.map((razed, i) => (
               <Province
                 key={i}
@@ -373,11 +381,11 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
             ))}
           </div>
 
-          <div className="my-3 text-center text-sm font-bold text-[var(--accent)]">
+          <div className="rk-river">
             {t("round")} {state?.round ?? 1}/5
           </div>
 
-          <div className="flex justify-center gap-3">
+          <div className="rk-row">
             {myProvinces.map((razed, i) => (
               <Province
                 key={i}
@@ -447,12 +455,11 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                   <button
                     key={v}
                     disabled={!canPlan || alreadySubmitted || defense?.token === v}
-                    onClick={() => setAttack((a) => ({ target: a?.target ?? 0, token: v }))}
-                    className={`h-9 w-9 rounded-full border text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
-                      attack?.token === v
-                        ? "border-[var(--accent)] bg-[var(--accent)] font-bold text-black"
-                        : "border-[#5a4a32] bg-[#1a1610]"
-                    }`}
+                    onClick={() => {
+                      playRokuganToken();
+                      setAttack((a) => ({ target: a?.target ?? 0, token: v }));
+                    }}
+                    className={`rk-token ${attack?.token === v ? "is-picked" : ""} ${defense?.token === v ? "is-locked" : ""}`}
                   >
                     {v}
                   </button>
@@ -471,12 +478,11 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                   <button
                     key={v}
                     disabled={!canPlan || alreadySubmitted || attack?.token === v}
-                    onClick={() => setDefense((d) => ({ target: d?.target ?? 0, token: v }))}
-                    className={`h-9 w-9 rounded-full border text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
-                      defense?.token === v
-                        ? "border-[var(--accent)] bg-[var(--accent)] font-bold text-black"
-                        : "border-[#5a4a32] bg-[#1a1610]"
-                    }`}
+                    onClick={() => {
+                      playRokuganToken();
+                      setDefense((d) => ({ target: d?.target ?? 0, token: v }));
+                    }}
+                    className={`rk-token ${defense?.token === v ? "is-picked" : ""} ${attack?.token === v ? "is-locked" : ""}`}
                   >
                     {v}
                   </button>

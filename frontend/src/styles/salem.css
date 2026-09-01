@@ -873,3 +873,44 @@ html[dir="rtl"] .salem-card-3d.is-flipped .salem-card-inner {
   color: var(--accent);
   text-shadow: 0 1px 2px #000;
 }
+
+.salem-hall-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.salem-hall-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 0.7rem;
+  border-radius: 0.7rem;
+  border: 1px solid #8a6a32;
+  background: linear-gradient(180deg, #efe0b8, #d4bc86);
+  color: var(--salem-ink);
+  text-align: start;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.salem-hall-choice:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+.salem-hall-choice-kicker {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--salem-ink-soft);
+}
+html[dir="rtl"] .salem-hall-choice-kicker {
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+.salem-hall-choice-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .salem-hall-choice { transition: none; }
+}

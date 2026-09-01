@@ -72,7 +72,7 @@ export default function SalemTable({
       ? "is-night"
       : phase === "conspiracy"
         ? "is-conspiracy is-dawn"
-        : phase === "day"
+        : phase === "day" || phase === "town_hall"
           ? "is-day is-turn"
           : phase === "over"
             ? "is-over"

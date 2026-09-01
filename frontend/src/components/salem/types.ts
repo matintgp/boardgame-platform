@@ -16,7 +16,7 @@
  * you.hand is string card ids. you.tryals: { id, revealed } (TRYAL_* ids).
  */
 
-export type SalemPhase = "day" | "conspiracy" | "night" | "confess" | "over";
+export type SalemPhase = "day" | "town_hall" | "conspiracy" | "night" | "confess" | "over";
 export type CardColor = "red" | "green" | "blue" | "black";
 export type TryalKind = "witch" | "innocent" | "constable";
 export type SalemWinner = "town" | "witches";
@@ -58,6 +58,7 @@ export interface SalemYou {
   can_confess?: boolean;
   my_kill?: number | null;
   my_protect?: number | null;
+  town_hall_options?: SalemTownHall[];
 }
 
 export interface SalemResult {
@@ -270,6 +271,19 @@ function normalizeYou(raw: unknown): SalemYou | null {
       y.my_conspiracy_pick == null ? null : Number(y.my_conspiracy_pick),
     my_night_kill: y.my_night_kill == null ? null : Number(y.my_night_kill),
     my_gavel: y.my_gavel == null ? null : Number(y.my_gavel),
+    town_hall_options: Array.isArray(y.town_hall_options)
+      ? y.town_hall_options
+          .map((raw) => {
+            if (raw && typeof raw === "object") {
+              const o = raw as { id?: string; name?: string };
+              if (!o.id) return null;
+              return { id: String(o.id), name: String(o.name || o.id) };
+            }
+            if (typeof raw === "string") return { id: raw, name: raw };
+            return null;
+          })
+          .filter((x): x is SalemTownHall => x != null)
+      : [],
   };
 }
 
