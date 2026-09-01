@@ -134,11 +134,11 @@ export default function SalemTable({
       <div className={`salem-gavel-token ${phase === "night" ? "is-strike" : ""}`} aria-hidden>
         <img src="/salem/icons/gavel.svg" alt="" />
       </div>
-      {hourglass && (
-        <div className="salem-hourglass-wrap" aria-live="polite">
+      {(hourglass || phase === "dawn" || phase === "town_hall") && (
+        <div className="salem-hourglass-wrap" aria-live={hourglass ? "polite" : "off"}>
           <div
-            className="salem-hourglass"
-            style={{ ["--sand" as string]: sand }}
+            className={`salem-hourglass ${hourglass ? "" : "is-idle"}`}
+            style={{ ["--sand" as string]: hourglass ? sand : "1" }}
             aria-hidden
           >
             <div className="salem-hourglass-frame" />

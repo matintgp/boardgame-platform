@@ -254,6 +254,14 @@ html[lang="fa"] .salem-root {
   height: 56px;
   flex-shrink: 0;
 }
+.salem-hourglass.is-idle .salem-hourglass-sand-top,
+.salem-hourglass.is-idle .salem-hourglass-sand-bot,
+.salem-hourglass.is-idle .salem-hourglass-stream {
+  animation: none;
+}
+.salem-hourglass.is-idle .salem-hourglass-sand-top { height: 14px; }
+.salem-hourglass.is-idle .salem-hourglass-sand-bot { height: 3px; }
+.salem-hourglass.is-idle .salem-hourglass-stream { opacity: 0; }
 .salem-hourglass-frame {
   position: absolute;
   inset: 0;
