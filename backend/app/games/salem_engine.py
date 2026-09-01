@@ -3,7 +3,8 @@
 See salem_data.py for Town Hall mapping and original card ids. Engines are
 pure/synchronous: the service layer owns I/O and timers. A `tick` action
 auto-skips leftover confessions once `confess_deadline` has passed; the
-chess-only timer loop is not wired in.
+chess-only timer loop is not wired in. Tables of 4–7 start in phase
+`town_hall` until every seat picks one of two dealt characters.
 """
 
 from __future__ import annotations
@@ -73,7 +74,18 @@ class SalemEngine(BaseEngine):
 
         chars = list(TOWN_HALL_ORDER)
         rng.shuffle(chars)
-        town_hall = {str(i): town_hall_public(chars[i]) for i in range(n)}
+        town_hall: dict[str, dict | None] = {}
+        town_hall_options: dict[str, list[dict]] = {}
+        if n <= 7:
+            for i in range(n):
+                a, b = chars[2 * i], chars[2 * i + 1]
+                town_hall_options[str(i)] = [town_hall_public(a), town_hall_public(b)]
+                town_hall[str(i)] = None
+            phase = "town_hall"
+        else:
+            for i in range(n):
+                town_hall[str(i)] = town_hall_public(chars[i])
+            phase = "day"
 
         deck = build_deck(n)
         rng.shuffle(deck)
@@ -84,27 +96,18 @@ class SalemEngine(BaseEngine):
 
         marks = {str(i): 0 for i in range(n)}
         witch_seats: list[int] = []
-        current_seat = 0
         for i in range(n):
-            ability = TOWN_HALL[town_hall[str(i)]["id"]]["ability"]
-            if ability == "extra_card" and deck:
-                hands[str(i)].append(deck.pop())
-            if ability == "extra_accusation":
-                hands[str(i)].append("accusation")
-            if ability == "start_marks":
-                marks[str(i)] = 2
-            if ability == "goes_first":
-                current_seat = i
             for card in tryals[str(i)]:
                 if card["id"] == TRYAL_WITCH and i not in witch_seats:
                     witch_seats.append(i)
 
-        return {
-            "phase": "day",
+        state = {
+            "phase": phase,
             "round": 1,
             "n": n,
             "alive": {str(i): True for i in range(n)},
             "town_hall": town_hall,
+            "town_hall_options": town_hall_options,
             "marks": marks,
             "tryals": tryals,
             "witches": witch_seats,
@@ -112,7 +115,7 @@ class SalemEngine(BaseEngine):
             "blues": {str(i): [] for i in range(n)},
             "deck": deck,
             "discard": [],
-            "current_seat": current_seat,
+            "current_seat": 0,
             "skip_turns": {},
             "conspiracy_picks": {},
             "night_kills": {},
@@ -125,6 +128,9 @@ class SalemEngine(BaseEngine):
             "last_reveal": None,
             "result": None,
         }
+        if phase == "day":
+            self._apply_town_hall_setup(state)
+        return state
 
     # ---- queries ------------------------------------------------------------
 
@@ -132,9 +138,31 @@ class SalemEngine(BaseEngine):
         return sorted(int(s) for s, alive in state["alive"].items() if alive)
 
     def _ability(self, state: dict, seat: int) -> str:
-        th = state["town_hall"][str(seat)]
-        cid = th["id"] if isinstance(th, dict) else th
+        th = state["town_hall"].get(str(seat))
+        if not isinstance(th, dict):
+            return ""
+        cid = th.get("id")
+        if not cid:
+            return ""
         return TOWN_HALL.get(cid, {}).get("ability", "")
+
+    def _apply_town_hall_setup(self, state: dict) -> None:
+        """Setup bonuses after every seat has a public Town Hall character."""
+        deck = state["deck"]
+        hands = state["hands"]
+        marks = state["marks"]
+        current_seat = 0
+        for i in range(state["n"]):
+            ability = self._ability(state, i)
+            if ability == "extra_card" and deck:
+                hands[str(i)].append(deck.pop())
+            if ability == "extra_accusation":
+                hands[str(i)].append("accusation")
+            if ability == "start_marks":
+                marks[str(i)] = 2
+            if ability == "goes_first":
+                current_seat = i
+        state["current_seat"] = current_seat
 
     def _is_witch(self, state: dict, seat: int) -> bool:
         return seat in state["witches"]
@@ -371,9 +399,7 @@ class SalemEngine(BaseEngine):
         if action_type == "confess_skip":
             return self._confess_skip(state, seat)
         if action_type == "choose_town_hall":
-            raise IllegalAction(
-                "Town Hall characters are assigned automatically in this version"
-            )
+            return self._choose_town_hall(state, seat, payload)
         raise IllegalAction(f"Unknown action '{action_type}'")
 
     def resolve_if_ready(self, state: dict, events: list[dict] | None = None) -> ApplyResult:
@@ -403,6 +429,35 @@ class SalemEngine(BaseEngine):
         for s in self._alive_seats(state):
             state["confessed"].setdefault(str(s), "skip")
         return self.resolve_if_ready(state, [])
+
+    def _choose_town_hall(self, state: dict, seat: int, payload: dict) -> ApplyResult:
+        if state["phase"] != "town_hall":
+            raise IllegalAction("Town Hall is already assigned")
+        self._require_alive(state, seat)
+        if state["town_hall"].get(str(seat)) is not None:
+            raise IllegalAction("You already chose a Town Hall character")
+        cid = payload.get("character_id")
+        if not isinstance(cid, str):
+            raise IllegalAction("Invalid character_id")
+        options = state.get("town_hall_options", {}).get(str(seat)) or []
+        chosen = next((o for o in options if o.get("id") == cid), None)
+        if chosen is None:
+            raise IllegalAction("That is not one of your Town Hall options")
+        state["town_hall"][str(seat)] = dict(chosen)
+        state["town_hall_options"][str(seat)] = []
+        events = [
+            {
+                "type": "town_hall_chosen",
+                "seat": seat,
+                "payload": {"character_id": chosen["id"], "name": chosen["name"]},
+            }
+        ]
+        if all(state["town_hall"].get(str(s)) is not None for s in range(state["n"])):
+            self._apply_town_hall_setup(state)
+            state["phase"] = "day"
+            state["town_hall_options"] = {}
+            events.append({"type": "day_started", "seat": None, "payload": {}})
+        return ApplyResult(events=events, finished=False)
 
     def _play_card(self, state: dict, seat: int, payload: dict) -> ApplyResult:
         if state["phase"] != "day":
@@ -817,6 +872,9 @@ class SalemEngine(BaseEngine):
             "is_witch": is_witch,
             "is_constable": self._is_constable(state, seat),
             "alive": alive,
+            "town_hall_options": list(
+                state.get("town_hall_options", {}).get(str(seat), [])
+            ),
         }
         if is_witch:
             you["teammates"] = self._alive_witches(state)

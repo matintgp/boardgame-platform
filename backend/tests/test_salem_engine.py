@@ -20,6 +20,12 @@ def engine():
 def make_game(engine: SalemEngine, n: int = 4, seed: int = 1):
     seats = [f"user-{i}" for i in range(n)]
     state = engine.init_state({"seed": seed}, seats)
+    if state["phase"] == "town_hall":
+        for s in range(n):
+            opts = state["town_hall_options"][str(s)]
+            engine.apply_action(
+                state, s, "choose_town_hall", {"character_id": opts[0]["id"]}
+            )
     return state
 
 
@@ -581,3 +587,77 @@ def test_constable_can_gavel_self(engine):
     skip_all_confess(engine, state)
     assert state["alive"][str(constable)] is True
     assert state["last_night"]["killed"] is None
+
+
+# ---- Town Hall 2-pick (n<=7) ------------------------------------------------
+
+
+def test_n8_auto_assigns_town_hall(engine):
+    state = engine.init_state({"seed": 80}, [f"u{i}" for i in range(8)])
+    assert state["phase"] == "day"
+    assert all(state["town_hall"][str(i)] is not None for i in range(8))
+    vis = engine.visible_state(state, 0)
+    assert vis["you"]["town_hall_options"] == []
+    with pytest.raises(IllegalAction, match="already assigned"):
+        engine.apply_action(state, 0, "choose_town_hall", {"character_id": "iron_will"})
+
+
+def test_n4_starts_in_town_hall_pick(engine):
+    state = engine.init_state({"seed": 4}, [f"u{i}" for i in range(4)])
+    assert state["phase"] == "town_hall"
+    assert all(state["town_hall"][str(i)] is None for i in range(4))
+    mine = engine.visible_state(state, 0)
+    other = engine.visible_state(state, 1)
+    spec = engine.visible_state(state, None)
+    assert len(mine["you"]["town_hall_options"]) == 2
+    assert other["you"]["town_hall_options"] != mine["you"]["town_hall_options"]
+    assert spec["you"] is None
+    assert spec["town_hall"]["0"] is None
+    ids = {o["id"] for o in mine["you"]["town_hall_options"]}
+    assert "town_hall_options" not in spec
+    assert "town_hall_options" not in other
+    # Options stay on you only — other seats get a different pair.
+    assert set(ids).isdisjoint({o["id"] for o in other["you"]["town_hall_options"]})
+
+
+def test_choose_town_hall_rejects_foreign_id(engine):
+    state = engine.init_state({"seed": 5}, [f"u{i}" for i in range(4)])
+    mine = {o["id"] for o in state["town_hall_options"]["0"]}
+    foreign = next(cid for cid in ("iron_will", "card_cache", "crowd_voice") if cid not in mine)
+    with pytest.raises(IllegalAction, match="not one of your Town Hall options"):
+        engine.apply_action(state, 0, "choose_town_hall", {"character_id": foreign})
+
+
+def test_choose_town_hall_resolves_to_day(engine):
+    state = engine.init_state({"seed": 6}, [f"u{i}" for i in range(4)])
+    picks = []
+    for s in range(4):
+        cid = state["town_hall_options"][str(s)][1]["id"]
+        picks.append(cid)
+        res = engine.apply_action(state, s, "choose_town_hall", {"character_id": cid})
+        if s < 3:
+            assert state["phase"] == "town_hall"
+            assert any(e["type"] == "town_hall_chosen" for e in res.events)
+            assert not any(e["type"] == "day_started" for e in res.events)
+        else:
+            assert state["phase"] == "day"
+            assert any(e["type"] == "day_started" for e in res.events)
+    assert [state["town_hall"][str(s)]["id"] for s in range(4)] == picks
+    vis = engine.visible_state(state, 0)
+    assert vis["you"]["town_hall_options"] == []
+    assert vis["town_hall"]["0"]["id"] == picks[0]
+
+
+def test_first_light_applies_after_all_picks(engine):
+    state = engine.init_state({"seed": 7}, [f"u{i}" for i in range(7)])
+    assert state["phase"] == "town_hall"
+    first_light_seat = None
+    for s in range(7):
+        opts = state["town_hall_options"][str(s)]
+        pick = next((o["id"] for o in opts if o["id"] == "first_light"), opts[0]["id"])
+        if pick == "first_light":
+            first_light_seat = s
+        engine.apply_action(state, s, "choose_town_hall", {"character_id": pick})
+    assert state["phase"] == "day"
+    if first_light_seat is not None:
+        assert state["current_seat"] == first_light_seat
