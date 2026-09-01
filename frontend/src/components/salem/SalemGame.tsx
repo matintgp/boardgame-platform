@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, ensureSession, type SessionUser } from "@/lib/api";
 import { parseExpiryMs, remainingLobby } from "@/lib/lobbyExpiry";
+import { joinRematchTable } from "@/lib/rematch";
 import { Link, useRouter } from "@/i18n/navigation";
 import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import { playGameEndSound } from "@/lib/sounds";
@@ -600,7 +601,17 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             </span>
             <button
               className="btn btn-primary"
-              onClick={() => router.push(`/game/${rematchOffer.game_id}`)}
+              disabled={rematchBusy}
+              onClick={async () => {
+                setRematchBusy(true);
+                try {
+                  await joinRematchTable(rematchOffer.game_id);
+                  router.push(`/game/${rematchOffer.game_id}`);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "join failed");
+                  setRematchBusy(false);
+                }
+              }}
             >
               {tg("accept")}
             </button>

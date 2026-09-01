@@ -9,6 +9,7 @@ import { playCaptureSound, playCheckSound, playGameEndSound } from "@/lib/sounds
 import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
 import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
+import { joinRematchTable } from "@/lib/rematch";
 
 /** Engine MafiaEngine.min_players — start is allowed at min, seats go up to view.max_players. */
 const MAFIA_MIN_PLAYERS = 4;
@@ -449,7 +450,17 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
             </span>
             <button
               className="btn btn-primary"
-              onClick={() => router.push(`/game/${rematchOffer.game_id}`)}
+              disabled={rematchBusy}
+              onClick={async () => {
+                setRematchBusy(true);
+                try {
+                  await joinRematchTable(rematchOffer.game_id);
+                  router.push(`/game/${rematchOffer.game_id}`);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "join failed");
+                  setRematchBusy(false);
+                }
+              }}
             >
               {tg("accept")}
             </button>

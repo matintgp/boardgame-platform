@@ -8,6 +8,7 @@ import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
 import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
+import { joinRematchTable } from "@/lib/rematch";
 import {
   playCaptureSound,
   playCheckSound,
@@ -425,9 +426,14 @@ export default function GamePage({ gameId }: { gameId: string }) {
           </span>
           <button
             className="btn btn-primary"
-            onClick={() =>
-              router.push(`/game/${rematchOffer.game_id}`)
-            }
+            onClick={async () => {
+              try {
+                await joinRematchTable(rematchOffer.game_id);
+                router.push(`/game/${rematchOffer.game_id}`);
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "join failed");
+              }
+            }}
           >
             {t("accept")}
           </button>

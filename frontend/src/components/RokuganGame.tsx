@@ -8,6 +8,7 @@ import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
 import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
+import { joinRematchTable } from "@/lib/rematch";
 import {
   playCaptureSound,
   playCheckSound,
@@ -59,6 +60,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
   const [defense, setDefense] = useState<{ target: number; token: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [resultDismissed, setResultDismissed] = useState(false);
+  const [rematchOffer, setRematchOffer] = useState<{ game_id: string; by: string } | null>(null);
   const socketRef = useRef<GameSocket | null>(null);
   const [socket, setSocket] = useState<GameSocket | null>(null);
   const hydratedRef = useRef(false);
@@ -75,6 +77,11 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
       if (env.type === "error") {
         const msg = (env.payload as { message?: string } | undefined)?.message;
         setError(msg ?? "error");
+        return;
+      }
+      if (env.type === "rematch") {
+        const p = env.payload as { game_id: string; by: string };
+        setRematchOffer(p);
         return;
       }
       if (env.type === "lobby_update") {
@@ -276,6 +283,27 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {rematchOffer && (
+        <div className="card mb-4 flex w-full max-w-md items-center justify-between gap-3 border-[var(--accent)] p-4">
+          <span>
+            🔁 <span className="font-bold">{rematchOffer.by}</span> {tg("rematchOffer")}
+          </span>
+          <button
+            className="btn btn-primary"
+            onClick={async () => {
+              try {
+                await joinRematchTable(rematchOffer.game_id);
+                router.push(`/game/${rematchOffer.game_id}`);
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "join failed");
+              }
+            }}
+          >
+            {tg("accept")}
+          </button>
         </div>
       )}
 
