@@ -27,13 +27,15 @@ export default function LobbyExpiryNote({
   }, [aborted, expiryMs]);
 
   if (aborted) {
-    return <p className="text-sm text-red-400">{expiredLabel}</p>;
+    return <p className="lobby-ttl is-expired">⏳ {expiredLabel}</p>;
   }
   const clock = remainingLobby(expiryMs, now);
   if (!clock) return null;
   return (
-    <p className={`text-xs ${clock.expired || clock.urgent ? "text-red-400" : "muted"}`}>
-      {clock.expired ? expiredLabel : expiresIn({ time: clock.label })}
+    <p
+      className={`lobby-ttl ${clock.expired ? "is-expired" : clock.urgent ? "is-urgent" : ""}`}
+    >
+      ⏳ {clock.expired ? expiredLabel : expiresIn({ time: clock.label })}
     </p>
   );
 }
