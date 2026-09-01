@@ -274,9 +274,9 @@
     "spectatorHint": "No actions, but chat and the log stay open.",
     "spectatorBanner": "You are eliminated — spectating",
     "waitingDawn": "Waiting for the other witches to place the cat...",
-    "dawnHintWitch": "Dawn. Living witches place the Black Cat on a player.",
+    "dawnHintWitch": "Dawn. Place the Black Cat on anyone, including yourself. All witches must agree.",
     "dawnHintTown": "Dawn. The witches move in secret.",
-    "yourTurnHint": "Your turn. Play a card. Black cards resolve at once.",
+    "yourTurnHint": "Your turn. Draw two, or play one or more cards then end your turn.",
     "waitingTurnResolve": "Waiting for this action to resolve...",
     "waitingTurn": "Waiting for {name}...",
     "waitingWitches": "Waiting for the other witches to agree on this target...",
@@ -303,7 +303,7 @@
     "cancelCard": "Cancel",
     "draw": "Draw",
     "pickTarget": "Click a seat to play this card.",
-    "playHint": "Play a card, then click a seat if it needs a target.",
+    "playHint": "Draw two, or play cards then end your turn.",
     "playOrDraw": "Play a card. Black cards resolve at once.",
     "emptyHand": "No cards in hand.",
     "color": {
@@ -344,7 +344,7 @@
     "hallPickedWait": "Waiting for the rest of the hall...",
     "conspiracyHint": "Choose an unrevealed Tryal from the player on your left.",
     "pickFrom": "First click whose marks to move.",
-    "playHintEngine": "Play one card. You draw after it resolves. Black cards start Conspiracy or Night.",
+    "playHintEngine": "Draw two or play cards. Black cards start Conspiracy or Night.",
     "confessSkip": "Do not confess",
     "cards": {
       "accusation": {
@@ -461,6 +461,9 @@
       "kiln_guard": "Governor, 42",
       "quiet_bench": "Goodwife",
       "unknownHall": "Townsfolk"
-    }
+    },
+    "drawTwo": "Draw two",
+    "endTurn": "End turn",
+    "playedHint": "You played. Play more cards, or end your turn."
   }
 }

@@ -5,6 +5,10 @@
  *
  * Actions via GameSocket `{ type: "action", room, action, payload }`:
  *   play_card        { card_id, target?, extra? }
+ *   draw_two         {}
+ *   end_turn         {}
+ *   dawn_cat         { target }
+ *   choose_town_hall { character_id }
  *   conspiracy_take  { tryal_index }
  *   night_kill       { target }
  *   gavel            { target }
@@ -12,11 +16,11 @@
  *   confess_skip     {}
  *   tick             {}   // auto-skip leftover confessions after confess_deadline
  *
- * Phases: day | conspiracy | night | confess | over
+ * Phases: town_hall | dawn | day | conspiracy | night | confess | over
  * you.hand is string card ids. you.tryals: { id, revealed } (TRYAL_* ids).
  */
 
-export type SalemPhase = "day" | "town_hall" | "conspiracy" | "night" | "confess" | "over";
+export type SalemPhase = "town_hall" | "dawn" | "day" | "conspiracy" | "night" | "confess" | "over";
 export type CardColor = "red" | "green" | "blue" | "black";
 export type TryalKind = "witch" | "innocent" | "constable";
 export type SalemWinner = "town" | "witches";
@@ -59,6 +63,8 @@ export interface SalemYou {
   my_kill?: number | null;
   my_protect?: number | null;
   town_hall_options?: SalemTownHall[];
+  my_dawn_cat?: number | null;
+  played_this_turn?: boolean;
 }
 
 export interface SalemResult {
@@ -284,6 +290,8 @@ function normalizeYou(raw: unknown): SalemYou | null {
           })
           .filter((x): x is SalemTownHall => x != null)
       : [],
+    my_dawn_cat: y.my_dawn_cat == null ? null : Number(y.my_dawn_cat),
+    played_this_turn: Boolean(y.played_this_turn),
   };
 }
 
@@ -399,6 +407,11 @@ export function adaptEngineState(raw: SalemState, _roster?: PlayerInfo[]): Salem
     ? {
         ...raw.you,
         can_play: raw.phase === "day" && raw.current_seat === raw.you.seat && raw.you.alive,
+        can_draw:
+          raw.phase === "day" &&
+          raw.current_seat === raw.you.seat &&
+          raw.you.alive &&
+          !raw.you.played_this_turn,
         my_kill: raw.you.my_night_kill ?? raw.you.my_kill ?? null,
         my_protect: raw.you.my_gavel ?? raw.you.my_protect ?? null,
         tryals: raw.you.tryals.map((tr, i) => ({

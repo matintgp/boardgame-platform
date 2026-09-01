@@ -349,17 +349,22 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   const myDay = phase === "day" && you != null && youAlive && you.seat === state?.current_seat;
 
   const myPick =
-    phase === "night"
-      ? nightTool === "gavel"
-        ? (you?.my_gavel ?? null)
-        : (you?.my_night_kill ?? null)
-      : null;
+    phase === "dawn"
+      ? (you?.my_dawn_cat ?? null)
+      : phase === "night"
+        ? nightTool === "gavel"
+          ? (you?.my_gavel ?? null)
+          : (you?.my_night_kill ?? null)
+        : null;
 
   function canTargetSeat(seat: number) {
     if (conn !== "open") return false;
     if (!you || !youAlive) return false;
     if (!phase || phase === "over" || phase === "confess" || phase === "conspiracy" || phase === "town_hall") return false;
     if (!isSeatAlive(state, seat)) return false;
+    if (phase === "dawn") {
+      return !!you.is_witch;
+    }
     if (phase === "day" && myDay && selectedCardId) {
       if (cardForbidsSelf(selectedCardId) && seat === you.seat) return false;
       if (selectedCardId === "scapegoat") {
@@ -381,6 +386,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   }
 
   function actionLabel(): string {
+    if (phase === "dawn" && you?.is_witch) return t("placeCat");
     if (selectedCardId === "scapegoat" && scapegoatFrom == null) return t("pickFromSeat");
     if (selectedCardId) return t("playOn");
     if (phase === "night" && you?.is_witch && you?.is_constable) {
@@ -404,6 +410,11 @@ export default function SalemGame({ gameId }: { gameId: string }) {
 
   function onSeatActivate(seat: number) {
     if (!canTargetSeat(seat) || !you) return;
+    if (phase === "dawn" && you.is_witch) {
+      playSalemCard();
+      sendAction("dawn_cat", { target: seat });
+      return;
+    }
     if (phase === "day" && selectedCardId) {
       if (selectedCardId === "scapegoat") {
         if (scapegoatFrom == null) {
@@ -544,17 +555,19 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   const phaseTitle =
     phase === "day"
       ? t("phaseDay")
-      : phase === "conspiracy"
-        ? t("phaseConspiracy")
-        : phase === "night"
-          ? t("phaseNight")
-          : phase === "confess"
-            ? t("phaseConfess")
-            : phase === "town_hall"
-              ? t("phaseTownHall")
-              : phase === "over"
-                ? t("gameOver")
-                : "";
+      : phase === "dawn"
+        ? t("phaseDawn")
+        : phase === "conspiracy"
+          ? t("phaseConspiracy")
+          : phase === "night"
+            ? t("phaseNight")
+            : phase === "confess"
+              ? t("phaseConfess")
+              : phase === "town_hall"
+                ? t("phaseTownHall")
+                : phase === "over"
+                  ? t("gameOver")
+                  : "";
 
   const phaseHint = !you
     ? t("spectatorHint")
@@ -566,7 +579,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             ? t("pickFrom")
             : selectedCardId
               ? t("pickTarget")
-              : t("yourTurnHint")
+              : you.played_this_turn
+                ? t("playedHint")
+                : t("yourTurnHint")
           : t("waitingTurn", { name: nameOf(players, state?.current_seat ?? -1) })
         : phase === "conspiracy"
           ? alreadyConspiracy
@@ -586,11 +601,17 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               ? alreadyConfessed
                 ? t("waitingConfess")
                 : t("confessHint")
-              : phase === "town_hall"
-                ? (you.town_hall_options ?? []).length
-                  ? t("hallPickHint")
-                  : t("hallPickedWait")
-                : "";
+              : phase === "dawn"
+                ? you.is_witch
+                  ? you.my_dawn_cat != null
+                    ? t("waitingDawn")
+                    : t("dawnHintWitch")
+                  : t("dawnHintTown")
+                : phase === "town_hall"
+                  ? (you.town_hall_options ?? []).length
+                    ? t("hallPickHint")
+                    : t("hallPickedWait")
+                  : "";
 
   const winnerRole = state?.result?.winner_role;
   const iWon =
@@ -722,7 +743,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               className={`salem-phase-banner mb-4 ${
                 state.phase === "night" || state.phase === "confess"
                   ? "is-night"
-                  : state.phase === "conspiracy"
+                  : state.phase === "dawn" || state.phase === "conspiracy"
                     ? "is-dawn"
                     : state.phase === "over"
                       ? "is-over"
@@ -732,13 +753,15 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               <p className="salem-phase-title">
                 {state.phase === "night"
                   ? `☾ ${phaseTitle}`
-                  : state.phase === "conspiracy"
-                    ? `↻ ${phaseTitle}`
-                    : state.phase === "confess"
-                      ? `⚖ ${phaseTitle}`
-                      : state.phase === "over"
-                        ? `🏁 ${phaseTitle}`
-                        : `🕯 ${phaseTitle}`}
+                  : state.phase === "dawn"
+                    ? `☽ ${phaseTitle}`
+                    : state.phase === "conspiracy"
+                      ? `↻ ${phaseTitle}`
+                      : state.phase === "confess"
+                        ? `⚖ ${phaseTitle}`
+                        : state.phase === "over"
+                          ? `🏁 ${phaseTitle}`
+                          : `🕯 ${phaseTitle}`}
               </p>
               <p className="muted mt-0.5 text-sm">
                 {t("round")} {state.round}
@@ -876,20 +899,50 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               <div className="salem-hand">
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold">{t("handTitle")}</h3>
-                  {selectedCardId && (
-                    <button
-                      className="btn btn-ghost !py-1 !px-2 text-xs"
-                      onClick={() => setSelectedHandIndex(null)}
-                    >
-                      {t("cancelCard")}
-                    </button>
-                  )}
+                  <span className="flex items-center gap-1">
+                    {myDay && conn === "open" && (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-ghost !py-1 !px-2 text-xs"
+                          disabled={!!you.played_this_turn}
+                          onClick={() => {
+                            setSelectedHandIndex(null);
+                            sendAction("draw_two", {});
+                          }}
+                        >
+                          {t("drawTwo")}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary !py-1 !px-2 text-xs"
+                          disabled={!you.played_this_turn}
+                          onClick={() => {
+                            setSelectedHandIndex(null);
+                            sendAction("end_turn", {});
+                          }}
+                        >
+                          {t("endTurn")}
+                        </button>
+                      </>
+                    )}
+                    {selectedCardId && (
+                      <button
+                        className="btn btn-ghost !py-1 !px-2 text-xs"
+                        onClick={() => setSelectedHandIndex(null)}
+                      >
+                        {t("cancelCard")}
+                      </button>
+                    )}
+                  </span>
                 </div>
                 <p className="muted mb-1 text-xs">
                   {myDay
                     ? selectedCardId
                       ? t("pickTarget")
-                      : t("playHint")
+                      : you.played_this_turn
+                        ? t("playedHint")
+                        : t("playHint")
                     : t("handIdle")}
                 </p>
                 <div className="salem-hand-row">

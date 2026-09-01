@@ -70,13 +70,15 @@ export default function SalemTable({
   const tableClass =
     phase === "night" || phase === "confess"
       ? "is-night"
-      : phase === "conspiracy"
-        ? "is-conspiracy is-dawn"
-        : phase === "day" || phase === "town_hall"
-          ? "is-day is-turn"
-          : phase === "over"
-            ? "is-over"
-            : "";
+      : phase === "dawn"
+        ? "is-dawn"
+        : phase === "conspiracy"
+          ? "is-conspiracy is-dawn"
+          : phase === "day" || phase === "town_hall"
+            ? "is-day is-turn"
+            : phase === "over"
+              ? "is-over"
+              : "";
 
   const marksTotal = state
     ? Object.values(state.marks ?? {}).reduce((a, b) => a + (Number(b) || 0), 0)
@@ -152,11 +154,13 @@ export default function SalemTable({
         <span className="salem-center-icon" aria-hidden>
           {phase === "night" || phase === "confess"
             ? "☾"
-            : phase === "conspiracy"
-              ? "↻"
-              : phase === "over"
-                ? "⚖"
-                : "🕯"}
+            : phase === "dawn"
+              ? "☽"
+              : phase === "conspiracy"
+                ? "↻"
+                : phase === "over"
+                  ? "⚖"
+                  : "🕯"}
         </span>
       </div>
       {slots.map((slot, i) => {
