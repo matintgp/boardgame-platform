@@ -263,7 +263,7 @@ export default function LobbyPage() {
           return (
             <article key={m.id} className={`card card-lift overflow-hidden enter enter-d${i + 1}`}>
               <div className="game-cover h-28">
-                <img src={m.cover} alt={t(m.nameKey)} />
+                <img src={m.cover} alt={t(m.nameKey)} loading="lazy" />
                 <div className="cover-shade" />
                 <div className="absolute inset-x-0 bottom-0 p-3 text-start">
                   <h2 className="font-bold">{t(m.nameKey)}</h2>

@@ -28,6 +28,7 @@ import {
   playSalemNight,
   playSalemReveal,
 } from "./salemSounds";
+import SoundControls from "./SoundControls";
 import {
   MARK_THRESHOLD,
   SALEM_MAX_FALLBACK,
@@ -53,6 +54,36 @@ type NightTool = "kill" | "gavel";
 function deadlineMs(v: number | null | undefined): number | null {
   if (v == null || !Number.isFinite(v)) return null;
   return v < 1e12 ? v * 1000 : v;
+}
+
+/** Hall portrait that degrades to a parchment initial-crest when the asset 404s. */
+function HallFace({
+  id,
+  name,
+  className,
+}: {
+  id: string;
+  name: string;
+  className: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const src = hallPortrait(id);
+  if (!src || failed) {
+    return (
+      <span className={`${className} salem-portrait-fallback`} aria-hidden>
+        {(name.trim().slice(0, 1) || "?").toUpperCase()}
+      </span>
+    );
+  }
+  return (
+    <img
+      className={className}
+      src={src}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 export default function SalemGame({ gameId }: { gameId: string }) {
@@ -82,6 +113,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   } | null>(null);
   const [scapegoatFrom, setScapegoatFrom] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [flyingIndex, setFlyingIndex] = useState<number | null>(null);
+  const [errSeq, setErrSeq] = useState(0);
+  const [toast, setToast] = useState<{ seq: number; text: string } | null>(null);
   const socketRef = useRef<GameSocket | null>(null);
   const prevStateRef = useRef<SalemState | null>(null);
   const hydratedRef = useRef(false);
@@ -97,6 +131,8 @@ export default function SalemGame({ gameId }: { gameId: string }) {
       if (env.room && env.room !== room) return;
       if (env.type === "error") {
         const msg = (env.payload as { message?: string } | undefined)?.message;
+        setErrSeq((n) => n + 1);
+        setFlyingIndex(null);
         setError(msg ?? "error");
         return;
       }
@@ -246,6 +282,12 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     const id = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(id);
   }, [state?.phase, confessUntil]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 2600);
+    return () => window.clearTimeout(id);
+  }, [toast]);
 
   function sendAction(action: string, payload: Record<string, unknown> = {}) {
     setError(null);
@@ -397,11 +439,37 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     return "";
   }
 
+  function flashFlying(index: number | null) {
+    if (index == null) return;
+    setFlyingIndex(index);
+    window.setTimeout(
+      () => setFlyingIndex((cur) => (cur === index ? null : cur)),
+      420
+    );
+  }
+
+  function announcePlay(cardId: string, target: number | undefined) {
+    const card = cardCopy(cardId).title;
+    setToast({
+      seq: Date.now(),
+      text:
+        target != null && you
+          ? t("logPlay", {
+              name: nameOf(players, you.seat),
+              card,
+              target: nameOf(players, target),
+            })
+          : t("playedCard", { card }),
+    });
+  }
+
   function finishPlay(cardId: string, target: number | undefined, extra: Record<string, unknown>) {
     const payload: Record<string, unknown> = { card_id: cardId };
     if (target != null) payload.target = target;
     if (Object.keys(extra).length) payload.extra = extra;
     playSalemCard();
+    flashFlying(selectedHandIndex);
+    announcePlay(cardId, target);
     sendAction("play_card", payload);
     setSelectedHandIndex(null);
     setTryalPrompt(null);
@@ -471,6 +539,8 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     }
     if (!cardNeedsTarget(cardId)) {
       playSalemCard();
+      flashFlying(index);
+      announcePlay(cardId, undefined);
       sendAction("play_card", { card_id: cardId });
       setSelectedHandIndex(null);
       return;
@@ -627,8 +697,16 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     : [];
 
   return (
-    <div className="salem-root grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <div className="mx-auto w-full max-w-2xl">
+    <div
+      className={`salem-root grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] ${
+        phase === "night" || phase === "confess"
+          ? "is-night"
+          : phase === "dawn" || phase === "conspiracy"
+            ? "is-dawn"
+            : ""
+      }`}
+    >
+      <div className="mx-auto w-full max-w-[44rem]">
         {rematchOffer && (
           <div className="card mb-4 flex items-center justify-between gap-3 border-[var(--accent)] p-4">
             <span>
@@ -750,28 +828,33 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                       : "is-turn"
               }`}
             >
-              <p className="salem-phase-title">
-                {state.phase === "night"
-                  ? `☾ ${phaseTitle}`
-                  : state.phase === "dawn"
-                    ? `☽ ${phaseTitle}`
-                    : state.phase === "conspiracy"
-                      ? `↻ ${phaseTitle}`
-                      : state.phase === "confess"
-                        ? `⚖ ${phaseTitle}`
-                        : state.phase === "over"
-                          ? `🏁 ${phaseTitle}`
-                          : `🕯 ${phaseTitle}`}
-              </p>
-              <p className="muted mt-0.5 text-sm">
-                {t("round")} {state.round}
-                {state.phase === "day" && state.current_seat != null && (
-                  <>
-                    {" · "}
-                    {t("seatTurn", { name: nameOf(players, state.current_seat) })}
-                  </>
-                )}
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="salem-phase-title">
+                    {state.phase === "night"
+                      ? `☾ ${phaseTitle}`
+                      : state.phase === "dawn"
+                        ? `☽ ${phaseTitle}`
+                        : state.phase === "conspiracy"
+                          ? `↻ ${phaseTitle}`
+                          : state.phase === "confess"
+                            ? `⚖ ${phaseTitle}`
+                            : state.phase === "over"
+                              ? `🏁 ${phaseTitle}`
+                              : `🕯 ${phaseTitle}`}
+                  </p>
+                  <p className="muted mt-0.5 text-sm">
+                    {t("round")} {state.round}
+                    {state.phase === "day" && state.current_seat != null && (
+                      <>
+                        {" · "}
+                        {t("seatTurn", { name: nameOf(players, state.current_seat) })}
+                      </>
+                    )}
+                  </p>
+                </div>
+                <SoundControls />
+              </div>
             </div>
 
             {you && (
@@ -895,6 +978,18 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               teammates={teammates}
             />
 
+            {toast && (
+              <div key={toast.seq} className="salem-toast" role="status">
+                {toast.text}
+              </div>
+            )}
+
+            {error && (
+              <p key={errSeq} className="salem-hand-error" role="alert">
+                ⚠ {error === "error" ? t("illegalMove") : error}
+              </p>
+            )}
+
             {you && youAlive && (you.hand ?? []).length >= 0 && (
               <div className="salem-hand">
                 <div className="mb-1 flex items-center justify-between gap-2">
@@ -949,28 +1044,42 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                   {(you.hand ?? []).length === 0 && <p className="muted text-sm">{t("emptyHand")}</p>}
                   {(you.hand ?? []).map((cardId, i) => {
                     const copy = cardCopy(cardId);
+                    const marks = accusationValue(cardId);
+                    const armed = selectedHandIndex === i;
                     return (
                       <button
                         type="button"
                         key={`${cardId}-${i}`}
                         className={`salem-card is-${copy.color} ${
-                          selectedHandIndex === i ? "is-selected" : ""
-                        }`}
+                          armed ? "is-selected is-armed" : ""
+                        } ${flyingIndex === i ? "is-flying" : ""}`}
                         style={{ animationDelay: `${i * 70}ms` }}
                         onClick={() => onCardClick(cardId, i)}
                         disabled={!myDay || conn !== "open"}
                       >
-                        <span className="salem-card-color">{t(`color.${copy.color}`)}</span>
-                        <span className="salem-card-title">{copy.title}</span>
+                        {marks > 0 && (
+                          <span className="salem-card-marks" aria-hidden>
+                            {Array.from({ length: marks }).map((_, mi) => (
+                              <i key={mi} className="salem-card-mark" />
+                            ))}
+                          </span>
+                        )}
+                        <span className="salem-card-band">
+                          <span className="salem-card-color">{t(`color.${copy.color}`)}</span>
+                          <span className="salem-card-title">{copy.title}</span>
+                        </span>
                         <span className="salem-card-text">{copy.text}</span>
+                        {armed && (
+                          <span className="salem-card-cancel" title={t("cancelCard")} aria-hidden>
+                            ✕
+                          </span>
+                        )}
                       </button>
                     );
                   })}
                 </div>
               </div>
             )}
-
-            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
           </>
         )}
       </div>
@@ -1080,23 +1189,26 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             </p>
             {(you.town_hall_options ?? []).length > 0 && (
               <div className="salem-hall-pick">
-                {(you.town_hall_options ?? []).map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    className="salem-hall-choice"
-                    onClick={() => {
-                      playSalemCard();
-                      sendAction("choose_town_hall", { character_id: opt.id });
-                    }}
-                  >
-                    {hallPortrait(opt.id) && (
-                      <img className="salem-hall-choice-face" src={hallPortrait(opt.id)!} alt="" />
-                    )}
-                    <span className="salem-hall-choice-kicker">{t(`hallRoles.${townHallI18nKey(opt.id)}`)}</span>
-                    <span className="salem-hall-choice-title">{t(`halls.${townHallI18nKey(opt.id)}`)}</span>
-                  </button>
-                ))}
+                {(you.town_hall_options ?? []).map((opt) => {
+                  const key = townHallI18nKey(opt.id);
+                  const name = t(`halls.${key}`);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className="salem-hall-choice"
+                      onClick={() => {
+                        playSalemCard();
+                        sendAction("choose_town_hall", { character_id: opt.id });
+                      }}
+                    >
+                      <HallFace id={opt.id} name={name} className="salem-hall-choice-face" />
+                      <span className="salem-hall-choice-kicker">{t(`hallRoles.${key}`)}</span>
+                      <span className="salem-hall-choice-title">{name}</span>
+                      <span className="salem-hall-choice-desc">{t(`hallAbilities.${key}`)}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

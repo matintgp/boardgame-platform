@@ -954,3 +954,335 @@ html[dir="rtl"] .salem-hall-choice-kicker {
   filter: sepia(0.25) contrast(1.05);
   background: #1a1208;
 }
+
+/* ═══ premium pass: ambient transitions, card anatomy, play feedback ═══ */
+
+/* —— table ambient: fast phase shifts, vignette, dawn glow —— */
+.salem-table {
+  transition: box-shadow 0.38s ease, filter 0.38s ease;
+}
+.salem-night-fog,
+.salem-table::before {
+  transition: opacity 0.38s ease;
+}
+.salem-dawn-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  background: radial-gradient(ellipse at 50% 28%, rgba(255, 196, 110, 0.3), transparent 62%);
+  mix-blend-mode: screen;
+  transition: opacity 0.38s ease;
+}
+.salem-table.is-dawn .salem-dawn-glow { opacity: 1; }
+.salem-table-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 44%, transparent 52%, rgba(10, 5, 2, 0.45) 100%);
+}
+
+/* —— screen-level ambient tint behind the game column —— */
+.salem-root { position: relative; }
+.salem-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(30, 20, 60, 0.38), rgba(6, 4, 14, 0.55));
+  transition: opacity 0.38s ease;
+}
+.salem-root.is-night::before { opacity: 1; }
+.salem-root.is-dawn::before {
+  opacity: 1;
+  background: radial-gradient(ellipse at 50% 0%, rgba(96, 62, 20, 0.3), rgba(20, 12, 6, 0.42));
+}
+
+@keyframes salem-phase-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* —— portrait crest fallback (missing asset) —— */
+.salem-portrait-fallback {
+  display: grid;
+  place-items: center;
+  font-family: var(--salem-serif);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #3a2414;
+  background: radial-gradient(circle at 50% 30%, #f2e4c0, #d4bc86 68%, #a8844e);
+  box-shadow:
+    inset 0 0 0 2px rgba(138, 90, 50, 0.55),
+    inset 0 0 0 5px rgba(242, 228, 192, 0.55);
+}
+.salem-avatar .salem-portrait-fallback {
+  font-size: 1.05rem;
+  border-radius: 50%;
+}
+
+.salem-hall-choice-desc {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--salem-ink-soft);
+}
+
+/* —— card front anatomy (hand cards) —— */
+.salem-card:not(.salem-card-3d) {
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 224, 0.35), rgba(122, 84, 40, 0.14)),
+    url("/salem/parchment.jpg") center / cover no-repeat,
+    var(--salem-parchment);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.salem-card.is-black:not(.salem-card-3d) {
+  background: linear-gradient(180deg, #2a2048, #100c1c);
+}
+.salem-card:not(.salem-card-3d)::before,
+.salem-card-front::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 0.38rem;
+  border: 1px solid rgba(106, 74, 34, 0.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(240, 226, 188, 0.65),
+    inset 0 0 0 3px rgba(106, 74, 34, 0.22);
+  pointer-events: none;
+}
+.salem-card:not(.salem-card-3d)::after,
+.salem-card-front::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle 2.2px at 4px 4px, rgba(122, 84, 40, 0.85) 96%, transparent),
+    radial-gradient(circle 2.2px at calc(100% - 4px) 4px, rgba(122, 84, 40, 0.85) 96%, transparent),
+    radial-gradient(circle 2.2px at 4px calc(100% - 4px), rgba(122, 84, 40, 0.85) 96%, transparent),
+    radial-gradient(circle 2.2px at calc(100% - 4px) calc(100% - 4px), rgba(122, 84, 40, 0.85) 96%, transparent);
+}
+.salem-card.is-red:not(.salem-card-3d)::before { border-color: rgba(140, 26, 34, 0.7); }
+.salem-card.is-green:not(.salem-card-3d)::before { border-color: rgba(61, 106, 58, 0.7); }
+.salem-card.is-blue:not(.salem-card-3d)::before { border-color: rgba(47, 106, 136, 0.7); }
+.salem-card.is-black:not(.salem-card-3d)::before { border-color: rgba(150, 140, 190, 0.45); }
+
+.salem-card-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.02rem;
+  margin-inline: -0.15rem;
+  padding: 0.2rem 0.25rem;
+  border-block: 1px solid rgba(106, 74, 34, 0.45);
+  background: linear-gradient(180deg, rgba(138, 90, 50, 0.18), rgba(138, 90, 50, 0.05));
+}
+.salem-card.is-red .salem-card-band {
+  border-color: rgba(140, 26, 34, 0.55);
+  background: linear-gradient(180deg, rgba(154, 28, 42, 0.22), rgba(154, 28, 42, 0.06));
+}
+.salem-card.is-green .salem-card-band {
+  border-color: rgba(61, 106, 58, 0.55);
+  background: linear-gradient(180deg, rgba(61, 106, 58, 0.22), rgba(61, 106, 58, 0.06));
+}
+.salem-card.is-blue .salem-card-band {
+  border-color: rgba(47, 106, 136, 0.55);
+  background: linear-gradient(180deg, rgba(47, 106, 136, 0.2), rgba(47, 106, 136, 0.05));
+}
+.salem-card.is-black .salem-card-band {
+  border-color: rgba(150, 140, 190, 0.4);
+  background: linear-gradient(180deg, rgba(58, 44, 96, 0.55), rgba(24, 18, 44, 0.35));
+}
+.salem-card.is-compact .salem-card-band {
+  margin-inline: -0.05rem;
+  padding: 0.1rem 0.15rem;
+}
+
+.salem-card-marks {
+  position: absolute;
+  top: 0.42rem;
+  inset-inline-end: 0.42rem;
+  z-index: 2;
+  display: flex;
+  gap: 3px;
+}
+.salem-card-mark {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e06060, var(--salem-wax) 58%, #5a0e16);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 222, 180, 0.55),
+    0 1px 3px rgba(60, 8, 12, 0.5);
+}
+.salem-card.is-compact .salem-card-mark { width: 9px; height: 9px; }
+
+.salem-card:not(:disabled):not(.is-selected):not(.salem-card-3d):hover {
+  transform: translateY(-7px);
+  box-shadow:
+    0 1px 0 rgba(255, 240, 210, 0.5) inset,
+    0 14px 26px rgba(20, 10, 0, 0.42);
+}
+.salem-card.is-armed {
+  transform: translateY(-14px) rotate(-2deg);
+  box-shadow:
+    0 0 0 2px var(--salem-candle),
+    0 0 24px rgba(255, 176, 74, 0.45),
+    0 18px 34px rgba(20, 10, 0, 0.45);
+  z-index: 3;
+}
+.salem-card.is-armed::before {
+  border-color: var(--salem-candle);
+  animation: salem-armed-pulse 1.15s ease-in-out infinite;
+}
+@keyframes salem-armed-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 224, 138, 0.7),
+      inset 0 0 0 3px rgba(255, 176, 74, 0.25);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 224, 138, 0.95),
+      inset 0 0 0 3px rgba(255, 176, 74, 0.55);
+  }
+}
+.salem-card-cancel {
+  position: absolute;
+  top: -0.45rem;
+  inset-inline-start: -0.45rem;
+  z-index: 4;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #c44545, #7a1620);
+  color: #ffe8c8;
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+  border: 1px solid rgba(255, 220, 180, 0.6);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.salem-card.is-flying {
+  animation: salem-card-fly 0.34s ease-in both;
+  animation-delay: 0s !important;
+  pointer-events: none;
+}
+@keyframes salem-card-fly {
+  0% { transform: translateY(-14px) rotate(-2deg); opacity: 1; }
+  100% { transform: translateY(-64px) scale(0.85) rotate(-5deg); opacity: 0; }
+}
+
+/* —— SalemCard 3d front: parchment body + frame —— */
+.salem-card-front {
+  background:
+    linear-gradient(180deg, rgba(255, 248, 224, 0.3), rgba(122, 84, 40, 0.12)),
+    url("/salem/parchment.jpg") center / cover no-repeat,
+    var(--salem-parchment);
+}
+.salem-card-front.is-black {
+  background: linear-gradient(180deg, #2a2048, #100c1c);
+  color: #e8e0d0;
+}
+.salem-card-front.is-black::before {
+  border-color: rgba(150, 140, 190, 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 108, 160, 0.35),
+    inset 0 0 0 3px rgba(60, 50, 100, 0.3);
+}
+.salem-card-front.is-black::after {
+  background:
+    radial-gradient(circle 2.2px at 4px 4px, rgba(160, 150, 200, 0.7) 96%, transparent),
+    radial-gradient(circle 2.2px at calc(100% - 4px) 4px, rgba(160, 150, 200, 0.7) 96%, transparent),
+    radial-gradient(circle 2.2px at 4px calc(100% - 4px), rgba(160, 150, 200, 0.7) 96%, transparent),
+    radial-gradient(circle 2.2px at calc(100% - 4px) calc(100% - 4px), rgba(160, 150, 200, 0.7) 96%, transparent);
+}
+.salem-card-front .salem-card-text { text-align: center; }
+
+/* —— tryal pip reveal flip —— */
+.salem-tryal:not(.is-empty) {
+  animation: salem-tryal-flip 0.3s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+@keyframes salem-tryal-flip {
+  from { transform: rotateY(90deg) scale(0.8); opacity: 0.2; }
+  to { transform: rotateY(0) scale(1); opacity: 1; }
+}
+
+/* —— play feedback: toast + illegal-move shake —— */
+.salem-toast {
+  margin: 0.5rem auto 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 162, 78, 0.42);
+  background: rgba(24, 17, 10, 0.92);
+  color: var(--salem-parchment);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  animation:
+    salem-toast-in 0.22s ease both,
+    salem-toast-out 0.3s ease 2.25s both;
+}
+@keyframes salem-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@keyframes salem-toast-out {
+  to { opacity: 0; transform: translateY(6px); }
+}
+.salem-hand-error {
+  margin: 0.55rem auto 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.3rem 0.8rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(196, 69, 69, 0.5);
+  background: rgba(60, 12, 16, 0.6);
+  color: #f0b0b0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  animation: salem-shake 0.28s ease both;
+}
+@keyframes salem-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+
+/* —— hand dock polish —— */
+.salem-hand {
+  border-top: 1px solid rgba(196, 162, 78, 0.16);
+  border-radius: 1.1rem 1.1rem 0 0;
+  backdrop-filter: blur(5px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .salem-table,
+  .salem-night-fog,
+  .salem-table::before,
+  .salem-dawn-glow,
+  .salem-root::before,
+  .salem-card:not(.salem-card-3d) {
+    transition: none !important;
+  }
+  .salem-toast,
+  .salem-hand-error,
+  .salem-tryal:not(.is-empty),
+  .salem-card.is-armed::before,
+  .salem-card.is-flying {
+    animation: none !important;
+  }
+}

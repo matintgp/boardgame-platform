@@ -57,7 +57,7 @@ export default function Navbar() {
               className={
                 locale === "fa"
                   ? "text-[var(--accent)]"
-                  : "muted hover:text-[var(--accent)]"
+                  : "muted transition-colors hover:text-[var(--accent)]"
               }
               aria-current={locale === "fa" ? "true" : undefined}
             >
@@ -72,7 +72,7 @@ export default function Navbar() {
               className={
                 locale === "en"
                   ? "text-[var(--accent)]"
-                  : "muted hover:text-[var(--accent)]"
+                  : "muted transition-colors hover:text-[var(--accent)]"
               }
               aria-current={locale === "en" ? "true" : undefined}
             >

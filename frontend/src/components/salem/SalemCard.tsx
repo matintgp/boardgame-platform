@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import { accusationValue } from "./catalog";
 
 export type SalemCardColor = "green" | "blue" | "red" | "black";
 export type SalemCardFace =
@@ -190,10 +191,22 @@ export default function SalemCard({
       </>
     );
   } else {
+    const marks = card?.id ? accusationValue(card.id) : 0;
     front = (
       <>
+        {marks > 0 && (
+          <span className="salem-card-marks" aria-hidden>
+            {Array.from({ length: marks }).map((_, mi) => (
+              <i key={mi} className="salem-card-mark" />
+            ))}
+          </span>
+        )}
         <PlayMark color={resolvedColor} />
-        {resolvedTitle && <span className="salem-card-title">{resolvedTitle}</span>}
+        {resolvedTitle && (
+          <span className="salem-card-band">
+            <span className="salem-card-title">{resolvedTitle}</span>
+          </span>
+        )}
         {resolvedText && <span className="salem-card-text">{resolvedText}</span>}
       </>
     );

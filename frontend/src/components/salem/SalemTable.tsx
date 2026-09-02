@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { hallPortrait, playCardInfo, tryalKindFromId, townHallI18nKey } from "./catalog";
 import {
@@ -17,6 +18,28 @@ import {
 } from "./types";
 
 type Slot = { seat: number; player: PlayerInfo | null };
+
+/** Seat portrait that degrades to a parchment initial-crest when the asset 404s. */
+function SeatPortrait({ hallId, name }: { hallId: string; name: string }) {
+  const [failed, setFailed] = useState(false);
+  const src = hallPortrait(hallId);
+  if (!src || failed) {
+    return (
+      <span className="salem-portrait salem-portrait-fallback" aria-hidden>
+        {(name.trim().slice(0, 1) || "?").toUpperCase()}
+      </span>
+    );
+  }
+  return (
+    <img
+      className="salem-portrait"
+      src={src}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export default function SalemTable({
   slots,
@@ -90,11 +113,13 @@ export default function SalemTable({
 
   return (
     <div
-      className={`salem-table mx-auto aspect-[5/4] w-full ${crowded ? "is-crowded" : intimate ? "is-intimate max-w-[34rem]" : "max-w-[36rem]"} ${tableClass}`}
+      className={`salem-table mx-auto aspect-[5/4] w-full ${crowded ? "is-crowded" : intimate ? "is-intimate max-w-[min(34rem,calc(54vh*5/4))]" : "max-w-[min(37rem,calc(56vh*5/4))]"} ${tableClass}`}
       dir="ltr"
     >
       <div className="salem-table-felt" />
       <div className="salem-night-fog" aria-hidden />
+      <div className="salem-dawn-glow" aria-hidden />
+      <div className="salem-table-vignette" aria-hidden />
       <div className="salem-candle salem-candle-left" aria-hidden>
         <span className="salem-flame" />
         <span className="salem-wick" />
@@ -187,7 +212,7 @@ export default function SalemTable({
               } ${canHit ? "is-target" : ""}`}
             >
               {hall && hallPortrait(hall.id) ? (
-                <img className="salem-portrait" src={hallPortrait(hall.id)!} alt="" />
+                <SeatPortrait hallId={hall.id} name={t(`halls.${townHallI18nKey(hall.id)}`)} />
               ) : (
                 p ? (p.user.username.slice(0, 1) || "?").toUpperCase() : "·"
               )}

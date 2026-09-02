@@ -52,7 +52,7 @@ export default function HomePage() {
             className={`card card-lift enter enter-d${i + 1} group overflow-hidden`}
           >
             <div className="game-cover aspect-[16/10]">
-              <img src={g.cover} alt={tl(g.nameKey)} />
+              <img src={g.cover} alt={tl(g.nameKey)} loading="lazy" />
               <div className="cover-shade" />
               <div className="absolute inset-x-0 bottom-0 p-4 text-start">
                 <div className="text-lg font-bold">{tl(g.nameKey)}</div>
