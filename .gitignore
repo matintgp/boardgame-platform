@@ -28,3 +28,6 @@ Thumbs.db
 
 # Infra runtime data
 infra/data/
+
+# Copyrighted Facade Games rulebook - never commit
+board-games-salem-1692-salem-rulebook-link.pdf
