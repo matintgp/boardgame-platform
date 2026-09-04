@@ -792,3 +792,19 @@ html[dir="rtl"] .game-tile-kicker {
   color: var(--action-primary, var(--accent));
   letter-spacing: 0.01em;
 }
+
+
+/* Platform shell width: salon pages stay cozy; live tables breathe wider */
+.salon-main {
+  width: 100%;
+  max-width: 64rem; /* ~max-w-5xl */
+  margin-inline: auto;
+  padding-inline: 1rem;
+  padding-block: 2rem;
+}
+@media (min-width: 768px) {
+  .salon-main { padding-inline: 1.5rem; }
+}
+.salon-main:has([data-game-table]) {
+  max-width: 80rem; /* ~max-w-7xl */
+}

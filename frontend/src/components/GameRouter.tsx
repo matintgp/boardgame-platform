@@ -53,10 +53,26 @@ export default function GameRouter({ gameId }: { gameId: string }) {
     return <p className="muted text-center">{t("loadingGame")}</p>;
   }
 
-  if (gameType === "salem") return <SalemGame gameId={gameId} />;
-  if (gameType === "rokugan") return <RokuganGame gameId={gameId} />;
-  if (gameType === "mafia") return <MafiaGame gameId={gameId} />;
-  if (gameType === "chess") return <ChessGame gameId={gameId} />;
+  if (gameType === "salem") return (
+    <div data-game-table>
+      <SalemGame gameId={gameId} />
+    </div>
+  );
+  if (gameType === "rokugan") return (
+    <div data-game-table>
+      <RokuganGame gameId={gameId} />
+    </div>
+  );
+  if (gameType === "mafia") return (
+    <div data-game-table>
+      <MafiaGame gameId={gameId} />
+    </div>
+  );
+  if (gameType === "chess") return (
+    <div data-game-table>
+      <ChessGame gameId={gameId} />
+    </div>
+  );
 
   return (
     <div className="card mx-auto max-w-md p-6 text-center">

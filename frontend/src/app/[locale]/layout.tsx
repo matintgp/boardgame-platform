@@ -52,7 +52,7 @@ export default async function LocaleLayout({
       <body className={`${vazirmatn.className} ${vazirmatn.variable} min-h-screen`}>
         <NextIntlClientProvider>
           <Navbar />
-          <main className="relative z-10 mx-auto max-w-5xl px-4 py-8">{children}</main>
+          <main className="salon-main relative z-10">{children}</main>
           {process.env.NODE_ENV === "production" && (
             <script dangerouslySetInnerHTML={{ __html:
               `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}` }} />
