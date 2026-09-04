@@ -1,4 +1,4 @@
-/* Rokugan duel — lacquer, vermillion, ink river. Scoped to .rk-* */
+/* Rokugan duel — lacquer, vermillion, ink river, parchment. Scoped to .rk-* */
 
 .rk-root {
   --rk-lacquer: #1a0e0c;
@@ -9,8 +9,23 @@
   --rk-silk: #2a1814;
   --rk-ash: #4a2820;
   --rk-paper: #e8dcc0;
+  --rk-paper-dim: #cfc3a4;
+  --rk-ink-soft: #3a3228;
+  --rk-seal: #a83428;
+  --rk-hold: #6a9a72;
+  --rk-focus: rgba(232, 200, 106, 0.55);
+  color: var(--text-primary, var(--text));
 }
 
+.rk-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4, 1rem);
+  width: 100%;
+}
+
+/* —— war table —— */
 .rk-table {
   position: relative;
   width: min(100%, 28rem);
@@ -42,6 +57,19 @@
   justify-content: center;
   gap: 0.7rem;
 }
+.rk-side-label {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  font-size: var(--type-caption, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--rk-paper-dim);
+}
+.rk-side-label.is-self {
+  color: var(--rk-paper);
+}
 .rk-river {
   position: relative;
   z-index: 1;
@@ -68,6 +96,7 @@ html[dir="rtl"] .rk-river {
   vertical-align: middle;
 }
 
+/* —— provinces —— */
 .rk-province {
   position: relative;
   display: flex;
@@ -81,9 +110,13 @@ html[dir="rtl"] .rk-river {
   border: 1px solid #6a4a28;
   color: var(--rk-paper);
   background:
+    linear-gradient(165deg, rgba(232, 220, 192, 0.08), transparent 42%),
     linear-gradient(180deg, #3a281c, #1c120e);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform var(--motion-fast, 140ms) var(--ease-standard, ease),
+    box-shadow var(--motion-fast, 140ms) var(--ease-standard, ease),
+    border-color var(--motion-fast, 140ms) var(--ease-standard, ease);
 }
 .rk-province img {
   width: 1.85rem;
@@ -94,6 +127,31 @@ html[dir="rtl"] .rk-river {
   font-weight: 700;
   letter-spacing: 0.04em;
 }
+.rk-province-badge {
+  position: absolute;
+  top: 0.28rem;
+  inset-inline-end: 0.28rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.28rem;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: 0.55rem;
+  font-weight: 800;
+  line-height: 1.15rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--rk-paper);
+  background: rgba(12, 8, 6, 0.72);
+  border: 1px solid rgba(232, 200, 106, 0.35);
+}
+.rk-province-badge.is-attack {
+  background: rgba(196, 69, 50, 0.9);
+  border-color: rgba(232, 200, 106, 0.45);
+}
+.rk-province-badge.is-defense {
+  background: rgba(42, 72, 58, 0.92);
+  border-color: rgba(106, 154, 114, 0.55);
+}
 .rk-province.is-live {
   cursor: pointer;
 }
@@ -101,10 +159,26 @@ html[dir="rtl"] .rk-river {
   border-color: var(--rk-gold);
   transform: translateY(-3px);
 }
+.rk-province.is-live:focus-visible {
+  outline: 2px solid var(--rk-gold);
+  outline-offset: 3px;
+}
 .rk-province.is-picked {
   border-color: var(--rk-gold);
   box-shadow: 0 0 0 2px rgba(232, 200, 106, 0.45), 0 8px 18px rgba(232, 200, 106, 0.18);
   transform: translateY(-6px);
+}
+.rk-province.is-picked.is-attack-target {
+  border-color: var(--rk-vermillion);
+  box-shadow:
+    0 0 0 2px rgba(196, 69, 50, 0.5),
+    0 8px 18px rgba(196, 69, 50, 0.22);
+}
+.rk-province.is-picked.is-defense-target {
+  border-color: #7aaf82;
+  box-shadow:
+    0 0 0 2px rgba(106, 154, 114, 0.5),
+    0 8px 18px rgba(106, 154, 114, 0.18);
 }
 .rk-province.is-razed {
   border-color: #8c2a22;
@@ -119,9 +193,17 @@ html[dir="rtl"] .rk-river {
   transform: none;
 }
 
+/* —— strength tokens —— */
+.rk-token-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
 .rk-token {
-  width: 2.15rem;
-  height: 2.15rem;
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   border: 1px solid #6a4a28;
   background:
@@ -130,14 +212,37 @@ html[dir="rtl"] .rk-river {
   font-weight: 800;
   font-size: 0.85rem;
   box-shadow: 0 3px 0 #0c0806, 0 6px 10px rgba(0, 0, 0, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform var(--motion-fast, 140ms) var(--ease-standard, ease),
+    box-shadow var(--motion-fast, 140ms) var(--ease-standard, ease),
+    border-color var(--motion-fast, 140ms) ease;
+}
+.rk-token:not(:disabled):hover {
+  border-color: var(--rk-gold);
+  transform: translateY(-2px);
+}
+.rk-token:focus-visible {
+  outline: 2px solid var(--rk-gold);
+  outline-offset: 3px;
 }
 .rk-token.is-picked {
   border-color: var(--rk-gold);
   color: #1a1008;
   background: radial-gradient(circle at 35% 30%, #f0d48a, #c4a24e);
   transform: translateY(-4px);
-  box-shadow: 0 0 0 2px rgba(232, 200, 106, 0.4);
+  box-shadow: 0 0 0 2px rgba(232, 200, 106, 0.4), 0 6px 12px rgba(0, 0, 0, 0.35);
+}
+.rk-token.is-picked.is-attack {
+  border-color: #f0a090;
+  color: #fff8f0;
+  background: radial-gradient(circle at 35% 30%, #d45a48, #8c2418);
+  box-shadow: 0 0 0 2px rgba(196, 69, 50, 0.45), 0 6px 12px rgba(0, 0, 0, 0.35);
+}
+.rk-token.is-picked.is-defense {
+  border-color: #a8d0b0;
+  color: #f4fff6;
+  background: radial-gradient(circle at 35% 30%, #4a7a58, #1e3828);
+  box-shadow: 0 0 0 2px rgba(106, 154, 114, 0.45), 0 6px 12px rgba(0, 0, 0, 0.35);
 }
 .rk-token:disabled {
   opacity: 0.38;
@@ -145,16 +250,291 @@ html[dir="rtl"] .rk-river {
 .rk-token.is-locked {
   outline: 2px dashed rgba(196, 69, 50, 0.55);
   outline-offset: 2px;
+  cursor: not-allowed;
 }
 
-.rk-lobby {
-  background: rgba(18, 10, 8, 0.82);
+/* —— status banner —— */
+.rk-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: min(100%, 28rem);
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(232, 200, 106, 0.28);
+  background: rgba(20, 12, 10, 0.72);
+  font-size: 0.85rem;
+}
+.rk-crest {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+.rk-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: var(--type-caption, 0.72rem);
+  font-weight: 700;
+  border: 1px solid rgba(232, 200, 106, 0.22);
+  background: rgba(12, 8, 6, 0.55);
+  color: var(--rk-paper-dim);
+}
+.rk-status-chip.is-ready {
+  border-color: rgba(106, 154, 114, 0.55);
+  color: #c8e6cc;
+  background: rgba(30, 56, 40, 0.55);
+}
+.rk-status-chip.is-waiting {
+  border-color: rgba(232, 200, 106, 0.35);
+  color: var(--rk-gold);
+}
+.rk-status-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px rgba(232, 200, 106, 0.12);
+  flex-shrink: 0;
+}
+.rk-status-chip.is-ready .rk-status-dot {
+  box-shadow: 0 0 0 3px rgba(106, 154, 114, 0.18);
+}
+.rk-status-chip.is-waiting .rk-status-dot {
+  animation: rk-pulse 1.6s var(--ease-standard, ease) infinite;
+}
+
+@keyframes rk-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.rk-hint {
+  margin: 0;
+  max-width: 28rem;
+  text-align: center;
+  font-size: var(--type-body-sm, 0.875rem);
+  color: var(--text-muted, var(--muted));
+}
+.rk-hint.is-sealed {
+  color: var(--rk-gold);
+  font-weight: 600;
+}
+
+/* —— planning panel (parchment) —— */
+.rk-panel {
+  border: 1px solid rgba(232, 200, 106, 0.28);
+  border-radius: var(--radius-panel, 1rem);
+  background:
+    linear-gradient(180deg, rgba(232, 220, 192, 0.07), transparent 40%),
+    rgba(18, 10, 8, 0.88);
+  box-shadow: var(--shadow-panel, 0 10px 40px rgba(0, 0, 0, 0.22));
   overflow: hidden;
+}
+.rk-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem 0.65rem;
+  border-bottom: 1px solid rgba(232, 200, 106, 0.16);
+}
+.rk-panel-head h3 {
+  margin: 0;
+  font-size: var(--type-h3, 1.1rem);
+  font-weight: 700;
+  color: var(--rk-paper);
+}
+.rk-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem 1rem;
+}
+.rk-plan-block {
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(106, 74, 40, 0.55);
+  background: rgba(12, 8, 6, 0.35);
+}
+.rk-plan-block.is-attack {
+  border-color: rgba(196, 69, 50, 0.4);
+  background:
+    linear-gradient(135deg, rgba(196, 69, 50, 0.12), transparent 55%),
+    rgba(12, 8, 6, 0.35);
+}
+.rk-plan-block.is-defense {
+  border-color: rgba(106, 154, 114, 0.4);
+  background:
+    linear-gradient(135deg, rgba(106, 154, 114, 0.12), transparent 55%),
+    rgba(12, 8, 6, 0.35);
+}
+.rk-plan-block.is-sealed {
+  opacity: 0.92;
+}
+.rk-plan-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+  font-size: var(--type-label, 0.78rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rk-paper);
+}
+html[dir="rtl"] .rk-plan-title {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.rk-plan-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.45rem;
+  font-size: var(--type-body-sm, 0.875rem);
+}
+.rk-plan-meta .muted {
+  min-width: 4.5rem;
+}
+.rk-plan-value {
+  font-weight: 800;
+  color: var(--rk-gold);
+}
+.rk-plan-value.is-empty {
+  color: var(--text-disabled, #5c6370);
+  font-weight: 600;
+}
+.rk-seal-note {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(232, 200, 106, 0.28);
+  background: rgba(232, 200, 106, 0.08);
+  font-size: var(--type-body-sm, 0.875rem);
+  color: var(--rk-gold);
+  font-weight: 600;
+}
+.rk-submit {
+  width: 100%;
+}
+
+/* —— battle log / reveal —— */
+.rk-log {
+  max-height: 18rem;
+  overflow: auto;
+  border: 1px solid rgba(232, 200, 106, 0.22);
+  border-radius: var(--radius-panel, 1rem);
+  background: rgba(18, 10, 8, 0.88);
+  padding: 0.9rem 1rem 1rem;
+}
+.rk-log h3 {
+  margin: 0 0 0.65rem;
+  font-size: var(--type-h3, 1.1rem);
+  color: var(--rk-paper);
+}
+.rk-log-round {
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(232, 200, 106, 0.14);
+}
+.rk-log-round:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.rk-log-round-title {
+  margin-bottom: 0.4rem;
+  font-size: var(--type-label, 0.78rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rk-gold);
+}
+html[dir="rtl"] .rk-log-round-title {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.rk-outcome {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.6rem;
+  align-items: center;
+  padding: 0.45rem 0.55rem;
+  margin-bottom: 0.35rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(106, 74, 40, 0.45);
+  background: rgba(12, 8, 6, 0.4);
+  font-size: var(--type-body-sm, 0.875rem);
+}
+.rk-outcome:last-child {
+  margin-bottom: 0;
+}
+.rk-outcome.is-razed {
+  border-color: rgba(196, 69, 50, 0.45);
+  background: rgba(196, 69, 50, 0.1);
+}
+.rk-outcome.is-held {
+  border-color: rgba(106, 154, 114, 0.35);
+  background: rgba(106, 154, 114, 0.08);
+}
+.rk-outcome-who {
+  font-weight: 700;
+  color: var(--rk-paper);
+}
+.rk-outcome-line {
+  color: var(--rk-paper-dim);
+}
+.rk-outcome-vs {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--rk-paper);
+}
+.rk-outcome-tag {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  padding: 0.18rem 0.45rem;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+html[dir="rtl"] .rk-outcome-tag {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.rk-outcome-tag.is-razed {
+  color: #ffd0c8;
+  background: rgba(168, 52, 40, 0.85);
+}
+.rk-outcome-tag.is-held {
+  color: #dff5e4;
+  background: rgba(42, 90, 58, 0.85);
+}
+
+/* —— waiting lobby —— */
+.rk-lobby {
+  width: 100%;
+  max-width: 26rem;
+  border: 1px solid rgba(232, 200, 106, 0.28);
+  border-radius: var(--radius-card, 1rem);
+  background: rgba(18, 10, 8, 0.88);
+  overflow: hidden;
+  box-shadow: var(--shadow-card, 0 10px 40px rgba(0, 0, 0, 0.22));
 }
 .rk-lobby-hero {
   position: relative;
-  min-height: 7.5rem;
-  background: #1a0e0c;
+  min-height: 8rem;
+  background: var(--rk-lacquer);
 }
 .rk-lobby-hero img {
   position: absolute;
@@ -166,26 +546,72 @@ html[dir="rtl"] .rk-river {
 .rk-lobby-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(12, 8, 6, 0.94), rgba(12, 8, 6, 0.2) 55%);
+  background: linear-gradient(to top, rgba(12, 8, 6, 0.94), rgba(12, 8, 6, 0.25) 55%);
 }
-
-.rk-banner {
+.rk-lobby-hero-copy {
+  position: relative;
+  z-index: 1;
+  padding: 1.15rem 1.15rem 0.95rem;
+}
+.rk-lobby-kicker {
+  margin: 0 0 0.25rem;
+  font-size: var(--type-caption, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rk-gold);
+}
+html[dir="rtl"] .rk-lobby-kicker {
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.rk-lobby-hero-copy h2 {
+  margin: 0;
+  font-size: var(--type-h2, 1.35rem);
+  font-weight: 800;
+  color: var(--rk-paper);
+}
+.rk-lobby-body {
+  padding: 1rem 1.15rem 1.15rem;
+}
+.rk-lobby-wait {
+  margin: 0 0 0.65rem;
+  font-size: var(--type-body-sm, 0.875rem);
+  color: var(--text-muted, var(--muted));
+}
+.rk-seat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.85rem 0 0;
+}
+.rk-seat {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.6rem;
-  padding: 0.55rem 0.8rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(232, 200, 106, 0.28);
-  background: rgba(20, 12, 10, 0.72);
-  font-size: 0.85rem;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(106, 74, 40, 0.55);
+  background: rgba(12, 8, 6, 0.4);
+  font-size: var(--type-body-sm, 0.875rem);
 }
-.rk-crest {
-  width: 1.4rem;
-  height: 1.4rem;
+.rk-seat.is-you {
+  border-color: rgba(232, 200, 106, 0.4);
+  background: rgba(232, 200, 106, 0.08);
+}
+.rk-error {
+  margin: 0.75rem 0 0;
+  font-size: var(--type-body-sm, 0.875rem);
+  color: #f0a0a0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .rk-province,
-  .rk-token { transition: none; }
+  .rk-token {
+    transition: none;
+  }
+  .rk-status-chip.is-waiting .rk-status-dot {
+    animation: none;
+  }
 }

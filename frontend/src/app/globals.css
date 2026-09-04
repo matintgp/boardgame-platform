@@ -769,3 +769,41 @@ html[dir="rtl"] .game-tile-kicker {
   .nav-menu-btn { display: inline-flex; }
   .nav-drawer { display: flex; }
 }
+
+
+/* Shared chat booth (all tables) */
+.chat-booth {
+  border-color: var(--gold-line);
+  background: linear-gradient(180deg, rgba(28, 24, 18, 0.55), rgba(18, 16, 12, 0.72));
+}
+.chat-booth-summary {
+  font-weight: 650;
+}
+.chat-log {
+  font-size: var(--type-body-sm, 0.875rem);
+  line-height: 1.45;
+  padding-inline-end: 0.15rem;
+}
+.chat-empty { opacity: 0.55; }
+.chat-line {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, auto) 1fr;
+  gap: 0.35rem 0.55rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.chat-line:last-child { border-bottom: 0; }
+.chat-user {
+  font-weight: 700;
+  color: var(--text-secondary, var(--muted));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-line.is-mine .chat-user {
+  color: var(--action-primary, var(--accent));
+}
+.chat-text {
+  color: var(--text, inherit);
+  overflow-wrap: anywhere;
+}

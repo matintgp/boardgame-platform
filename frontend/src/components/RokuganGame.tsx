@@ -21,9 +21,25 @@ interface RokuganState {
   round: number;
   phase: "choose" | "over";
   provinces: Record<string, boolean[]>;
-  log: { round: number; outcomes: { attacker: number; target: number; attack: number; defended: boolean; defense: number | null; razed: boolean }[] }[];
+  log: {
+    round: number;
+    outcomes: {
+      attacker: number;
+      target: number;
+      attack: number;
+      defended: boolean;
+      defense: number | null;
+      razed: boolean;
+    }[];
+  }[];
   result: { reason: string; winner_seat: number | null } | null;
-  you: { seat: number; plan: { attack: { target: number; token: number }; defense: { target: number; token: number } } | null } | null;
+  you: {
+    seat: number;
+    plan: {
+      attack: { target: number; token: number };
+      defense: { target: number; token: number };
+    } | null;
+  } | null;
   opponent: { submitted: boolean } | null;
 }
 
@@ -112,7 +128,14 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
               else playCaptureSound();
             } else playMoveSound(true);
           }
-          setState(payload.state);
+          // Clear local draft when the server opens a new choose window (round advance).
+          const next = payload.state;
+          const sealed = next.you?.plan != null;
+          if (!sealed && next.phase === "choose") {
+            setAttack(null);
+            setDefense(null);
+          }
+          setState(next);
           hydratedRef.current = true;
         }
       }
@@ -148,7 +171,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
       disposed = true;
       socketRef.current?.close();
     };
-  }, [applyEnvelope, gameId, room]);
+  }, [applyEnvelope, gameId, room, router]);
 
   async function joinTable() {
     setError(null);
@@ -203,6 +226,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
     idx,
     clickable,
     selected,
+    role,
     razed,
     label,
   }: {
@@ -210,12 +234,22 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
     idx: number;
     clickable: boolean;
     selected: boolean;
+    role: "attack" | "defense" | null;
     razed: boolean;
     label: string;
   }) {
+    const roleClass =
+      selected && role === "attack"
+        ? "is-attack-target"
+        : selected && role === "defense"
+          ? "is-defense-target"
+          : "";
     return (
       <button
+        type="button"
         disabled={!clickable}
+        aria-pressed={selected}
+        aria-label={label}
         onClick={() => {
           if (ownerSeat === oppSeat) {
             setAttack((a) => ({ target: idx, token: a?.token ?? 3 }));
@@ -223,8 +257,13 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
             setDefense((d) => ({ target: idx, token: d?.token ?? 3 }));
           }
         }}
-        className={`rk-province ${razed ? "is-razed" : ""} ${selected ? "is-picked" : ""} ${clickable ? "is-live" : ""}`}
+        className={`rk-province ${razed ? "is-razed" : ""} ${selected ? "is-picked" : ""} ${roleClass} ${clickable ? "is-live" : ""}`}
       >
+        {selected && role && (
+          <span className={`rk-province-badge is-${role}`} aria-hidden>
+            {role === "attack" ? t("attackShort") : t("defenseShort")}
+          </span>
+        )}
         <img src={razed ? "/rokugan/icons/ash.svg" : "/rokugan/icons/shrine.svg"} alt="" />
         <span className="rk-province-label">{label}</span>
       </button>
@@ -233,17 +272,28 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
 
   const myProvinces = state?.provinces?.[String(mySeat ?? 0)] ?? [false, false, false];
   const oppProvinces = state?.provinces?.[String(oppSeat ?? 1)] ?? [false, false, false];
-  const canPlan =
-    state?.phase === "choose" && mySeat != null && conn === "open";
+  const canPlan = state?.phase === "choose" && mySeat != null && conn === "open";
   const alreadySubmitted = state?.you?.plan != null;
+  const sealedPlan = state?.you?.plan ?? null;
+  const displayAttack = alreadySubmitted ? sealedPlan?.attack ?? null : attack;
+  const displayDefense = alreadySubmitted ? sealedPlan?.defense ?? null : defense;
   const waiting = (view?.status ?? "waiting") === "waiting" || !state || players.length < 2;
   const timedOut = lobbyTimedOut(view?.status, view?.expires_at, view?.created_at);
   const maxPlayers = view?.max_players ?? 2;
   const canStart = (view?.is_host ?? false) && waiting && players.length >= maxPlayers && !timedOut;
+  const oppReady = !!state?.opponent?.submitted;
+  const oppName = players.find((p) => p.seat === oppSeat)?.user.username ?? "...";
+  const myName = players.find((p) => p.seat === mySeat)?.user.username ?? "...";
+
+  let statusHint = tg("waiting");
+  if (conn === "closed") statusHint = tg("disconnected");
+  else if (conn === "connecting") statusHint = tg("connecting");
+  else if (state?.result) statusHint = "";
+  else if (alreadySubmitted) statusHint = t("waitingOpponent");
+  else if (canPlan) statusHint = t("planHint");
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
-      {/* Result overlay */}
+    <div className="rk-root grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
       {state?.result && !resultDismissed && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="result-pop card relative w-full max-w-sm p-6 text-center">
@@ -260,13 +310,13 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
             <p className="muted mt-2 text-sm">{t("resultLine")}</p>
             <div className="mt-5 flex justify-center gap-3">
               <button
+                type="button"
                 className="btn btn-primary"
                 onClick={async () => {
                   try {
-                    const res = await api<{ game_id: string }>(
-                      `/api/games/${gameId}/rematch`,
-                      { method: "POST" }
-                    );
+                    const res = await api<{ game_id: string }>(`/api/games/${gameId}/rematch`, {
+                      method: "POST",
+                    });
                     router.push(`/game/${res.game_id}`);
                   } catch {
                     router.push("/lobby");
@@ -275,7 +325,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
               >
                 🔁 {tg("rematch")}
               </button>
-              <button className="btn btn-ghost" onClick={() => setResultDismissed(true)}>
+              <button type="button" className="btn btn-ghost" onClick={() => setResultDismissed(true)}>
                 {tg("reviewBoard")}
               </button>
             </div>
@@ -289,6 +339,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
             🔁 <span className="font-bold">{rematchOffer.by}</span> {tg("rematchOffer")}
           </span>
           <button
+            type="button"
             className="btn btn-primary"
             onClick={async () => {
               try {
@@ -304,22 +355,22 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
         </div>
       )}
 
-      {/* Battle board */}
-      <div className="mx-auto flex flex-col items-center gap-4">
+      <div className="rk-stage mx-auto">
         {waiting ? (
-          <div className="rk-lobby card w-full max-w-md">
+          <div className="rk-lobby">
             <div className="rk-lobby-hero">
               <img src="/heroes/rokugan.jpg" alt="" />
               <div className="rk-lobby-shade" />
-              <div className="relative z-[1] p-5">
-                <h2 className="text-xl font-bold">⚔ {t("title")}</h2>
+              <div className="rk-lobby-hero-copy">
+                <p className="rk-lobby-kicker">{t("lobbyKicker")}</p>
+                <h2>{t("title")}</h2>
+                <p className="mt-1 text-sm text-[var(--rk-paper-dim)]">{t("lobbySubtitle")}</p>
               </div>
             </div>
-            <div className="p-5">
-            <p className="muted mb-2 text-sm">
-              ⏳ {tg("waiting")} ({players.length}/{maxPlayers})
-            </p>
-            <div className="mb-4">
+            <div className="rk-lobby-body">
+              <p className="rk-lobby-wait">
+                {tg("waiting")} ({players.length}/{maxPlayers})
+              </p>
               <LobbyExpiryNote
                 expiresAt={view?.expires_at}
                 createdAt={view?.created_at}
@@ -327,109 +378,109 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                 expiredLabel={tl("expired")}
                 expiresIn={(p) => tl("expiresIn", p)}
               />
-            </div>
-            <div className="flex flex-col gap-2 text-sm">
-              {players.map((p) => (
-                <div key={p.seat} className="flex justify-between rounded-lg border border-[var(--border)] p-2">
-                  <span>
-                    {p.user.username}
-                    {p.user.id === user?.id && <em className="muted ms-1">{t("youMarker")}</em>}
-                  </span>
-                </div>
-              ))}
-            </div>
-            {view && mySeat == null && !timedOut && (
-              <button className="btn btn-primary mt-4 w-full" onClick={joinTable}>
-                {tg("join")}
-              </button>
-            )}
-            {canStart && (
-              <button className="btn btn-primary mt-4 w-full" onClick={start}>
-                ▶ {tg("start")}
-              </button>
-            )}
-            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+              <p className="mt-3 text-xs font-semibold tracking-wide text-[var(--rk-gold)]">
+                {t("playersSeated")}
+              </p>
+              <div className="rk-seat-list">
+                {players.map((p) => (
+                  <div key={p.seat} className={`rk-seat ${p.user.id === user?.id ? "is-you" : ""}`}>
+                    <span>
+                      {p.user.username}
+                      {p.user.id === user?.id && <em className="muted ms-1">{t("youMarker")}</em>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {view && mySeat == null && !timedOut && (
+                <button type="button" className="btn btn-primary mt-4 w-full" onClick={joinTable}>
+                  {tg("join")}
+                </button>
+              )}
+              {canStart && (
+                <button type="button" className="btn btn-primary mt-4 w-full" onClick={start}>
+                  ▶ {tg("start")}
+                </button>
+              )}
+              {error && <p className="rk-error">{error}</p>}
             </div>
           </div>
         ) : (
-        <>
-        <div className="rk-banner">
-          <span className="flex items-center gap-2 font-bold">
-            <img className="rk-crest" src="/rokugan/icons/crest.svg" alt="" />
-            {players.find((p) => p.seat === oppSeat)?.user.username ?? "..."}
-          </span>
-          <span className="muted text-xs">
-            {state?.opponent?.submitted ? `✍️ ${t("opponentReady")}` : t("opponentThinking")}
-          </span>
-        </div>
+          <>
+            <div className="rk-banner">
+              <span className="flex items-center gap-2 font-bold">
+                <img className="rk-crest" src="/rokugan/icons/crest.svg" alt="" />
+                {oppName}
+              </span>
+              <span className={`rk-status-chip ${oppReady ? "is-ready" : "is-waiting"}`}>
+                <span className="rk-status-dot" aria-hidden />
+                {oppReady ? t("opponentReady") : t("opponentThinking")}
+              </span>
+            </div>
 
-        <div className="rk-table">
-          <p className="mb-2 text-center text-xs font-semibold tracking-wide text-[var(--muted)]">
-            {players.find((p) => p.seat === oppSeat)?.user.username ?? "..."}
-          </p>
-          <div className="rk-row">
-            {oppProvinces.map((razed, i) => (
-              <Province
-                key={i}
-                ownerSeat={oppSeat}
-                idx={i}
-                clickable={canPlan && !alreadySubmitted && !razed}
-                selected={attack?.target === i}
-                razed={razed}
-                label={`${t("province")} ${i + 1}`}
-              />
-            ))}
-          </div>
+            <div className="rk-table">
+              <p className="rk-side-label mb-2">{oppName}</p>
+              <div className="rk-row">
+                {oppProvinces.map((razed, i) => (
+                  <Province
+                    key={`opp-${i}`}
+                    ownerSeat={oppSeat}
+                    idx={i}
+                    clickable={canPlan && !alreadySubmitted && !razed}
+                    selected={displayAttack?.target === i}
+                    role={displayAttack?.target === i ? "attack" : null}
+                    razed={razed}
+                    label={`${t("province")} ${i + 1}`}
+                  />
+                ))}
+              </div>
 
-          <div className="rk-river">
-            {t("round")} {state?.round ?? 1}/5
-          </div>
+              <div className="rk-river">
+                {t("round")} {state?.round ?? 1}/5
+              </div>
 
-          <div className="rk-row">
-            {myProvinces.map((razed, i) => (
-              <Province
-                key={i}
-                ownerSeat={mySeat ?? 0}
-                idx={i}
-                clickable={canPlan && !alreadySubmitted && !razed}
-                selected={defense?.target === i}
-                razed={razed}
-                label={`${t("province")} ${i + 1}`}
-              />
-            ))}
-          </div>
-          <p className="mt-2 text-center text-xs font-semibold">
-            {players.find((p) => p.seat === mySeat)?.user.username ?? "..."}
-            <em className="muted ms-1 font-normal">{t("youMarker")}</em>
-          </p>
-        </div>
+              <div className="rk-row">
+                {myProvinces.map((razed, i) => (
+                  <Province
+                    key={`me-${i}`}
+                    ownerSeat={mySeat ?? 0}
+                    idx={i}
+                    clickable={canPlan && !alreadySubmitted && !razed}
+                    selected={displayDefense?.target === i}
+                    role={displayDefense?.target === i ? "defense" : null}
+                    razed={razed}
+                    label={`${t("province")} ${i + 1}`}
+                  />
+                ))}
+              </div>
+              <p className="rk-side-label is-self mt-2">
+                {myName}
+                <em className="muted ms-1 font-normal">{t("youMarker")}</em>
+              </p>
+            </div>
 
-        <p className="muted text-center text-sm">
-          {conn === "closed"
-            ? tg("disconnected")
-            : conn === "connecting"
-              ? tg("connecting")
-            : state?.result
-              ? ""
-              : alreadySubmitted
-                ? t("waitingOpponent")
-                : canPlan
-                  ? t("planHint")
-                  : tg("waiting")}
-        </p>
-        </>
+            {statusHint && (
+              <p className={`rk-hint ${alreadySubmitted ? "is-sealed" : ""}`} aria-live="polite">
+                {statusHint}
+              </p>
+            )}
+          </>
         )}
       </div>
 
-      {/* Side panel */}
       <div className="flex flex-col gap-4">
         <VoicePanel
           gameId={gameId}
           selfName={user?.username}
           defaultCollapsed
-          labels={{ join: tv("join"), leave: tv("leave"), mute: tv("mute"), unmute: tv("unmute"), title: tv("title"), micError: tv("micError") }}
+          labels={{
+            join: tv("join"),
+            leave: tv("leave"),
+            mute: tv("mute"),
+            unmute: tv("unmute"),
+            title: tv("title"),
+            micError: tv("micError"),
+          }}
         />
-
 
         <ChatPanel
           socket={socket}
@@ -439,87 +490,157 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
           placeholder={tc("placeholder")}
           sendLabel={tc("send")}
         />
+
         {!waiting && (
-        <div className="card p-4">
-          <h3 className="mb-2 font-semibold">⚔ {t("title")}</h3>
-          <div className="flex flex-col gap-3 text-sm">
-            <div>
-              <p className="mb-1 font-semibold">⚔ {t("yourAttack")}</p>
-              <div className="flex items-center gap-2">
-                <span className="muted w-20">{t("province")}</span>
-                {attack && <span className="font-bold">{attack.target + 1}</span>}
-              </div>
-              <div className="mt-1 flex items-center gap-1">
-                <span className="muted w-20">{t("strength")}</span>
-                {TOKENS.map((v) => (
-                  <button
-                    key={v}
-                    disabled={!canPlan || alreadySubmitted || defense?.token === v}
-                    onClick={() => {
-                      playRokuganToken();
-                      setAttack((a) => ({ target: a?.target ?? 0, token: v }));
-                    }}
-                    className={`rk-token ${attack?.token === v ? "is-picked" : ""} ${defense?.token === v ? "is-locked" : ""}`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
+          <div className="rk-panel">
+            <div className="rk-panel-head">
+              <h3>{t("title")}</h3>
+              <span
+                className={`rk-status-chip ${alreadySubmitted ? "is-ready" : "is-waiting"}`}
+              >
+                <span className="rk-status-dot" aria-hidden />
+                {alreadySubmitted ? t("planSealed") : t("draftPlan")}
+              </span>
             </div>
-            <div>
-              <p className="mb-1 font-semibold">🛡 {t("yourDefense")}</p>
-              <div className="flex items-center gap-2">
-                <span className="muted w-20">{t("province")}</span>
-                {defense && <span className="font-bold">{defense.target + 1}</span>}
+            <div className="rk-panel-body">
+              <div className={`rk-plan-block is-attack ${alreadySubmitted ? "is-sealed" : ""}`}>
+                <div className="rk-plan-title">
+                  <span>{t("yourAttack")}</span>
+                  <span className="rk-province-badge is-attack">{t("attackShort")}</span>
+                </div>
+                <div className="rk-plan-meta">
+                  <span className="muted">{t("targetProvince")}</span>
+                  {displayAttack ? (
+                    <span className="rk-plan-value">{displayAttack.target + 1}</span>
+                  ) : (
+                    <span className="rk-plan-value is-empty">{t("pickProvince")}</span>
+                  )}
+                </div>
+                <div className="rk-plan-meta">
+                  <span className="muted">{t("strength")}</span>
+                </div>
+                <div className="rk-token-row" role="group" aria-label={t("yourAttack")}>
+                  {TOKENS.map((v) => {
+                    const locked = !alreadySubmitted && defense?.token === v;
+                    const picked = displayAttack?.token === v;
+                    return (
+                      <button
+                        type="button"
+                        key={`atk-${v}`}
+                        disabled={!canPlan || alreadySubmitted || locked}
+                        title={locked ? t("tokenInUse") : undefined}
+                        aria-pressed={picked}
+                        onClick={() => {
+                          playRokuganToken();
+                          setAttack((a) => ({ target: a?.target ?? 0, token: v }));
+                        }}
+                        className={`rk-token ${picked ? "is-picked is-attack" : ""} ${locked ? "is-locked" : ""}`}
+                      >
+                        {v}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="mt-1 flex items-center gap-1">
-                <span className="muted w-20">{t("strength")}</span>
-                {TOKENS.map((v) => (
-                  <button
-                    key={v}
-                    disabled={!canPlan || alreadySubmitted || attack?.token === v}
-                    onClick={() => {
-                      playRokuganToken();
-                      setDefense((d) => ({ target: d?.target ?? 0, token: v }));
-                    }}
-                    className={`rk-token ${defense?.token === v ? "is-picked" : ""} ${attack?.token === v ? "is-locked" : ""}`}
-                  >
-                    {v}
-                  </button>
-                ))}
+
+              <div className={`rk-plan-block is-defense ${alreadySubmitted ? "is-sealed" : ""}`}>
+                <div className="rk-plan-title">
+                  <span>{t("yourDefense")}</span>
+                  <span className="rk-province-badge is-defense">{t("defenseShort")}</span>
+                </div>
+                <div className="rk-plan-meta">
+                  <span className="muted">{t("targetProvince")}</span>
+                  {displayDefense ? (
+                    <span className="rk-plan-value">{displayDefense.target + 1}</span>
+                  ) : (
+                    <span className="rk-plan-value is-empty">{t("pickProvince")}</span>
+                  )}
+                </div>
+                <div className="rk-plan-meta">
+                  <span className="muted">{t("strength")}</span>
+                </div>
+                <div className="rk-token-row" role="group" aria-label={t("yourDefense")}>
+                  {TOKENS.map((v) => {
+                    const locked = !alreadySubmitted && attack?.token === v;
+                    const picked = displayDefense?.token === v;
+                    return (
+                      <button
+                        type="button"
+                        key={`def-${v}`}
+                        disabled={!canPlan || alreadySubmitted || locked}
+                        title={locked ? t("tokenInUse") : undefined}
+                        aria-pressed={picked}
+                        onClick={() => {
+                          playRokuganToken();
+                          setDefense((d) => ({ target: d?.target ?? 0, token: v }));
+                        }}
+                        className={`rk-token ${picked ? "is-picked is-defense" : ""} ${locked ? "is-locked" : ""}`}
+                      >
+                        {v}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {canPlan && !alreadySubmitted && (
+                <button type="button" className="btn btn-primary rk-submit" onClick={submitPlan}>
+                  {t("submitPlan")}
+                </button>
+              )}
+              {alreadySubmitted && state?.phase === "choose" && (
+                <div className="rk-seal-note" role="status">
+                  <span aria-hidden>●</span>
+                  <span>
+                    {t("planSealed")}
+                    {oppReady ? ` · ${t("readyStatus")}` : ` · ${t("waitingStatus")}`}
+                  </span>
+                </div>
+              )}
+              {error && <p className="rk-error">{error}</p>}
             </div>
-            {canPlan && !alreadySubmitted && (
-              <button className="btn btn-primary" onClick={submitPlan}>
-                🗡 {t("submitPlan")}
-              </button>
-            )}
-            {alreadySubmitted && state?.phase === "choose" && (
-              <p className="muted text-sm">✅ {t("waitingOpponent")}</p>
-            )}
-            {error && <p className="text-sm text-red-400">{error}</p>}
           </div>
-        </div>
         )}
 
         {state && state.log.length > 0 && (
-          <div className="card max-h-72 overflow-auto p-4">
-            <h3 className="mb-2 font-semibold">{t("battleLog")}</h3>
+          <div className="rk-log">
+            <h3>{t("battleLog")}</h3>
             {state.log
               .slice()
               .reverse()
               .map((entry) => (
-                <div key={entry.round} className="mb-2 border-b border-[var(--border)] pb-2 text-sm">
-                  <div className="font-semibold">
+                <div key={entry.round} className="rk-log-round">
+                  <div className="rk-log-round-title">
                     {t("round")} {entry.round}
                   </div>
-                  {entry.outcomes.map((o) => (
-                    <div key={o.attacker} className="muted">
-                      {o.attacker === mySeat ? t("you") : t("opponentName")} →{" "}
-                      {t("province")} {o.target + 1}: {o.attack} vs {o.defense ?? "—"}{" "}
-                      {o.razed ? "💥" : "🛡"}
-                    </div>
-                  ))}
+                  {entry.outcomes.map((o) => {
+                    const who = o.attacker === mySeat ? t("you") : t("opponentName");
+                    const defLabel =
+                      o.defense == null ? t("noDefense") : String(o.defense);
+                    return (
+                      <div
+                        key={`${entry.round}-${o.attacker}`}
+                        className={`rk-outcome ${o.razed ? "is-razed" : "is-held"}`}
+                      >
+                        <div className="rk-outcome-who">
+                          {who} → {t("province")} {o.target + 1}
+                        </div>
+                        <span
+                          className={`rk-outcome-tag ${o.razed ? "is-razed" : "is-held"}`}
+                        >
+                          {o.razed ? t("outcomeRazed") : t("outcomeHeld")}
+                        </span>
+                        <div className="rk-outcome-line">
+                          <span className="rk-outcome-vs">
+                            {t("strengthVs", {
+                              attack: o.attack,
+                              defense: defLabel,
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
           </div>
