@@ -373,7 +373,7 @@ html[dir="rtl"] .kicker {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #b8893a, var(--accent));
+  background: linear-gradient(to inline-end, #b8893a, var(--accent));
 }
 
 .game-cover {
@@ -619,13 +619,23 @@ html[dir="rtl"] .kicker {
   .trophy-glow,
   .mm-ring,
   .card-lift,
-  .game-cover img {
+  .game-cover img,
+  .game-tile,
+  .skip-link {
     animation: none !important;
     transition: none !important;
     transform: none !important;
   }
-  .card-lift:hover {
+  .card-lift:hover,
+  .card-lift:hover .game-cover img,
+  .game-tile:hover {
     transform: none;
+  }
+  /* Chess piece-slide keyframes live in this file — kill transform animation */
+  [style*="piece-slide"],
+  .piece-slide {
+    animation: none !important;
+    transform: none !important;
   }
 }
 
@@ -753,6 +763,7 @@ html[dir="rtl"] .game-tile-kicker {
 }
 
 .nav-menu-btn { display: none; }
+.nav-drawer[hidden] { display: none !important; }
 .nav-drawer {
   display: none;
   flex-direction: column;

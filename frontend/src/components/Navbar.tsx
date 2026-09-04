@@ -28,7 +28,11 @@ export default function Navbar() {
   useEffect(() => {
     if (!menuOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        const btn = document.querySelector<HTMLButtonElement>("[data-nav-menu-btn]");
+        btn?.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -49,6 +53,7 @@ export default function Navbar() {
     `nav-link ${active(href) ? "nav-link-active" : ""}`;
 
   const menuLabel = locale === "fa" ? (menuOpen ? "بستن منو" : "باز کردن منو") : (menuOpen ? "Close menu" : "Open menu");
+  const drawerLabel = locale === "fa" ? "منو" : "Menu";
 
   const langSwitch = (
     <div
@@ -137,6 +142,7 @@ export default function Navbar() {
 
         <button
           type="button"
+          data-nav-menu-btn
           className="nav-menu-btn btn btn-ghost !px-3 !py-1.5"
           aria-expanded={menuOpen}
           aria-controls={menuId}
@@ -147,18 +153,23 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {menuOpen && (
-        <div id={menuId} className="nav-drawer" role="dialog" aria-modal="true" aria-label={menuLabel}>
-          <Link href="/lobby" className={linkClass("/lobby")} onClick={() => setMenuOpen(false)}>
-            {t("lobby")}
-          </Link>
-          <Link href="/friends" className={linkClass("/friends")} onClick={() => setMenuOpen(false)}>
-            {t("friends")}
-          </Link>
-          {langSwitch}
-          {authBlock}
-        </div>
-      )}
+      <div
+        id={menuId}
+        className="nav-drawer"
+        role="dialog"
+        aria-modal={menuOpen ? true : undefined}
+        aria-label={drawerLabel}
+        hidden={!menuOpen}
+      >
+        <Link href="/lobby" className={linkClass("/lobby")} onClick={() => setMenuOpen(false)}>
+          {t("lobby")}
+        </Link>
+        <Link href="/friends" className={linkClass("/friends")} onClick={() => setMenuOpen(false)}>
+          {t("friends")}
+        </Link>
+        {langSwitch}
+        {authBlock}
+      </div>
     </header>
   );
 }
