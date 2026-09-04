@@ -242,7 +242,7 @@ export default function LobbyPage() {
       <div className="enter flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="kicker">{t("kicker")}</p>
-          <h1 className="mt-1 text-3xl font-bold">{t("title")}</h1>
+          <h1 className="type-h1 mt-1">{t("title")}</h1>
           <p className="muted mt-1 text-sm">{t("subtitle")}</p>
         </div>
         {user && (
@@ -261,7 +261,7 @@ export default function LobbyPage() {
         {MODES.map((m, i) => {
           const isSearching = searching === m.id;
           return (
-            <article key={m.id} className={`card card-lift overflow-hidden enter enter-d${i + 1}`}>
+            <article key={m.id} className={`card card-lift game-tile is-${m.id} overflow-hidden enter enter-d${i + 1}`}>
               <div className="game-cover h-28">
                 <img src={m.cover} alt={t(m.nameKey)} loading="lazy" />
                 <div className="cover-shade" />
@@ -342,7 +342,7 @@ export default function LobbyPage() {
               ? Math.min(100, Math.round((l.players.length / l.max_players) * 100))
               : 0;
             return (
-              <div key={l.id} className="card card-lift flex flex-wrap items-center justify-between gap-3 p-4">
+              <div key={l.id} className={`card card-lift table-row game-tile is-${l.game_type} flex flex-wrap items-center justify-between gap-3 p-4`}>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{name}</span>

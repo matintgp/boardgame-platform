@@ -11,7 +11,13 @@
     "language": "زبان",
     "kicker": "سالن بازی",
     "playNow": "ورود به لابی",
-    "profile": "پروفایل"
+    "profile": "پروفایل",
+    "tablesOpen": "میزهای باز",
+    "tablesOpenHint": "چهار دنیا. یک سالن.",
+    "gameWorldChess": "سالن مسابقه",
+    "gameWorldMafia": "سالن شب",
+    "gameWorldRokugan": "میز جنگ",
+    "gameWorldSalem": "محاکمه ۱۶۹۲"
   },
   "auth": {
     "email": "ایمیل",

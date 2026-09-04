@@ -11,7 +11,13 @@
     "language": "Language",
     "kicker": "The game salon",
     "playNow": "Enter the lobby",
-    "profile": "Profile"
+    "profile": "Profile",
+    "tablesOpen": "Open tables",
+    "tablesOpenHint": "Four worlds. One salon.",
+    "gameWorldChess": "Tournament floor",
+    "gameWorldMafia": "Night salon",
+    "gameWorldRokugan": "War table",
+    "gameWorldSalem": "1692 trial"
   },
   "auth": {
     "email": "Email",

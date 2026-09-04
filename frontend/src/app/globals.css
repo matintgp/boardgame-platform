@@ -1,12 +1,87 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0b0d12;
-  --surface: #181b22;
-  --border: #2a2f3a;
-  --accent: #d4a24e;
-  --text: #e8e6e1;
-  --muted: #9aa0ab;
+  /* —— semantic design tokens (platform: obsidian / brass club) —— */
+  --surface-canvas: #0b0d12;
+  --surface-base: #12151c;
+  --surface-raised: #181b22;
+  --surface-overlay: rgba(18, 20, 28, 0.92);
+  --surface-sunken: #0a0c10;
+
+  --text-primary: #e8e6e1;
+  --text-secondary: #c4c0b8;
+  --text-muted: #9aa0ab;
+  --text-disabled: #5c6370;
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: #2a2f3a;
+  --border-strong: rgba(212, 162, 78, 0.35);
+
+  --action-primary: #d4a24e;
+  --action-primary-hover: #e0b45e;
+  --action-danger: #c44545;
+  --action-success: #5abe82;
+  --action-warning: #d4a24e;
+
+  --game-focus: #d4a24e;
+  --game-selected: #e8c86a;
+  --game-target: #7ec8e8;
+  --game-invalid: #8a5060;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  --radius-button: 0.65rem;
+  --radius-panel: 1rem;
+  --radius-card: 1rem;
+  --radius-modal: 1.15rem;
+  --radius-pill: 9999px;
+
+  --shadow-panel: 0 10px 40px rgba(0, 0, 0, 0.22);
+  --shadow-floating: 0 18px 48px rgba(0, 0, 0, 0.38);
+  --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.22);
+  --shadow-selected: 0 0 0 2px rgba(212, 162, 78, 0.45), 0 12px 28px rgba(212, 162, 78, 0.12);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
+
+  --motion-instant: 80ms;
+  --motion-fast: 140ms;
+  --motion-normal: 220ms;
+  --motion-slow: 380ms;
+  --motion-reveal: 560ms;
+
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-impact: cubic-bezier(0.2, 0.9, 0.3, 1.15);
+
+  --type-display: clamp(2rem, 4vw, 3rem);
+  --type-h1: clamp(1.6rem, 2.5vw, 2.1rem);
+  --type-h2: 1.35rem;
+  --type-h3: 1.1rem;
+  --type-body: 1rem;
+  --type-body-sm: 0.875rem;
+  --type-label: 0.78rem;
+  --type-caption: 0.72rem;
+  --type-status: 0.85rem;
+
+  /* —— game theme accents (parent shell stays brass) —— */
+  --theme-chess: #d4a24e;
+  --theme-mafia: #8b3a4a;
+  --theme-rokugan: #c44532;
+  --theme-salem: #c4a24e;
+
+  /* —— backward-compatible aliases —— */
+  --bg: var(--surface-canvas);
+  --surface: var(--surface-raised);
+  --border: var(--border-default);
+  --accent: var(--action-primary);
+  --text: var(--text-primary);
+  --muted: var(--text-muted);
   --gold-line: rgba(212, 162, 78, 0.22);
   --gold-soft: rgba(212, 162, 78, 0.12);
 }
@@ -632,4 +707,82 @@ html[dir="rtl"] .kicker {
   background: #e8e6e1;
   animation: mafia-twinkle 2.8s ease-in-out infinite;
   pointer-events: none;
+}
+
+
+/* —— type scale utilities —— */
+.type-display { font-size: var(--type-display); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+.type-h1 { font-size: var(--type-h1); font-weight: 800; line-height: 1.2; }
+.type-h2 { font-size: var(--type-h2); font-weight: 700; line-height: 1.25; }
+.type-h3 { font-size: var(--type-h3); font-weight: 700; line-height: 1.3; }
+.type-body { font-size: var(--type-body); line-height: 1.55; }
+.type-body-sm { font-size: var(--type-body-sm); line-height: 1.5; }
+.type-label { font-size: var(--type-label); font-weight: 650; line-height: 1.35; }
+.type-caption { font-size: var(--type-caption); color: var(--text-muted); line-height: 1.4; }
+.type-status { font-size: var(--type-status); font-weight: 650; font-variant-numeric: tabular-nums; }
+html[dir="rtl"] .type-display { letter-spacing: 0; }
+
+/* —— home game discovery cards (world-distinct, same shell) —— */
+.game-tile {
+  --tile-accent: var(--action-primary);
+  position: relative;
+  isolation: isolate;
+}
+.game-tile::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--tile-accent), transparent);
+  opacity: 0.85;
+  pointer-events: none;
+}
+.game-tile.is-chess { --tile-accent: var(--theme-chess); }
+.game-tile.is-mafia { --tile-accent: var(--theme-mafia); }
+.game-tile.is-rokugan { --tile-accent: var(--theme-rokugan); }
+.game-tile.is-salem { --tile-accent: var(--theme-salem); }
+.game-tile .game-cover {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tile-accent) 18%, #1c160c), #0b0d12 62%);
+}
+.game-tile:hover {
+  border-color: color-mix(in srgb, var(--tile-accent) 55%, transparent);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.38),
+    0 0 0 1px color-mix(in srgb, var(--tile-accent) 22%, transparent),
+    0 0 28px color-mix(in srgb, var(--tile-accent) 14%, transparent);
+}
+.game-tile-kicker {
+  font-size: var(--type-caption);
+  font-weight: 700;
+  color: var(--tile-accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+html[dir="rtl"] .game-tile-kicker {
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.salon-section-title {
+  font-size: var(--type-h2);
+  font-weight: 700;
+}
+.salon-section-sub {
+  font-size: var(--type-body-sm);
+  color: var(--text-muted);
+}
+
+.table-row {
+  position: relative;
+  overflow: hidden;
+}
+.table-row::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--tile-accent, var(--action-primary));
+  opacity: 0.85;
 }
