@@ -93,17 +93,21 @@ export default function SalemTable({
   const crowded = n >= 10;
   const intimate = n > 0 && n <= 6;
   const tableClass =
-    phase === "night" || phase === "confess"
-      ? "is-night"
-      : phase === "dawn"
-        ? "is-dawn"
-        : phase === "conspiracy"
-          ? "is-conspiracy is-dawn"
-          : phase === "day" || phase === "town_hall"
-            ? "is-day is-turn"
-            : phase === "over"
-              ? "is-over"
-              : "";
+    phase === "confess"
+      ? "is-night is-confess"
+      : phase === "night"
+        ? "is-night"
+        : phase === "dawn"
+          ? "is-dawn"
+          : phase === "conspiracy"
+            ? "is-conspiracy"
+            : phase === "town_hall"
+              ? "is-town-hall is-day"
+              : phase === "day"
+                ? "is-day is-turn"
+                : phase === "over"
+                  ? "is-over"
+                  : "";
 
   // Closest seat to the reveal threshold (visible state only).
   const perSeatMax = state

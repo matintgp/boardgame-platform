@@ -712,11 +712,21 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   return (
     <div
       className={`salem-root grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] ${
-        phase === "night" || phase === "confess"
-          ? "is-night"
-          : phase === "dawn" || phase === "conspiracy"
-            ? "is-dawn"
-            : ""
+        phase === "confess"
+          ? "is-night is-confess"
+          : phase === "night"
+            ? "is-night"
+            : phase === "conspiracy"
+              ? "is-dawn is-conspiracy"
+              : phase === "dawn"
+                ? "is-dawn"
+                : phase === "town_hall"
+                  ? "is-town-hall"
+                  : phase === "day"
+                    ? "is-day"
+                    : phase === "over"
+                      ? "is-over"
+                      : ""
       }`}
     >
       <div className="mx-auto w-full max-w-[44rem]">
@@ -744,7 +754,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
           </div>
         )}
 
-        <p className="muted mb-2 text-center text-xs" aria-live="polite">
+        <p className="type-caption muted mb-2 text-center" aria-live="polite">
           {conn === "open" ? (
             <span className="text-emerald-400/80">● {connLabel}</span>
           ) : (
@@ -754,7 +764,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
 
         {aborted ? (
           <div className="salem-lobby card overflow-hidden p-6 text-center">
-            <h2 className="text-xl font-bold">🕯 {t("title")}</h2>
+            <h2 className="type-h2">🕯 {t("title")}</h2>
             <p className="muted mt-2">{t("lobbyExpired")}</p>
             <Link href="/lobby" className="btn btn-primary mt-4">
               {tg("backToLobby")}
@@ -766,12 +776,12 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               <img src="/salem/hero.jpg" alt="" />
               <div className="salem-lobby-shade" />
               <div className="relative z-[1] p-5">
-                <h2 className="text-2xl font-bold">🕯 {t("title")}</h2>
-                <p className="muted mt-1 text-sm">{t("tagline")}</p>
+                <h2 className="type-h1">🕯 {t("title")}</h2>
+                <p className="type-body-sm muted mt-1">{t("tagline")}</p>
               </div>
             </div>
             <div className="p-5">
-              <p className="muted mb-1 text-sm">
+              <p className="type-body-sm muted mb-1">
                 ⏳ {t("waitingForPlayers")} ({players.length}/{maxPlayers})
               </p>
               {lobbyClock && (
@@ -783,7 +793,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                     : t("expiresIn", { time: lobbyClock.label })}
                 </p>
               )}
-              <p className="muted mb-4 text-xs">
+              <p className="type-caption muted mb-4">
                 {players.length < minPlayers
                   ? t("needMinPlayers", { count: minPlayers })
                   : isHost
@@ -820,7 +830,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                   ▶ {tg("start")}
                 </button>
               )}
-              {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+              {error && <p className="type-body-sm mt-3 text-red-400">{error}</p>}
             </div>
           </div>
         ) : !state ? (
@@ -832,13 +842,21 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             <div
               key={state.phase}
               className={`salem-phase-banner mb-4 ${
-                state.phase === "night" || state.phase === "confess"
-                  ? "is-night"
-                  : state.phase === "dawn" || state.phase === "conspiracy"
-                    ? "is-dawn"
-                    : state.phase === "over"
-                      ? "is-over"
-                      : "is-turn"
+                state.phase === "confess"
+                  ? "is-night is-confess"
+                  : state.phase === "night"
+                    ? "is-night"
+                    : state.phase === "conspiracy"
+                      ? "is-dawn is-conspiracy"
+                      : state.phase === "dawn"
+                        ? "is-dawn"
+                        : state.phase === "town_hall"
+                          ? "is-town-hall"
+                          : state.phase === "day"
+                            ? "is-day is-turn"
+                            : state.phase === "over"
+                              ? "is-over"
+                              : "is-turn"
               }`}
             >
               <div className="salem-phase-pill-row">
@@ -885,9 +903,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                   you.is_witch ? "is-witch" : !youAlive ? "is-dead" : ""
                 }`}
               >
-                <p className="muted text-xs uppercase tracking-wide">{t("yourAllegiance")}</p>
+                <p className="type-label muted uppercase tracking-wide">{t("yourAllegiance")}</p>
                 <p
-                  className={`mt-1 text-xl font-extrabold ${
+                  className={`type-h2 mt-1 ${
                     you.is_witch ? "text-red-400" : "text-[var(--accent)]"
                   }`}
                 >
@@ -895,7 +913,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                   {you.is_constable ? ` · ${t("roleConstable")}` : ""}
                 </p>
                 {you.is_witch && (
-                  <p className="muted mt-1 text-xs">
+                  <p className="type-caption muted mt-1">
                     🤝 {t("teammates")}:{" "}
                     {teammates
                       .filter((s) => s !== you.seat)
@@ -903,20 +921,20 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                       .join(", ") || "—"}
                   </p>
                 )}
-                {!youAlive && <p className="mt-2 text-sm text-zinc-300">✝ {t("spectatorBanner")}</p>}
+                {!youAlive && <p className="type-body-sm mt-2 text-zinc-300">✝ {t("spectatorBanner")}</p>}
                 {youAlive && phase !== "over" && (
-                  <p className="salem-role-hint muted mt-2 text-xs">{phaseHint}</p>
+                  <p className="salem-role-hint type-caption muted mt-2">{phaseHint}</p>
                 )}
                 {phase === "night" && youAlive && you.is_witch && you.is_constable && (
                   <div className="mt-3 flex gap-2">
                     <button
-                      className={`btn ${nightTool === "kill" ? "btn-primary" : "btn-ghost"} !py-1 !px-3 text-sm`}
+                      className={`btn ${nightTool === "kill" ? "btn-primary" : "btn-ghost"} type-body-sm !py-1 !px-3`}
                       onClick={() => setNightTool("kill")}
                     >
                       {t("kill")}
                     </button>
                     <button
-                      className={`btn ${nightTool === "gavel" ? "btn-primary" : "btn-ghost"} !py-1 !px-3 text-sm`}
+                      className={`btn ${nightTool === "gavel" ? "btn-primary" : "btn-ghost"} type-body-sm !py-1 !px-3`}
                       onClick={() => setNightTool("gavel")}
                     >
                       {t("gavel")}
@@ -947,8 +965,8 @@ export default function SalemGame({ gameId }: { gameId: string }) {
 
             {!you && state.phase !== "over" && (
               <div className="card mb-4 border-zinc-700 bg-[#12141a] p-4">
-                <p className="text-sm">👁 {t("spectatorBanner")}</p>
-                <p className="muted mt-1 text-xs">{t("spectatorHint")}</p>
+                <p className="type-body-sm">👁 {t("spectatorBanner")}</p>
+                <p className="type-caption muted mt-1">{t("spectatorHint")}</p>
               </div>
             )}
 
@@ -1030,7 +1048,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                     </button>
                   </div>
                 )}
-                <div className="salem-hand">
+                <div className={`salem-hand ${selectedCardId ? "is-armed-dock" : ""}`}>
                   <div className="salem-hand-label">
                     <span>{t("handTitle")}</span>
                     <span>{t("handCount", { count: (you.hand ?? []).length })}</span>
@@ -1038,7 +1056,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                   <div className="salem-hand-main">
                     <div className="salem-hand-row">
                       {(you.hand ?? []).length === 0 && (
-                        <p className="muted text-sm">{t("emptyHand")}</p>
+                        <p className="type-body-sm muted">{t("emptyHand")}</p>
                       )}
                       {(you.hand ?? []).map((cardId, i) => {
                         const copy = cardCopy(cardId);
@@ -1121,14 +1139,14 @@ export default function SalemGame({ gameId }: { gameId: string }) {
           sendLabel={t("chatSend")}
           defaultCollapsed
         />
-        {state && <p className="muted px-1 text-[11px]">{t("rulesBlurb")}</p>}
+        {state && <p className="type-caption muted px-1">{t("rulesBlurb")}</p>}
       </div>
 
       {tryalPrompt && (
         <div className="salem-overlay">
           <div className="result-pop salem-parchment-card relative w-full max-w-sm p-6 text-center">
-            <h2 className="text-xl font-extrabold">{t("pickTryalTitle")}</h2>
-            <p className="muted mt-2 text-sm">
+            <h2 className="type-h2">{t("pickTryalTitle")}</h2>
+            <p className="type-body-sm muted mt-2">
               {t("pickTryalHint", { name: nameOf(players, tryalPrompt.target) })}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -1163,8 +1181,8 @@ export default function SalemGame({ gameId }: { gameId: string }) {
       {showConspiracyOverlay && (
         <div className="salem-overlay">
           <div className="result-pop salem-parchment-card relative w-full max-w-sm p-6 text-center">
-            <h2 className="text-xl font-extrabold">↻ {t("phaseConspiracy")}</h2>
-            <p className="muted mt-2 text-sm">
+            <h2 className="type-h2">↻ {t("phaseConspiracy")}</h2>
+            <p className="type-body-sm muted mt-2">
               {alreadyConspiracy
                 ? t("waitingConspiracy")
                 : conspiracySource != null
@@ -1174,7 +1192,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             {!alreadyConspiracy && (
               <div className="mt-4 flex flex-col gap-2">
                 {conspiracyIndexes.length === 0 && (
-                  <p className="muted text-sm">{t("noTryalsLeft")}</p>
+                  <p className="type-body-sm muted">{t("noTryalsLeft")}</p>
                 )}
                 {conspiracyIndexes.map((idx) => (
                   <button
@@ -1196,9 +1214,17 @@ export default function SalemGame({ gameId }: { gameId: string }) {
 
       {phase === "town_hall" && you && youAlive && (
         <div className="salem-overlay">
-          <div className="result-pop salem-parchment-card relative w-full max-w-md p-6 text-center">
-            <h2 className="text-xl font-extrabold">🕯 {t("hallPickTitle")}</h2>
-            <p className="muted mt-2 text-sm">
+          <div
+            className="result-pop salem-parchment-card relative w-full max-w-md p-6 text-center"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="salem-hall-pick-title"
+          >
+            <p className="salem-hall-modal-kicker">{t("phaseTownHall")}</p>
+            <h2 id="salem-hall-pick-title" className="type-h2 mt-1">
+              🕯 {t("hallPickTitle")}
+            </h2>
+            <p className="type-body-sm muted mt-2">
               {(you.town_hall_options ?? []).length ? t("hallPickHint") : t("hallPickedWait")}
             </p>
             {(you.town_hall_options ?? []).length > 0 && (
@@ -1219,7 +1245,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                       <HallFace id={opt.id} name={name} className="salem-hall-choice-face" />
                       <span className="salem-hall-choice-kicker">{t(`hallRoles.${key}`)}</span>
                       <span className="salem-hall-choice-title">{name}</span>
+                      <span className="salem-hall-choice-ability-label">{t("hallPickAbility")}</span>
                       <span className="salem-hall-choice-desc">{t(`hallAbilities.${key}`)}</span>
+                      <span className="salem-hall-choice-keep">{t("hallPickKeep")}</span>
                     </button>
                   );
                 })}
@@ -1232,8 +1260,8 @@ export default function SalemGame({ gameId }: { gameId: string }) {
       {showConfessOverlay && (
         <div className="salem-overlay">
           <div className="result-pop salem-parchment-card relative w-full max-w-sm p-6 text-center">
-            <h2 className="text-xl font-extrabold">⚖ {t("confessTitle")}</h2>
-            <p className="muted mt-2 text-sm">
+            <h2 className="type-h2">⚖ {t("confessTitle")}</h2>
+            <p className="type-body-sm muted mt-2">
               {alreadyConfessed ? t("waitingConfess") : t("confessHint")}
             </p>
             {secondsLeft != null && (
@@ -1244,7 +1272,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             {!alreadyConfessed && (
               <div className="mt-4 flex flex-col gap-2">
                 {remainingTryals.length === 0 && (
-                  <p className="muted text-sm">{t("noTryalsLeft")}</p>
+                  <p className="type-body-sm muted">{t("noTryalsLeft")}</p>
                 )}
                 {remainingTryals.map((idx) => (
                   <button
@@ -1287,19 +1315,19 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             >
               {winnerRole === "witches" ? "☾" : "☀"}
             </div>
-            <h2 className="text-2xl font-extrabold text-[var(--accent)]">
+            <h2 className="type-h1 text-[var(--accent)]">
               {winnerRole === "witches" ? t("witchesWon") : t("townWon")}
             </h2>
-            <p className="muted mt-1 text-xs">{t("winnerTeam")}</p>
+            <p className="type-caption muted mt-1">{t("winnerTeam")}</p>
             {you && (
-              <p className="mt-2 text-sm font-semibold">{iWon ? t("youWon") : t("youLost")}</p>
+              <p className="type-body-sm mt-2 font-semibold">{iWon ? t("youWon") : t("youLost")}</p>
             )}
-            <p className="muted mt-2 text-sm">
+            <p className="type-body-sm muted mt-2">
               {state.result.winner_seats.map((s) => nameOf(players, s)).join(", ")}
             </p>
             {witchSeats.length > 0 && (
-              <ul className="mt-4 space-y-1 text-start text-sm">
-                <li className="muted text-xs uppercase tracking-wide">{t("everWitch")}</li>
+              <ul className="type-body-sm mt-4 space-y-1 text-start">
+                <li className="type-label muted uppercase tracking-wide">{t("everWitch")}</li>
                 {witchSeats.map((s) => (
                   <li key={s} className="flex justify-between gap-2">
                     <span>
@@ -1322,7 +1350,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                 {tg("reviewBoard")}
               </button>
             </div>
-            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+            {error && <p className="type-body-sm mt-3 text-red-400">{error}</p>}
           </div>
         </div>
       )}

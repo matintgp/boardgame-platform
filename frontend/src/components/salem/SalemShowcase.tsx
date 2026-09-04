@@ -14,8 +14,8 @@ export default function SalemShowcase() {
     <section className="salem-root flex flex-col gap-6">
       <header className="text-center">
         <p className="kicker">{t("kicker")}</p>
-        <h1 className="mt-1 text-3xl font-extrabold">{t("title")}</h1>
-        <p className="muted mx-auto mt-2 max-w-md text-sm">{t("tagline")}</p>
+        <h1 className="type-display mt-1">{t("title")}</h1>
+        <p className="type-body-sm muted mx-auto mt-2 max-w-md">{t("tagline")}</p>
       </header>
 
       <SalemTableFelt
