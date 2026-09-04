@@ -19,12 +19,95 @@ export interface SalemCardProps {
   compact?: boolean;
   title?: string;
   text?: string;
+  /** Suit band caption (e.g. localized color.<suit>). Play face only. */
+  suitLabel?: string;
   className?: string;
   style?: CSSProperties;
   onClick?: () => void;
   disabled?: boolean;
   card?: { id: string; color?: SalemCardColor; title?: string; text?: string };
 }
+
+/** Monochrome stroke emblems per engine card id (24×24, stroke set from CSS). */
+const EMBLEMS: Record<string, ReactNode> = {
+  // Writ — wax seal medallion with ribbons
+  accusation: (
+    <>
+      <circle cx="12" cy="9" r="5.5" />
+      <path d="M8.5 13.5 6 21l6-2.6L18 21l-2.5-7.5" />
+    </>
+  ),
+  // Proof — sealed scroll
+  evidence: (
+    <>
+      <rect x="6" y="4" width="12" height="16" rx="2" />
+      <path d="M9 9h6M9 13h6M9 17h4" />
+    </>
+  ),
+  // Oath — quill
+  witness: (
+    <>
+      <path d="M20 4c-5 0-10 4-12 9l-3 7 7-3c5-2 9-7 8-13z" />
+      <path d="M8 16 15 8" />
+    </>
+  ),
+  // Clean Hands — droplet
+  alibi: (
+    <>
+      <path d="M12 3c3.2 4.2 6 7.2 6 10.2a6 6 0 1 1-12 0C6 10.2 8.8 7.2 12 3z" />
+      <path d="M9.5 13.5a2.6 2.6 0 0 0 2 2.6" />
+    </>
+  ),
+  // Hearthfire — flame
+  arson: (
+    <>
+      <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-2.5-5.5C15 8 13 6 12 2c-1 4-3 6-4.5 7.5C6 11 5 13 5 15a7 7 0 0 0 7 7z" />
+      <path d="M12 22a3.5 3.5 0 0 0 3.5-3.5c0-1.5-1.5-3-3.5-5-2 2-3.5 3.5-3.5 5A3.5 3.5 0 0 0 12 22z" />
+    </>
+  ),
+  // Cutpurse — coin purse
+  robbery: (
+    <>
+      <path d="M9 7h6l1.2 3.2a6.2 6.2 0 1 1-8.4 0L9 7z" />
+      <path d="M9 7a3 3 0 0 1 6 0" />
+      <path d="M10 14.5h4" />
+    </>
+  ),
+  // Shifted Blame — opposing arrows
+  scapegoat: <path d="M4 8h11.5L12 4.5M20 16H8.5L12 19.5" />,
+  // Pillory — posts with holed bar
+  stocks: (
+    <>
+      <path d="M5 21V4M19 21V4M3 8h18" />
+      <circle cx="9.5" cy="8" r="1.7" />
+      <circle cx="14.5" cy="8" r="1.7" />
+    </>
+  ),
+  // Hex — hex sign
+  curse: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 6.5v11M7.2 9.2l9.6 5.6M16.8 9.2l-9.6 5.6" />
+    </>
+  ),
+  // Night Familiar — cat face
+  black_cat: (
+    <>
+      <path d="M5.5 9.5 7 4l3.5 2.8h3L17 4l1.5 5.5a6.8 6.8 0 1 1-13 0z" />
+      <circle cx="10" cy="13" r=".4" />
+      <circle cx="14" cy="13" r=".4" />
+    </>
+  ),
+  // The Turning — circular arrows
+  conspiracy: (
+    <>
+      <path d="M4.5 12a7.5 7.5 0 0 1 13-5.2M19.5 12a7.5 7.5 0 0 1-13 5.2" />
+      <path d="M17.5 2.8v4h-4M6.5 21.2v-4h4" />
+    </>
+  ),
+  // Nightfall — crescent moon
+  night: <path d="M20 13.5A8 8 0 0 1 10.5 4 6.5 6.5 0 1 0 20 13.5z" />,
+};
 
 function TryalBack() {
   return (
@@ -109,32 +192,30 @@ function ConstableMark() {
 function PlayMark({ color }: { color: SalemCardColor }) {
   if (color === "green") {
     return (
-      <svg viewBox="0 0 90 48" className="mx-auto h-10 w-full" aria-hidden>
-        <path d="M22 30c8-14 14-18 23-18 4 10 2 16-4 22" fill="none" stroke="#355c38" strokeWidth="1.6" />
-        <path d="M40 16c6 2 14 4 18 12" fill="none" stroke="#355c38" strokeWidth="1.3" />
-        <ellipse cx="28" cy="32" rx="5" ry="3" fill="#355c38" transform="rotate(-30 28 32)" />
+      <svg viewBox="0 0 24 24" aria-hidden>
+        <path d="M6 15c2.5-4.5 4.5-6 7.5-6 1.4 3.2.7 5.2-1.3 7.2" />
+        <path d="M11.5 10.5c2 .7 4.5 1.4 6 4" />
       </svg>
     );
   }
   if (color === "blue") {
     return (
-      <svg viewBox="0 0 90 48" className="mx-auto h-10 w-full" aria-hidden>
-        <path d="M45 10c10 12 16 18 16 26a16 16 0 1 1-32 0c0-8 6-14 16-26z" fill="#2f6a88" />
-        <circle cx="45" cy="32" r="5" fill="#7ec8e8" opacity="0.7" />
+      <svg viewBox="0 0 24 24" aria-hidden>
+        <path d="M12 3c2.7 3.2 4.3 4.8 4.3 7a4.3 4.3 0 1 1-8.6 0c0-2.2 1.6-3.8 4.3-7z" />
       </svg>
     );
   }
   if (color === "red") {
     return (
-      <svg viewBox="0 0 90 48" className="mx-auto h-10 w-full" aria-hidden>
-        <circle cx="45" cy="24" r="14" fill="#9a1c2a" stroke="#d4a24e" strokeWidth="1.2" />
-        <path d="M45 14l1.6 5 5.2.1-4.1 3.2 1.4 5L45 24.2 36.9 27.3l1.4-5-4.1-3.2 5.2-.1z" fill="#f0d9a0" />
+      <svg viewBox="0 0 24 24" aria-hidden>
+        <circle cx="12" cy="12" r="7.5" />
+        <path d="M12 7.5l1 3 3.2.1-2.5 2 .9 3-2.6-1.8-2.6 1.8.9-3-2.5-2 3.2-.1z" />
       </svg>
     );
   }
   return (
-    <svg viewBox="0 0 90 48" className="mx-auto h-10 w-full" aria-hidden>
-      <path d="M50 10c-10 2-18 10-18 20s8 18 18 20c-11 0-22-8-22-20S39 10 50 10z" fill="#cfd2ee" />
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M20 13.5A8 8 0 0 1 10.5 4 6.5 6.5 0 1 0 20 13.5z" />
     </svg>
   );
 }
@@ -153,6 +234,7 @@ export default function SalemCard({
   compact = false,
   title,
   text,
+  suitLabel,
   className = "",
   style,
   onClick,
@@ -194,6 +276,16 @@ export default function SalemCard({
     const marks = card?.id ? accusationValue(card.id) : 0;
     front = (
       <>
+        {suitLabel && <span className="salem-card-band">{suitLabel}</span>}
+        <span className="salem-card-emblem" aria-hidden>
+          {card?.id && EMBLEMS[card.id] ? (
+            <svg viewBox="0 0 24 24">{EMBLEMS[card.id]}</svg>
+          ) : (
+            <PlayMark color={resolvedColor} />
+          )}
+        </span>
+        {resolvedTitle && <span className="salem-card-title">{resolvedTitle}</span>}
+        {resolvedText && <span className="salem-card-text">{resolvedText}</span>}
         {marks > 0 && (
           <span className="salem-card-marks" aria-hidden>
             {Array.from({ length: marks }).map((_, mi) => (
@@ -201,13 +293,6 @@ export default function SalemCard({
             ))}
           </span>
         )}
-        <PlayMark color={resolvedColor} />
-        {resolvedTitle && (
-          <span className="salem-card-band">
-            <span className="salem-card-title">{resolvedTitle}</span>
-          </span>
-        )}
-        {resolvedText && <span className="salem-card-text">{resolvedText}</span>}
       </>
     );
   }
@@ -228,8 +313,8 @@ export default function SalemCard({
         <div className="salem-card-face salem-card-back">
           <TryalBack />
         </div>
-        <div className={`salem-card-face salem-card-front flex flex-col ${colorClass}`}>
-          <div className="flex h-full flex-col p-2">{front}</div>
+        <div className={`salem-card-face salem-card-front ${colorClass}`}>
+          <div className="salem-card-paper">{front}</div>
         </div>
       </div>
     </Tag>

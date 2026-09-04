@@ -12,6 +12,7 @@ import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
 import "@/styles/salem.css";
 import SalemTable from "./SalemTable";
+import SalemCard from "./SalemCard";
 import {
   accusationValue,
   cardForbidsSelf,
@@ -123,6 +124,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
   const tickedRef = useRef<number | null>(null);
   const phaseRef = useRef<SalemPhase | null>(null);
   const seenRevealKeyRef = useRef<string | null>(null);
+  const dockAlignedRef = useRef(false);
   const [revealedSlots, setRevealedSlots] = useState<Record<number, number[]>>({});
   const room = `game:${gameId}`;
 
@@ -257,7 +259,18 @@ export default function SalemGame({ gameId }: { gameId: string }) {
     setRevealedSlots({});
     seenRevealKeyRef.current = null;
     phaseRef.current = null;
+    dockAlignedRef.current = false;
   }, [gameId]);
+
+  // On shorter viewports the sticky hand dock initially overlaps the "you"
+  // seat; once the dock first renders, align it with its natural position.
+  useEffect(() => {
+    if (dockAlignedRef.current) return;
+    if (!document.querySelector(".salem-dock")) return;
+    dockAlignedRef.current = true;
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    if (scrollable > 0) window.scrollTo(0, document.documentElement.scrollHeight);
+  }, [state]);
 
   useEffect(() => {
     if (phaseRef.current === "conspiracy" && state?.phase === "day") {
@@ -789,7 +802,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                 youMarker={t("youMarker")}
                 emptyLabel={t("emptySeat")}
                 deadLabel={t("dead")}
-                accusationsLabel={t("accusations")}
+                reportLabel={t("report")}
                 deckLabel={t("deck")}
                 discardLabel={t("discard")}
                 onActivate={() => undefined}
@@ -828,8 +841,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                       : "is-turn"
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+              <div className="salem-phase-pill-row">
+                <span className="salem-phase-dot" aria-hidden />
+                <div className="min-w-0 flex-1">
                   <p className="salem-phase-title">
                     {state.phase === "night"
                       ? `☾ ${phaseTitle}`
@@ -843,7 +857,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                               ? `🏁 ${phaseTitle}`
                               : `🕯 ${phaseTitle}`}
                   </p>
-                  <p className="muted mt-0.5 text-sm">
+                  <p className="salem-phase-sub">
                     {t("round")} {state.round}
                     {state.phase === "day" && state.current_seat != null && (
                       <>
@@ -853,6 +867,14 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                     )}
                   </p>
                 </div>
+                {state.phase === "confess" && secondsLeft != null && (
+                  <span className="salem-timerpill" aria-live="polite">
+                    <svg viewBox="0 0 24 24" aria-hidden>
+                      <path d="M6 3h12M6 21h12M8 3v3c0 3 4 3 4 6s-4 3-4 6v3M16 3v3c0 3-4 3-4 6s4 3 4 6v3" />
+                    </svg>
+                    {t("confessTimer", { seconds: secondsLeft })}
+                  </span>
+                )}
                 <SoundControls />
               </div>
             </div>
@@ -882,7 +904,9 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                   </p>
                 )}
                 {!youAlive && <p className="mt-2 text-sm text-zinc-300">✝ {t("spectatorBanner")}</p>}
-                {youAlive && phase !== "over" && <p className="muted mt-2 text-xs">{phaseHint}</p>}
+                {youAlive && phase !== "over" && (
+                  <p className="salem-role-hint muted mt-2 text-xs">{phaseHint}</p>
+                )}
                 {phase === "night" && youAlive && you.is_witch && you.is_constable && (
                   <div className="mt-3 flex gap-2">
                     <button
@@ -929,20 +953,20 @@ export default function SalemGame({ gameId }: { gameId: string }) {
             )}
 
             {state.last_night && state.phase !== "night" && (
-              <div className="card mb-4 p-4 text-sm">
+              <div className="salem-strip">
                 ☾ {t("nightResult")}{" "}
                 {state.last_night.killed != null ? (
-                  <span className="text-red-400">
+                  <span className="text-red-300">
                     {t("someoneDied", { name: nameOf(players, state.last_night.killed) })}
                   </span>
                 ) : (
-                  <span className="text-emerald-400">{t("nobodyDied")}</span>
+                  <span className="text-emerald-300">{t("nobodyDied")}</span>
                 )}
               </div>
             )}
 
             {state.last_reveal && (
-              <div className="card mb-4 p-3 text-sm">
+              <div className="salem-strip">
                 ⚖ {t("lastReveal", { name: nameOf(players, state.last_reveal.seat) })}{" "}
                 <span className="font-semibold">{tryalLabel(state.last_reveal.id)}</span>
               </div>
@@ -960,23 +984,18 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               youMarker={t("youMarker")}
               emptyLabel={t("emptySeat")}
               deadLabel={t("dead")}
-              accusationsLabel={t("accusations")}
+              reportLabel={t("report")}
               deckLabel={t("deck")}
               discardLabel={t("discard")}
-              hourglass={state.phase === "confess"}
-              hourglassSeconds={
-                confessUntil ? Math.max(0, Math.round((confessUntil - now) / 1000)) : 0
-              }
-              hourglassLabel={
-                secondsLeft != null
-                  ? t("confessCountdown", { seconds: secondsLeft })
-                  : t("confessTitle")
-              }
               onActivate={onSeatActivate}
               onReport={reportPlayer}
               showWitchMarks={!!you?.is_witch}
               teammates={teammates}
             />
+
+            {you && youAlive && phase !== "over" && phaseHint && (
+              <div className="salem-phase-hint">{phaseHint}</div>
+            )}
 
             {toast && (
               <div key={toast.seq} className="salem-toast" role="status">
@@ -990,93 +1009,88 @@ export default function SalemGame({ gameId }: { gameId: string }) {
               </p>
             )}
 
-            {you && youAlive && (you.hand ?? []).length >= 0 && (
-              <div className="salem-hand">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold">{t("handTitle")}</h3>
-                  <span className="flex items-center gap-1">
-                    {myDay && conn === "open" && (
-                      <>
-                        <button
-                          type="button"
-                          className="btn btn-ghost !py-1 !px-2 text-xs"
-                          disabled={!!you.played_this_turn}
-                          onClick={() => {
-                            setSelectedHandIndex(null);
-                            sendAction("draw_two", {});
-                          }}
-                        >
-                          {t("drawTwo")}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-primary !py-1 !px-2 text-xs"
-                          disabled={!you.played_this_turn}
-                          onClick={() => {
-                            setSelectedHandIndex(null);
-                            sendAction("end_turn", {});
-                          }}
-                        >
-                          {t("endTurn")}
-                        </button>
-                      </>
-                    )}
-                    {selectedCardId && (
-                      <button
-                        className="btn btn-ghost !py-1 !px-2 text-xs"
-                        onClick={() => setSelectedHandIndex(null)}
-                      >
-                        {t("cancelCard")}
-                      </button>
-                    )}
-                  </span>
-                </div>
-                <p className="muted mb-1 text-xs">
-                  {myDay
-                    ? selectedCardId
-                      ? t("pickTarget")
-                      : you.played_this_turn
-                        ? t("playedHint")
-                        : t("playHint")
-                    : t("handIdle")}
-                </p>
-                <div className="salem-hand-row">
-                  {(you.hand ?? []).length === 0 && <p className="muted text-sm">{t("emptyHand")}</p>}
-                  {(you.hand ?? []).map((cardId, i) => {
-                    const copy = cardCopy(cardId);
-                    const marks = accusationValue(cardId);
-                    const armed = selectedHandIndex === i;
-                    return (
+            {you && youAlive && (
+              <div className="salem-dock">
+                {selectedCardId && (
+                  <div className="salem-actionbar">
+                    <span className="salem-actionbar-text">
+                      {selectedCardId === "scapegoat" && scapegoatFrom == null
+                        ? t("pickFromSeat")
+                        : t("armedPrompt", { card: cardCopy(selectedCardId).title })}
+                    </span>
+                    <button
+                      type="button"
+                      className="salem-btn salem-btn-ghost"
+                      onClick={() => {
+                        setSelectedHandIndex(null);
+                        setScapegoatFrom(null);
+                      }}
+                    >
+                      {t("cancelCard")}
+                    </button>
+                  </div>
+                )}
+                <div className="salem-hand">
+                  <div className="salem-hand-label">
+                    <span>{t("handTitle")}</span>
+                    <span>{t("handCount", { count: (you.hand ?? []).length })}</span>
+                  </div>
+                  <div className="salem-hand-main">
+                    <div className="salem-hand-row">
+                      {(you.hand ?? []).length === 0 && (
+                        <p className="muted text-sm">{t("emptyHand")}</p>
+                      )}
+                      {(you.hand ?? []).map((cardId, i) => {
+                        const copy = cardCopy(cardId);
+                        const armed = selectedHandIndex === i;
+                        return (
+                          <SalemCard
+                            key={`${cardId}-${i}`}
+                            face="play"
+                            flipped
+                            card={{
+                              id: cardId,
+                              color: copy.color,
+                              title: copy.title,
+                              text: copy.text,
+                            }}
+                            suitLabel={t(`color.${copy.color}`)}
+                            selected={armed}
+                            className={`${armed ? "is-armed" : ""} ${
+                              flyingIndex === i ? "is-flying" : ""
+                            }`}
+                            style={{ animationDelay: `${i * 70}ms` }}
+                            onClick={() => onCardClick(cardId, i)}
+                            disabled={!myDay || conn !== "open"}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="salem-turnbtns">
                       <button
                         type="button"
-                        key={`${cardId}-${i}`}
-                        className={`salem-card is-${copy.color} ${
-                          armed ? "is-selected is-armed" : ""
-                        } ${flyingIndex === i ? "is-flying" : ""}`}
-                        style={{ animationDelay: `${i * 70}ms` }}
-                        onClick={() => onCardClick(cardId, i)}
-                        disabled={!myDay || conn !== "open"}
+                        className="salem-btn salem-btn-ghost"
+                        disabled={!myDay || conn !== "open" || !!you.played_this_turn}
+                        onClick={() => {
+                          setSelectedHandIndex(null);
+                          sendAction("draw_two", {});
+                        }}
                       >
-                        {marks > 0 && (
-                          <span className="salem-card-marks" aria-hidden>
-                            {Array.from({ length: marks }).map((_, mi) => (
-                              <i key={mi} className="salem-card-mark" />
-                            ))}
-                          </span>
-                        )}
-                        <span className="salem-card-band">
-                          <span className="salem-card-color">{t(`color.${copy.color}`)}</span>
-                          <span className="salem-card-title">{copy.title}</span>
-                        </span>
-                        <span className="salem-card-text">{copy.text}</span>
-                        {armed && (
-                          <span className="salem-card-cancel" title={t("cancelCard")} aria-hidden>
-                            ✕
-                          </span>
-                        )}
+                        {t("drawTwo")}
                       </button>
-                    );
-                  })}
+                      <button
+                        type="button"
+                        className="salem-btn salem-btn-primary"
+                        disabled={!myDay || conn !== "open" || !you.played_this_turn}
+                        onClick={() => {
+                          setSelectedHandIndex(null);
+                          sendAction("end_turn", {});
+                        }}
+                      >
+                        {t("endTurn")}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

@@ -98,7 +98,24 @@ export function townHallI18nKey(id: string): string {
   return "unknownHall";
 }
 
-const HALL_PHOTO = new Set(["card_cache", "kiln_guard", "first_light"]);
+const HALL_PHOTO = new Set([
+  "stern_accuser",
+  "iron_will",
+  "sealed_row",
+  "card_cache",
+  "crowd_voice",
+  "steady_hand",
+  "closed_purse",
+  "hex_ward",
+  "first_light",
+  "last_word",
+  "town_crier",
+  "marked_stranger",
+  "village_healer",
+  "watch_ally",
+  "kiln_guard",
+  "quiet_bench",
+]);
 
 /** Period portrait (PD photo) or original woodcut plate. Never Facade card art. */
 export function hallPortrait(id: string): string | null {
