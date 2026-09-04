@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { GameSocket, type Envelope } from "@/lib/gameSocket";
 import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
+import "@/styles/chess.css";
 import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
 import { joinRematchTable } from "@/lib/rematch";
 import {
@@ -644,7 +645,15 @@ export default function GamePage({ gameId }: { gameId: string }) {
             })
           )}
         </div>
-        <p className="muted mt-2 text-center text-sm">
+        <p
+          className={`chess-status mx-auto mt-3 ${
+            conn === "closed"
+              ? "is-warn"
+              : state && !state.result && mySeat === state.turn_seat
+                ? "is-turn"
+                : ""
+          }`}
+        >
           {conn === "closed"
             ? t("disconnected")
             : conn === "connecting"
@@ -664,11 +673,11 @@ export default function GamePage({ gameId }: { gameId: string }) {
       {/* Side panel */}
       <div className="flex flex-col gap-4">
         <div className="card p-4">
-          <h3 className="mb-2 font-semibold">♞ Chess</h3>
+          <h3 className="chess-panel-title mb-2">♞ Chess</h3>
           {players.map((p) => {
             const isViewer = p.user.id === user?.id;
             return (
-              <div key={p.seat} className="flex justify-between py-1 text-sm">
+              <div key={p.seat} className="chess-player-row">
                 <span>
                   {p.seat === 0 ? "♔" : "♚"} {p.user.username}
                   {isViewer && <em className="muted ms-1">{t("youMarker")}</em>}

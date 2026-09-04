@@ -44,7 +44,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     <div className="enter mx-auto max-w-md">
       <div className="mb-6 text-center">
         <p className="kicker">{t("kicker")}</p>
-        <h1 className="mt-2 text-2xl font-bold">
+        <h1 className="type-h1 mt-2">
           {mode === "login" ? t("loginTitle") : t("registerTitle")}
         </h1>
         <p className="muted mt-2 text-sm">

@@ -1,0 +1,48 @@
+/* Chess — elegant competitive club. Scoped .chess-* */
+.chess-root {
+  --chess-light: #e8dcc0;
+  --chess-dark: #5a4630;
+  --chess-select: #d4a24e;
+  --chess-last: rgba(212, 162, 78, 0.35);
+}
+.chess-board-shell {
+  border-radius: var(--radius-panel, 1rem);
+  border: 1px solid var(--gold-line);
+  background: linear-gradient(180deg, #1c1812, #12100c);
+  padding: 0.65rem;
+  box-shadow: var(--shadow-panel);
+}
+.chess-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--gold-line);
+  background: rgba(24, 27, 34, 0.72);
+  font-size: var(--type-status);
+  font-weight: 650;
+}
+.chess-status.is-turn {
+  border-color: rgba(212, 162, 78, 0.55);
+  box-shadow: 0 0 16px rgba(212, 162, 78, 0.18);
+  color: var(--action-primary);
+}
+.chess-status.is-warn {
+  border-color: rgba(196, 69, 69, 0.45);
+  color: #e8a0a0;
+}
+.chess-panel-title {
+  font-size: var(--type-h3);
+  font-weight: 700;
+  color: var(--theme-chess, var(--action-primary));
+}
+.chess-player-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--type-body-sm);
+}
+.chess-player-row:last-child { border-bottom: 0; }

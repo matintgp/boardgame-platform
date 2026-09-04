@@ -50,7 +50,7 @@ export default function ProfilePage() {
     <div className="mx-auto flex max-w-lg flex-col gap-6">
       <div className="enter">
         <p className="kicker">{t("kicker")}</p>
-        <h1 className="mt-1 text-3xl font-bold">{t("title")}</h1>
+        <h1 className="type-h1 mt-1">{t("title")}</h1>
       </div>
 
       <div className="card enter enter-d1 flex items-center gap-5 p-6">
