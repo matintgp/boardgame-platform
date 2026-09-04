@@ -46,3 +46,17 @@
   font-size: var(--type-body-sm);
 }
 .chess-player-row:last-child { border-bottom: 0; }
+
+.chess-sq-light { background: var(--chess-light, #e8dcc0); }
+.chess-sq-dark { background: var(--chess-dark, #5a4630); }
+.chess-clock {
+  border-radius: var(--radius-control, 0.65rem);
+  border: 1px solid var(--gold-line);
+  background: rgba(24, 27, 34, 0.78);
+  font-size: var(--type-body-sm);
+}
+.chess-clock.is-active {
+  border-color: rgba(212, 162, 78, 0.65);
+  box-shadow: 0 0 14px rgba(212, 162, 78, 0.2);
+}
+.chess-clock.is-low { color: #e8a0a0; }

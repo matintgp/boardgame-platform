@@ -35,7 +35,7 @@ export default function Navbar() {
   return (
     <header className="salon-nav">
       <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="shrink-0 text-lg font-bold text-[var(--accent)]">
+        <Link href="/" className="brand-mark shrink-0 text-lg font-bold">
           {t("title")}
         </Link>
         <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm">

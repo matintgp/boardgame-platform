@@ -786,3 +786,9 @@ html[dir="rtl"] .game-tile-kicker {
   background: var(--tile-accent, var(--action-primary));
   opacity: 0.85;
 }
+
+
+.brand-mark {
+  color: var(--action-primary, var(--accent));
+  letter-spacing: 0.01em;
+}

@@ -128,7 +128,7 @@ export default function FriendsPage() {
     <div className="flex flex-col gap-8">
       <div className="enter">
         <p className="kicker">{t("kicker")}</p>
-        <h1 className="mt-1 text-3xl font-bold">{t("title")}</h1>
+        <h1 className="type-h1 mt-1">{t("title")}</h1>
         <p className="muted mt-1 text-sm">{t("subtitle")}</p>
       </div>
 
@@ -169,7 +169,7 @@ export default function FriendsPage() {
       </div>
 
       <section className="enter enter-d2">
-        <h2 className="mb-2 font-semibold">{t("incoming")}</h2>
+        <h2 className="type-h3 mb-2">{t("incoming")}</h2>
         <div className="enter-stagger flex flex-col gap-2">
           {incoming.map((e) => (
             <PersonRow key={e.request_id} name={nameOf(e)} rating={ratingOf(e)}>
@@ -192,7 +192,7 @@ export default function FriendsPage() {
       </section>
 
       <section className="enter enter-d3">
-        <h2 className="mb-2 font-semibold">{t("outgoing")}</h2>
+        <h2 className="type-h3 mb-2">{t("outgoing")}</h2>
         <div className="enter-stagger flex flex-col gap-2">
           {outgoing.map((e) => (
             <PersonRow key={e.request_id} name={nameOf(e)} rating={ratingOf(e)}>
@@ -208,7 +208,7 @@ export default function FriendsPage() {
       </section>
 
       <section className="enter enter-d4">
-        <h2 className="mb-2 font-semibold">{t("accepted")}</h2>
+        <h2 className="type-h3 mb-2">{t("accepted")}</h2>
         {accepted.length === 0 && (
           <div className="card empty-state">
             <p>{t("noFriends")}</p>

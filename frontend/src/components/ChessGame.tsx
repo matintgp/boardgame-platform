@@ -552,9 +552,9 @@ export default function GamePage({ gameId }: { gameId: string }) {
               return (
                 <div
                   key={seat}
-                  className={`card px-3 py-1 font-mono ${
-                    isActive ? "border-[var(--accent)]" : ""
-                  } ${low ? "text-red-400" : ""}`}
+                  className={`chess-clock px-3 py-1 font-mono ${
+                    isActive ? "is-active" : ""
+                  } ${low ? "is-low" : ""}`}
                 >
                   {players.find((p) => p.seat === seat)?.user.username.slice(0, 12) ?? "?"}{" "}
                   <span className="font-bold">{fmtClock(seat)}</span>
@@ -586,7 +586,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
           )}
         <div
           ref={boardRef}
-          className="grid aspect-square w-[min(88vw,480px)] overflow-hidden rounded-lg border border-[var(--border)] select-none"
+          className="chess-board-shell chess-root grid aspect-square w-[min(88vw,480px)] overflow-hidden select-none"
           style={{
             gridTemplateColumns: "repeat(8, 1fr)",
             gridTemplateRows: "repeat(8, 1fr)",
@@ -610,7 +610,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
                   aria-label={name}
                   onClick={() => onSquareClick(name)}
                   className={`relative flex items-center justify-center ${
-                    light ? "bg-[#ebecd0]" : "bg-[#739552]"
+                    light ? "chess-sq-light" : "chess-sq-dark"
                   } ${isSelected ? "outline outline-2 -outline-offset-2 outline-[var(--accent)]" : ""}`}
                 >
                   {isLastMove && (
