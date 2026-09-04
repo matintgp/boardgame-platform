@@ -82,41 +82,47 @@ export default function VoicePanel({
     };
   }, []);
 
+  const peerCount = peers.length + (joined ? 1 : 0);
+
   return (
     <details
-      className="card h-fit self-start overflow-hidden"
+      className="card voice-booth h-fit self-start overflow-hidden"
       open={open}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
-      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold marker:content-none">
+      <summary className="chat-booth-summary cursor-pointer list-none px-4 py-3 marker:content-none">
         <span className="flex items-center justify-between gap-2">
-          <span>🎙 {labels.title}</span>
-          <span className="muted text-xs font-normal">{open ? "▴" : "▾"}</span>
+          <span className="type-h3">{labels.title}</span>
+          <span className="muted text-xs font-normal" aria-hidden="true">
+            {open ? "▴" : "▾"}
+          </span>
         </span>
       </summary>
       <div className="px-4 pb-4">
         {!joined ? (
-          <button className="btn btn-primary w-full" onClick={joinVoice} disabled={busy}>
-            🎙 {labels.join}
+          <button type="button" className="btn btn-primary w-full" onClick={joinVoice} disabled={busy}>
+            {labels.join}
           </button>
         ) : (
           <div className="flex flex-col gap-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-green-400">● {labels.title}</span>
-              <span className="muted">
-                {peers.length + 1} {selfName ? "" : ""}
-              </span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="voice-live">● {labels.title}</span>
+              <span className="muted">{peerCount}</span>
             </div>
-            <div className="muted">
-              🗣 {selfName} {muted ? "🔇" : "🎙"}
-              {peers.map((p) => (
-                <span key={p}>
-                  , {p} 🎙
-                </span>
+            <ul className="voice-peers muted">
+              {selfName && (
+                <li className={muted ? "is-muted" : ""}>
+                  {selfName}
+                  {muted ? " · muted" : ""}
+                </li>
+              )}
+              {peers.map((name) => (
+                <li key={name}>{name}</li>
               ))}
-            </div>
+            </ul>
             <div className="flex gap-2">
               <button
+                type="button"
                 className="btn btn-ghost flex-1"
                 onClick={() => {
                   const room = roomRef.current;
@@ -126,15 +132,15 @@ export default function VoicePanel({
                   setMuted(next);
                 }}
               >
-                {muted ? `🔇 ${labels.unmute}` : `🎙 ${labels.mute}`}
+                {muted ? labels.unmute : labels.mute}
               </button>
-              <button className="btn btn-ghost flex-1 text-red-400" onClick={leave}>
-                ⏏ {labels.leave}
+              <button type="button" className="btn btn-ghost flex-1 text-red-400" onClick={leave}>
+                {labels.leave}
               </button>
             </div>
           </div>
         )}
-        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+        {error && <p className="mt-2 text-sm text-red-400" role="alert">{error}</p>}
       </div>
     </details>
   );

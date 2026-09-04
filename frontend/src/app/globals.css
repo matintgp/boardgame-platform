@@ -807,3 +807,20 @@ html[dir="rtl"] .game-tile-kicker {
   color: var(--text, inherit);
   overflow-wrap: anywhere;
 }
+
+
+.voice-booth {
+  border-color: var(--gold-line);
+  background: linear-gradient(180deg, rgba(24, 27, 34, 0.62), rgba(14, 16, 22, 0.78));
+}
+.voice-live {
+  color: #7dcea0;
+  font-weight: 650;
+  font-size: var(--type-body-sm, 0.875rem);
+}
+.voice-peers {
+  margin: 0;
+  padding-inline-start: 1rem;
+  font-size: var(--type-body-sm, 0.875rem);
+}
+.voice-peers .is-muted { opacity: 0.65; }
