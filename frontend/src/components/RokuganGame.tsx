@@ -282,6 +282,13 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
   const maxPlayers = view?.max_players ?? 2;
   const canStart = (view?.is_host ?? false) && waiting && players.length >= maxPlayers && !timedOut;
   const oppReady = !!state?.opponent?.submitted;
+  const stepAttackDone = displayAttack?.target != null;
+  const stepDefenseDone = displayDefense?.target != null;
+  const stepTokensDone =
+    displayAttack?.token != null &&
+    displayDefense?.token != null &&
+    displayAttack.token !== displayDefense.token;
+
   const oppName = players.find((p) => p.seat === oppSeat)?.user.username ?? "...";
   const myName = players.find((p) => p.seat === mySeat)?.user.username ?? "...";
 
@@ -416,6 +423,27 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
                 {oppReady ? t("opponentReady") : t("opponentThinking")}
               </span>
             </div>
+
+            {!alreadySubmitted && canPlan && (
+              <ol className="rk-steps" aria-label={t("draftPlan")}>
+                <li className={`rk-step ${stepAttackDone ? "is-done" : "is-active"}`}>
+                  <span className="rk-step-num" aria-hidden>1</span>
+                  {t("stepAttack")}
+                </li>
+                <li className={`rk-step ${stepDefenseDone ? "is-done" : stepAttackDone ? "is-active" : ""}`}>
+                  <span className="rk-step-num" aria-hidden>2</span>
+                  {t("stepDefense")}
+                </li>
+                <li className={`rk-step ${stepTokensDone ? "is-done" : stepAttackDone && stepDefenseDone ? "is-active" : ""}`}>
+                  <span className="rk-step-num" aria-hidden>3</span>
+                  {t("stepTokens")}
+                </li>
+                <li className={`rk-step ${stepTokensDone ? "is-active" : ""}`}>
+                  <span className="rk-step-num" aria-hidden>4</span>
+                  {t("stepSeal")}
+                </li>
+              </ol>
+            )}
 
             <div className="rk-table">
               <p className="rk-side-label mb-2">{oppName}</p>

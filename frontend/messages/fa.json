@@ -194,7 +194,11 @@
     "noDefense": "بدون دفاع",
     "waitingStatus": "منتظر",
     "readyStatus": "آماده",
-    "targetProvince": "هدف"
+    "targetProvince": "هدف",
+    "stepAttack": "استان حمله",
+    "stepDefense": "استان دفاع",
+    "stepTokens": "توکن قدرت",
+    "stepSeal": "مُهر نقشه"
   },
   "chat": {
     "title": "چت بازی",

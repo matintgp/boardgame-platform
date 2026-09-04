@@ -194,7 +194,11 @@
     "noDefense": "undefended",
     "waitingStatus": "Waiting",
     "readyStatus": "Ready",
-    "targetProvince": "Target"
+    "targetProvince": "Target",
+    "stepAttack": "Attack province",
+    "stepDefense": "Defense province",
+    "stepTokens": "Strength tokens",
+    "stepSeal": "Seal plan"
   },
   "chat": {
     "title": "Game Chat",
