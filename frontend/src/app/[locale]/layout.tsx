@@ -51,8 +51,13 @@ export default async function LocaleLayout({
     <html lang={locale} dir={dir}>
       <body className={`${vazirmatn.className} ${vazirmatn.variable} min-h-screen`}>
         <NextIntlClientProvider>
+          <a href="#main-content" className="skip-link">
+            {locale === "fa" ? "پرش به محتوا" : "Skip to content"}
+          </a>
           <Navbar />
-          <main className="salon-main relative z-10">{children}</main>
+          <main id="main-content" className="salon-main relative z-10" tabIndex={-1}>
+            {children}
+          </main>
           {process.env.NODE_ENV === "production" && (
             <script dangerouslySetInnerHTML={{ __html:
               `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}` }} />
