@@ -619,11 +619,7 @@ html[dir="rtl"] .kicker {
   .trophy-glow,
   .mm-ring,
   .card-lift,
-  .game-cover img,
-  .mafia-table.is-night,
-  .mafia-table.is-day,
-  .mafia-phase-banner,
-  .mafia-star {
+  .game-cover img {
     animation: none !important;
     transition: none !important;
     transform: none !important;
@@ -631,82 +627,6 @@ html[dir="rtl"] .kicker {
   .card-lift:hover {
     transform: none;
   }
-}
-
-/* Mafia table — night/day cinematic (no extra deps) */
-@keyframes mafia-night-pulse {
-  0%,
-  100% {
-    box-shadow: inset 0 0 48px 8px rgba(49, 46, 129, 0.45), 0 0 36px 4px rgba(67, 56, 202, 0.22);
-  }
-  50% {
-    box-shadow: inset 0 0 64px 14px rgba(79, 70, 229, 0.55), 0 0 56px 10px rgba(99, 102, 241, 0.35);
-  }
-}
-
-@keyframes mafia-day-glow {
-  0%,
-  100% {
-    box-shadow: inset 0 0 40px 6px rgba(212, 162, 78, 0.18), 0 0 28px 4px rgba(212, 162, 78, 0.16);
-  }
-  50% {
-    box-shadow: inset 0 0 56px 12px rgba(212, 162, 78, 0.32), 0 0 44px 8px rgba(244, 196, 108, 0.28);
-  }
-}
-
-@keyframes mafia-phase-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes mafia-twinkle {
-  0%,
-  100% {
-    opacity: 0.15;
-  }
-  50% {
-    opacity: 0.85;
-  }
-}
-
-.mafia-phase-banner {
-  animation: mafia-phase-in 0.45s ease-out both;
-}
-
-.mafia-table {
-  position: relative;
-  background: radial-gradient(circle at 50% 46%, #1f3d2c 0%, #102018 62%, #0a140e 100%);
-  border: 1px solid var(--border);
-}
-
-.mafia-table.is-night {
-  background: radial-gradient(circle at 50% 44%, #241e4a 0%, #0c0b18 64%, #06050c 100%);
-  animation: mafia-night-pulse 4.2s ease-in-out infinite;
-}
-
-.mafia-table.is-day {
-  background: radial-gradient(circle at 50% 44%, #4a3d22 0%, #1c1810 64%, #100e0a 100%);
-  animation: mafia-day-glow 5s ease-in-out infinite;
-}
-
-.mafia-table.is-over {
-  background: radial-gradient(circle at 50% 46%, #2a2f3a 0%, #14161b 70%);
-}
-
-.mafia-star {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  border-radius: 999px;
-  background: #e8e6e1;
-  animation: mafia-twinkle 2.8s ease-in-out infinite;
-  pointer-events: none;
 }
 
 

@@ -10,6 +10,7 @@ import ChatPanel from "@/components/ChatPanel";
 import VoicePanel from "@/components/VoicePanel";
 import LobbyExpiryNote, { lobbyTimedOut } from "@/components/LobbyExpiryNote";
 import { joinRematchTable } from "@/lib/rematch";
+import "@/styles/mafia.css";
 
 /** Engine MafiaEngine.min_players — start is allowed at min, seats go up to view.max_players. */
 const MAFIA_MIN_PLAYERS = 4;
@@ -440,8 +441,64 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
       ? Math.min(100, Math.round((votesIn / votesNeeded) * 100))
       : 0;
 
+  const aliveCount = state
+    ? Object.values(state.alive).filter(Boolean).length
+    : players.length;
+
+  const actionKind = actionForPhase();
+  const hasSubmitted = Boolean(
+    you?.alive &&
+      ((phase === "night" && you.my_action != null) ||
+        (phase === "day" && you.my_vote != null))
+  );
+  const showWaitingChip = Boolean(
+    you?.alive &&
+      phase &&
+      phase !== "over" &&
+      (hasSubmitted || (phase === "night" && you.role === "citizen"))
+  );
+  const showPickChip = Boolean(
+    you?.alive && phase && phase !== "over" && actionKind != null && !hasSubmitted
+  );
+
+  const phaseBannerClass =
+    phase === "night"
+      ? "is-night"
+      : phase === "day"
+        ? "is-voting"
+        : phase === "over"
+          ? "is-over"
+          : "";
+
+  const phaseTitle =
+    phase === "night"
+      ? t("phaseNightTitle")
+      : phase === "day"
+        ? t("phaseVotingTitle")
+        : phase === "over"
+          ? t("gameOver")
+          : "";
+
+  const phaseSub =
+    phase === "night"
+      ? t("phaseNightSub")
+      : phase === "day"
+        ? t("phaseVotingSub")
+        : phase === "over"
+          ? t("phaseOverTitle")
+          : "";
+
+  const targetHint =
+    actionKind === "mafia_kill"
+      ? t("killTargetHint")
+      : actionKind === "doctor_save"
+        ? t("saveTargetHint")
+        : actionKind === "vote"
+          ? t("voteTargetHint")
+          : "";
+
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="mafia-root grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="mx-auto w-full max-w-xl">
         {rematchOffer && (
           <div className="card mb-4 flex items-center justify-between gap-3 border-[var(--accent)] p-4">
@@ -467,19 +524,20 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
           </div>
         )}
 
-        <p className="muted mb-2 text-center text-xs" aria-live="polite">
+        <p className="mb-2 text-center" aria-live="polite">
           {conn === "open" ? (
-            <span className="text-emerald-400/80">● {connLabel}</span>
+            <span className="mafia-chip is-alive">● {t("connLive")}</span>
           ) : (
-            <span>◌ {connLabel}</span>
+            <span className="mafia-chip is-waiting">◌ {connLabel}</span>
           )}
         </p>
 
         {waiting ? (
-          <div className="card p-5">
-            <h2 className="mb-1 text-xl font-bold">🎭 {t("title")}</h2>
+          <div className="mafia-lobby-card">
+            <p className="mafia-role-card__label mb-1">{t("title")}</p>
+            <h2 className="mb-1 text-xl font-bold">{t("waitingForPlayers")}</h2>
             <p className="muted mb-1 text-sm">
-              ⏳ {t("waitingForPlayers")} ({players.length}/{maxPlayers})
+              {players.length}/{maxPlayers}
             </p>
             <LobbyExpiryNote
               expiresAt={view?.expires_at}
@@ -531,97 +589,138 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
           <>
             <div
               key={state.phase}
-              className={`mafia-phase-banner mb-4 rounded-xl border px-4 py-3 text-center ${
-                state.phase === "night"
-                  ? "border-indigo-900 bg-[#0b0d14]"
-                  : state.phase === "day"
-                    ? "border-[var(--accent)]/35 bg-[#1c1912]"
-                    : "border-[var(--border)] bg-[var(--surface)]"
-              }`}
+              className={`mafia-phase-banner mb-4 ${phaseBannerClass}`}
+              role="status"
+              aria-live="polite"
             >
-              <p
-                className={`text-2xl font-extrabold ${
-                  state.phase === "night"
-                    ? "text-indigo-200"
-                    : state.phase === "day"
-                      ? "text-[var(--accent)]"
-                      : "text-[var(--text)]"
-                }`}
-              >
-                {state.phase === "night"
-                  ? `🌙 ${t("night")}`
-                  : state.phase === "day"
-                    ? `☀️ ${t("day")}`
-                    : `🏁 ${t("gameOver")}`}
-              </p>
-              <p className="muted mt-0.5 text-sm">
+              <p className="mafia-phase-banner__kicker">
                 {t("round")} {state.round}
+                {" · "}
+                {t("aliveCount", { alive: aliveCount })}
               </p>
+              <p className="mafia-phase-banner__title">{phaseTitle}</p>
+              <p className="mafia-phase-banner__sub">{phaseSub}</p>
+              <div className="mafia-phase-banner__meta">
+                {phase === "night" && (
+                  <span className="mafia-chip">{t("night")}</span>
+                )}
+                {phase === "day" && (
+                  <span className="mafia-chip is-action">{t("phaseVotingTitle")}</span>
+                )}
+                {phase === "over" && (
+                  <span className="mafia-chip">{t("gameOver")}</span>
+                )}
+              </div>
             </div>
 
             {you && (
               <div
-                className={`card mb-4 p-4 ${
-                  you.role === "mafia"
-                    ? "!border-red-800"
-                    : !you.alive
-                      ? "border-zinc-700 bg-[#12141a]"
-                      : state.phase === "night"
-                        ? "border-indigo-900/70 bg-[#101218]"
-                        : ""
+                className={`mafia-role-card mb-4 ${
+                  !you.alive
+                    ? "is-dead"
+                    : you.role === "mafia"
+                      ? "is-mafia"
+                      : you.role === "doctor"
+                        ? "is-doctor"
+                        : state.phase === "night"
+                          ? "is-citizen is-night-sleep"
+                          : "is-citizen"
                 }`}
               >
-                <p className="muted text-xs uppercase tracking-wide">{t("yourRole")}</p>
-                <p
-                  className={`mt-1 text-2xl font-extrabold ${
-                    you.role === "mafia" ? "text-red-400" : "text-[var(--accent)]"
-                  }`}
-                >
-                  {t(roleKey(you.role))}
-                </p>
+                <p className="mafia-role-card__label">{t("yourRole")}</p>
+                <p className="mafia-role-card__role">{t(roleKey(you.role))}</p>
+                <div className="mafia-role-card__row">
+                  {you.alive ? (
+                    <span className="mafia-chip is-alive">{t("roleCardAlive")}</span>
+                  ) : (
+                    <span className="mafia-chip is-dead">{t("roleCardEliminated")}</span>
+                  )}
+                  {!you.alive && (
+                    <span className="mafia-chip is-spectating">{t("spectatingLabel")}</span>
+                  )}
+                  {showPickChip && (
+                    <span className="mafia-chip is-action">{actionLabel()}</span>
+                  )}
+                  {hasSubmitted && (
+                    <span className="mafia-chip is-submitted">{t("actionSubmitted")}</span>
+                  )}
+                  {showWaitingChip && !showPickChip && (
+                    <span className="mafia-chip is-waiting">{t("actionWaitingOthers")}</span>
+                  )}
+                </div>
                 {you.role === "mafia" && (
-                  <p className="muted mt-1 text-xs">
-                    🤝 {t("teammates")}:{" "}
-                    {teammates.filter((s) => s !== you.seat).map((s) => nameOf(players, s)).join(", ") || "—"}
+                  <p className="mafia-role-card__hint">
+                    {t("teammates")}:{" "}
+                    {teammates
+                      .filter((s) => s !== you.seat)
+                      .map((s) => nameOf(players, s))
+                      .join(", ") || "—"}
                     {you.team_ready ? ` — ${t("teamReady")}` : ""}
                   </p>
                 )}
                 {!you.alive && (
-                  <p className="mt-2 text-sm text-zinc-300">💀 {t("spectatorBanner")}</p>
+                  <p className="mafia-role-card__hint">{t("spectatorBanner")}</p>
                 )}
                 {you.alive && state.phase !== "over" && (
-                  <p className="muted mt-2 text-xs">{phaseHint}</p>
-                )}
-                {state.phase === "night" && you.alive && you.role === "citizen" && (
-                  <p className="mt-2 text-sm text-indigo-200">😴 {t("sleeping")}</p>
+                  <div
+                    className={`mafia-action-strip ${
+                      hasSubmitted
+                        ? "is-ready"
+                        : actionKind
+                          ? ""
+                          : "is-idle"
+                    }`}
+                  >
+                    <p className="mafia-action-strip__prompt">
+                      {phaseHint ||
+                        (actionKind ? t("actionPickTarget") : t("actionNoNightMove"))}
+                    </p>
+                    {showPickChip && (
+                      <span className="mafia-chip is-action">{t("actionPickTarget")}</span>
+                    )}
+                    {hasSubmitted && (
+                      <span className="mafia-chip is-submitted">{t("actionSubmitted")}</span>
+                    )}
+                  </div>
                 )}
               </div>
             )}
 
             {!you && state.phase !== "over" && (
-              <div className="card mb-4 border-zinc-700 bg-[#12141a] p-4">
-                <p className="text-sm">👁 {t("spectatorBanner")}</p>
-                <p className="muted mt-1 text-xs">{t("spectatorHint")}</p>
+              <div className="mafia-role-card is-spectator mb-4">
+                <p className="mafia-role-card__label">{t("spectatingLabel")}</p>
+                <p className="mafia-role-card__role" style={{ fontSize: "var(--type-h2)" }}>
+                  {t("spectatorBanner")}
+                </p>
+                <p className="mafia-role-card__hint">{t("spectatorHint")}</p>
               </div>
             )}
 
             {state.last_night && (
-              <div className="card mb-4 p-4 text-sm">
-                🌙 {t("nightResult")}{" "}
+              <div
+                className={`mafia-event-card mb-4 ${
+                  state.last_night.killed != null ? "is-death" : "is-safe"
+                }`}
+              >
+                <p className="mafia-event-card__label">{t("nightResult")}</p>
                 {state.last_night.killed != null ? (
-                  <span className="text-red-400">
+                  <span className="font-semibold" style={{ color: "color-mix(in srgb, var(--theme-mafia) 40%, #f2b8c0)" }}>
                     {t("someoneDied", { name: nameOf(players, state.last_night.killed) })}
                   </span>
                 ) : (
-                  <span className="text-emerald-400">{t("nobodyDied")}</span>
+                  <span className="text-[var(--action-success)]">{t("nobodyDied")}</span>
                 )}
               </div>
             )}
             {state.last_vote && (
-              <div className="card mb-4 p-4 text-sm">
-                ☀️ {t("voteResult")}{" "}
+              <div
+                className={`mafia-event-card mb-4 ${
+                  state.last_vote.eliminated != null ? "is-death" : "is-safe"
+                }`}
+              >
+                <p className="mafia-event-card__label">{t("voteResult")}</p>
                 {state.last_vote.eliminated != null ? (
-                  <span className="text-red-400">
+                  <span className="font-semibold" style={{ color: "color-mix(in srgb, var(--theme-mafia) 40%, #f2b8c0)" }}>
                     {nameOf(players, state.last_vote.eliminated)} — {t("wasEliminated")}
                   </span>
                 ) : (
@@ -630,7 +729,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
               </div>
             )}
 
-            <TableCircle
+                        <TableCircle
               slots={orderedSeats}
               phase={state.phase}
               youSeat={you?.seat ?? mySeat}
@@ -640,6 +739,15 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
               teammates={teammates}
               canTarget={canTarget}
               actionLabel={you?.alive ? actionLabel() : ""}
+              targetHint={you?.alive ? targetHint : ""}
+              actionKind={you?.alive ? actionKind : null}
+              hubLabel={
+                state.phase === "night"
+                  ? t("night")
+                  : state.phase === "day"
+                    ? t("day")
+                    : t("gameOver")
+              }
               youMarker={t("youMarker")}
               emptyLabel={t("emptySeat")}
               deadLabel={t("dead")}
@@ -649,18 +757,15 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
             />
 
             {state.phase === "day" && you && votesNeeded > 0 && (
-              <div className="card mt-4 p-3">
-                <div className="mb-1 flex justify-between text-xs">
+              <div className="mafia-vote-bar mt-4">
+                <div className="mb-2 flex justify-between text-xs">
                   <span className="muted">{t("votesIn")}</span>
-                  <span>
+                  <span className="font-semibold">
                     {t("voteProgress", { current: votesIn, needed: votesNeeded })}
                   </span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-[var(--border)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
-                    style={{ width: `${votePct}%` }}
-                  />
+                <div className="mafia-vote-bar__track" role="progressbar" aria-valuenow={votesIn} aria-valuemax={votesNeeded}>
+                  <div className="mafia-vote-bar__fill" style={{ width: `${votePct}%` }} />
                 </div>
               </div>
             )}
@@ -793,6 +898,9 @@ function TableCircle({
   teammates,
   canTarget,
   actionLabel,
+  targetHint = "",
+  actionKind = null,
+  hubLabel = "",
   youMarker,
   emptyLabel,
   deadLabel,
@@ -809,6 +917,9 @@ function TableCircle({
   teammates: number[];
   canTarget: (seat: number) => boolean;
   actionLabel: string;
+  targetHint?: string;
+  actionKind?: "mafia_kill" | "doctor_save" | "vote" | null;
+  hubLabel?: string;
   youMarker: string;
   emptyLabel: string;
   deadLabel: string;
@@ -821,10 +932,13 @@ function TableCircle({
     phase === "night"
       ? "is-night"
       : phase === "day"
-        ? "is-day"
+        ? "is-voting"
         : phase === "over"
           ? "is-over"
           : "";
+
+  const hubIcon =
+    phase === "night" ? "☾" : phase === "day" ? "☀" : phase === "over" ? "⚑" : "♠";
 
   return (
     <div
@@ -839,58 +953,57 @@ function TableCircle({
             style={{ top: s.top, left: s.left, animationDelay: s.delay }}
           />
         ))}
-      <div className="pointer-events-none absolute inset-[32%] flex flex-col items-center justify-center rounded-full border border-white/5 text-center">
-        <span className="text-3xl" aria-hidden>
-          {phase === "night" ? "🌙" : phase === "day" ? "☀️" : phase === "over" ? "🏁" : "🎭"}
+      <div className="mafia-table__hub">
+        <span className="mafia-table__hub-icon" aria-hidden>
+          {hubIcon}
         </span>
+        {hubLabel ? <span className="mafia-table__hub-label">{hubLabel}</span> : null}
       </div>
       {slots.map((slot, i) => {
         const pos = polar(i, n);
         const p = slot.player;
-        const isSelf = p ? p.user.id === userId || slot.seat === youSeat : slot.seat === youSeat;
+        const isSelf = p
+          ? p.user.id === userId || slot.seat === youSeat
+          : slot.seat === youSeat;
         const alive = p && aliveMap ? (aliveMap[String(slot.seat)] ?? true) : true;
         const picked = selected === slot.seat;
         const targetable = p != null && canTarget(slot.seat);
         const mate = showMafiaMarks && teammates.includes(slot.seat);
+        const seatClass = [
+          "mafia-seat",
+          !p ? "is-empty" : "",
+          isSelf ? "is-self" : "",
+          mate ? "is-teammate" : "",
+          !alive ? "is-dead" : "",
+          targetable ? "is-targetable" : "",
+          picked ? "is-selected" : "",
+          picked && actionKind === "vote" ? "is-vote-target" : "",
+          picked && actionKind === "mafia_kill" ? "is-kill-target" : "",
+          picked && actionKind === "doctor_save" ? "is-save-target" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+
         const chip = (
-          <div
-            className={`flex w-[7rem] flex-col items-center ${!alive ? "opacity-45" : ""}`}
-          >
-            <span
-              className={`relative flex h-14 w-14 items-center justify-center rounded-full border-2 text-lg font-bold transition ${
-                picked
-                  ? "border-[var(--accent)] bg-[rgba(212,162,78,0.2)] scale-105"
-                  : isSelf
-                    ? "border-[var(--accent)] bg-[var(--surface)]"
-                    : mate
-                      ? "border-red-700 bg-[#1a1010]"
-                      : p
-                        ? "border-[var(--border)] bg-[var(--surface)]"
-                        : "border-dashed border-[var(--border)] bg-black/20"
-              } ${targetable ? "cursor-pointer hover:border-[var(--accent)]" : ""} ${
-                !alive ? "grayscale" : ""
-              }`}
-            >
+          <div className={seatClass}>
+            <span className="mafia-seat__avatar">
               {!alive && (
-                <span className="absolute -top-1 -right-1 text-sm" aria-hidden>
-                  💀
+                <span className="mafia-seat__dead-mark" aria-hidden>
+                  ✕
                 </span>
               )}
               {p ? (p.user.username.slice(0, 1) || "?").toUpperCase() : "·"}
             </span>
-            <span
-              className="mt-1 w-full text-center text-[10px] font-medium leading-tight break-all"
-              title={p?.user.username}
-            >
+            <span className="mafia-seat__name" title={p?.user.username}>
               {p ? p.user.username : emptyLabel}
             </span>
-            {isSelf && p && <em className="muted text-[10px]">{youMarker}</em>}
-            {!alive && p && <em className="muted text-[10px]">— {deadLabel}</em>}
-            {targetable && actionLabel && (
-              <span className="mt-0.5 text-[10px] font-semibold text-[var(--accent)]">
-                {actionLabel}
-              </span>
-            )}
+            {isSelf && p && <em className="mafia-seat__meta">{youMarker}</em>}
+            {!alive && p && <em className="mafia-seat__meta">— {deadLabel}</em>}
+            {picked && targetHint ? (
+              <span className="mafia-seat__action">{targetHint}</span>
+            ) : targetable && actionLabel ? (
+              <span className="mafia-seat__action">{actionLabel}</span>
+            ) : null}
           </div>
         );
 
@@ -905,7 +1018,7 @@ function TableCircle({
                 type="button"
                 onClick={() => onActivate(slot.seat)}
                 aria-label={`${p?.user.username ?? slot.seat} ${actionLabel}`}
-                className="bg-transparent"
+                className="mafia-seat-btn"
               >
                 {chip}
               </button>
