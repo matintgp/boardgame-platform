@@ -174,8 +174,12 @@ async function errorText(res: Response): Promise<string> {
   try {
     const body = await res.json();
     if (typeof body.detail === "string") return body.detail;
+    if (Array.isArray(body.detail) && body.detail[0]?.msg) {
+      return String(body.detail[0].msg);
+    }
   } catch {
     /* ignore */
   }
+  if (res.status >= 500) return "Server error. Try again in a moment.";
   return `HTTP ${res.status}`;
 }
