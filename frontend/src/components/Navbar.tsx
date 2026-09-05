@@ -123,7 +123,7 @@ export default function Navbar() {
 
   return (
     <header className="salon-nav">
-      <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3" aria-label={t("title")}>
+      <nav className="salon-nav-inner flex items-center justify-between gap-3 py-3" aria-label={t("title")}>
         <Link href="/" className="brand-mark shrink-0 text-lg font-bold">
           {t("title")}
         </Link>

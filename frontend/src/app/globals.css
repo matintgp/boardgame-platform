@@ -624,8 +624,7 @@ html[dir="rtl"] .seat-bar > span {
   .mm-ring,
   .card-lift,
   .game-cover img,
-  .game-tile,
-  .skip-link {
+  .game-tile {
     animation: none !important;
     transition: none !important;
     transform: none !important;
@@ -728,40 +727,228 @@ html[dir="rtl"] .game-tile-kicker {
 }
 
 
-/* Platform shell width: salon pages stay cozy; live tables breathe wider */
+/* Platform shell width tokens — navbar + main share these */
+:root {
+  --shell-salon: 64rem; /* ~max-w-5xl */
+  --shell-game: 90rem;
+  --shell-game-xl: 100rem; /* nearly full at 1440–1920 with padding */
+  --game-rail-width: 15.5rem;
+}
+
+.salon-nav-inner,
 .salon-main {
   width: 100%;
-  max-width: 64rem; /* ~max-w-5xl */
+  max-width: var(--shell-salon);
   margin-inline: auto;
   padding-inline: 1rem;
-  padding-block: 2rem;
 }
 @media (min-width: 768px) {
+  .salon-nav-inner,
   .salon-main { padding-inline: 1.5rem; }
 }
+.salon-main {
+  padding-block: 2rem;
+  scroll-margin-top: 4.5rem;
+}
 .salon-main:has([data-game-table]) {
-  max-width: 80rem; /* ~max-w-7xl */
+  max-width: var(--shell-game);
+  padding-block: 1.25rem;
+}
+@media (min-width: 1280px) {
+  .salon-main:has([data-game-table]) {
+    max-width: var(--shell-game-xl);
+    padding-inline: 1.25rem;
+  }
+}
+/* When a live table is open, stretch navbar inner to match */
+body:has([data-game-table]) .salon-nav-inner {
+  max-width: var(--shell-game);
+}
+@media (min-width: 1280px) {
+  body:has([data-game-table]) .salon-nav-inner {
+    max-width: var(--shell-game-xl);
+  }
+}
+
+/* Shared game composition: primary surface + utility rail */
+.game-layout {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+  width: 100%;
+}
+.game-layout__primary {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+.game-layout__rail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.game-layout__full {
+  grid-column: 1 / -1;
+}
+@media (min-width: 1024px) {
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr) var(--game-rail-width);
+    gap: 1rem;
+  }
+  .game-layout__primary {
+    align-items: center;
+  }
+  .game-layout__rail {
+    position: sticky;
+    top: 4.75rem;
+    max-height: calc(100vh - 5.5rem);
+    overflow: auto;
+    padding-bottom: 0.5rem;
+  }
+}
+@media (min-width: 1440px) {
+  .game-layout {
+    --game-rail-width: 15rem;
+    gap: 1.25rem;
+  }
+}
+
+/* Compact utility rail (chat / voice) */
+.utility-rail .chat-booth,
+.utility-rail .voice-booth {
+  border-radius: 0.85rem;
+}
+.utility-rail .chat-booth-summary .type-h3,
+.utility-rail .voice-booth .type-h3 {
+  font-size: var(--type-label, 0.78rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+html[dir="rtl"] .utility-rail .chat-booth-summary .type-h3,
+html[dir="rtl"] .utility-rail .voice-booth .type-h3 {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.utility-rail details.chat-booth:not([open]),
+.utility-rail details.voice-booth:not([open]) {
+  padding: 0;
+}
+.utility-rail .chat-log {
+  max-height: 12rem;
+}
+
+/* Home discovery — stronger tiles, less SaaS gap */
+.home-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+.home-library {
+  scroll-margin-top: 4.5rem;
+}
+.home-tile-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.15rem;
+}
+@media (min-width: 640px) {
+  .home-tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+}
+@media (min-width: 1280px) {
+  .home-tile-grid { gap: 1.5rem; }
+}
+.home-tile-grid .game-cover {
+  aspect-ratio: 16 / 10;
+  min-height: 9.5rem;
+}
+@media (min-width: 1280px) {
+  .home-tile-grid .game-cover { min-height: 12rem; }
+}
+.hero-panel.hero-compact {
+  padding-block: 2rem;
+}
+@media (min-width: 640px) {
+  .hero-panel.hero-compact { padding-block: 2.35rem; }
+}
+
+/* Lobby section hierarchy */
+.lobby-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  scroll-margin-top: 4.5rem;
+}
+.lobby-section {
+  scroll-margin-top: 5rem;
+}
+.lobby-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+.lobby-my-games {
+  border-radius: var(--radius-panel, 1rem);
+  border: 1px solid var(--gold-line);
+  background:
+    linear-gradient(180deg, rgba(212, 162, 78, 0.08), transparent 42%),
+    rgba(18, 20, 28, 0.55);
+  padding: 1rem 1rem 1.1rem;
+}
+.lobby-my-games .lobby-my-item {
+  border-color: rgba(212, 162, 78, 0.22);
+  background: rgba(11, 13, 18, 0.45);
+}
+.lobby-select-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .lobby-select-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .lobby-select-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.15rem; }
 }
 
 
-/* A11y: skip link + mobile nav */
+/* A11y: skip link — visually hidden until focus (clip technique, not transform) */
 .skip-link {
   position: absolute;
   inset-inline-start: 0.75rem;
   top: 0.75rem;
   z-index: 100;
-  padding: 0.55rem 0.9rem;
-  border-radius: var(--radius-control, 0.65rem);
-  border: 1px solid var(--gold-line);
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
   background: var(--surface-raised, #181b22);
   color: var(--action-primary, var(--accent));
   font-size: var(--type-body-sm, 0.875rem);
   font-weight: 650;
-  transform: translateY(-160%);
-  transition: transform 0.15s ease;
 }
-.skip-link:focus {
-  transform: translateY(0);
+.skip-link:focus,
+.skip-link:focus-visible {
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+  border-radius: var(--radius-control, 0.65rem);
+  border: 1px solid var(--gold-line);
   outline: 2px solid var(--action-primary, var(--accent));
   outline-offset: 2px;
 }

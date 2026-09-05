@@ -238,7 +238,7 @@ export default function LobbyPage() {
   const atCap = hostedCount >= MAX_OPEN_LOBBIES;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="lobby-stack">
       <div className="enter flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="kicker">{t("kicker")}</p>
@@ -257,7 +257,8 @@ export default function LobbyPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="lobby-section enter enter-d1" aria-label={t("kicker")}>
+      <div className="lobby-select-grid">
         {MODES.map((m, i) => {
           const isSearching = searching === m.id;
           return (
@@ -311,6 +312,7 @@ export default function LobbyPage() {
           );
         })}
       </div>
+      </section>
 
       {(joinError || atCap) && (
         <p className="lobby-alert" role="alert">
@@ -318,8 +320,10 @@ export default function LobbyPage() {
         </p>
       )}
 
-      <section className="enter enter-d4">
-        <h2 className="mb-3 font-semibold">{t("openLobbies")}</h2>
+      <section className="lobby-section enter enter-d4" aria-labelledby="lobby-open-title">
+        <div className="lobby-section-head">
+          <h2 id="lobby-open-title" className="salon-section-title">{t("openLobbies")}</h2>
+        </div>
         {listLoading && <p className="muted">{t("loading")}</p>}
         {listError && (
           <p className="text-sm text-red-400">
@@ -374,8 +378,12 @@ export default function LobbyPage() {
       </section>
 
       {myGames.length > 0 && (
-        <section className="enter enter-d5">
-          <h2 className="mb-3 font-semibold">{t("yourGames")}</h2>
+        <section className="lobby-section lobby-my-games enter enter-d5" aria-labelledby="lobby-mine-title">
+          <div className="lobby-section-head">
+            <div>
+              <h2 id="lobby-mine-title" className="salon-section-title">{t("yourGames")}</h2>
+            </div>
+          </div>
           <div className="enter-stagger flex flex-col gap-2">
             {myGames.map((g) => {
               const { name } = gameLabel(t, g.game_type);
@@ -384,7 +392,7 @@ export default function LobbyPage() {
                 <Link
                   key={g.id}
                   href={`/game/${g.id}`}
-                  className="card card-lift flex items-center justify-between p-3"
+                  className="card card-lift lobby-my-item flex items-center justify-between p-3"
                 >
                   <span className="font-semibold">{name}</span>
                   <span className={pill.cls}>{pill.label}</span>

@@ -16,7 +16,7 @@ export default function HomeHeroCtas() {
   }, []);
 
   return (
-    <div className="mt-8 flex flex-wrap justify-center gap-3">
+    <div className="mt-6 flex flex-wrap justify-center gap-3">
       <Link href="/lobby" className="btn btn-primary">
         {t("playNow")}
       </Link>
