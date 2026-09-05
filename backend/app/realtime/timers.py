@@ -181,7 +181,13 @@ async def _tick(gid: uuid.UUID) -> bool:
         seat_obj = next((s for s in game.seats if s.seat == seat_to_move), None)
         if seat_obj is None:
             return False
-        online = await hub.user_online(seat_obj.user_id)
+        from app.games.chess_bot import is_bot_game
+
+        is_bot_turn = is_bot_game(game.settings) and seat_obj.user_id is None
+        if is_bot_turn:
+            online = True  # bot is never offline; moves come from Stockfish tasks
+        else:
+            online = await hub.user_online(seat_obj.user_id)
         now = time.time()
         changed = False
 
@@ -235,8 +241,11 @@ async def _tick(gid: uuid.UUID) -> bool:
                     return False
                 changed = True
 
-                # auto-move: player online but thinking for too long
-                if now - state.get("turn_started_at", now) >= MOVE_LIMIT_SECONDS:
+                # auto-move: human online but thinking for too long (never for bot seat)
+                if (
+                    not is_bot_turn
+                    and now - state.get("turn_started_at", now) >= MOVE_LIMIT_SECONDS
+                ):
                     apply_res = engine.random_move(state)
                     game.last_seq += len(apply_res.events)
                     for ev in apply_res.events:

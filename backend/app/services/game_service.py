@@ -72,6 +72,22 @@ def lobby_closed_reason(game: Game) -> str | None:
 
 
 async def create_game(db: AsyncSession, user: User, engine_cls: type[BaseEngine], config: dict) -> Game:
+    # Extended create: settings.mode=bot → active unrated bot match.
+    if (config or {}).get("mode") == "bot" or (config or {}).get("opponent_type") == "bot":
+        if engine_cls.game_id != "chess":
+            raise ValueError("bot_chess_only")
+        from app.services.bot_match import create_bot_game
+
+        return await create_bot_game(
+            db,
+            user,
+            difficulty=str(
+                (config or {}).get("difficulty")
+                or ((config or {}).get("bot") or {}).get("persona_id")
+                or "knight"
+            ),
+            player_color=str((config or {}).get("player_color") or "random"),
+        )
     await abort_expired_lobbies(db)
     open_count = await db.scalar(
         select(func.count())
@@ -115,22 +131,54 @@ def seat_of(game: Game, user_id: uuid.UUID) -> int | None:
 
 
 def lobby_payload(game: Game, users_by_id: dict[uuid.UUID, User]) -> dict:
-    return {
+    from app.games.chess_bot import is_bot_game, public_bot_from_settings
+
+    settings_map = getattr(game, "settings", None) or {}
+    bot_public = public_bot_from_settings(settings_map)
+    players = []
+    for s in sorted(game.seats, key=lambda x: x.seat):
+        if getattr(s, "user_id", None) is None and is_bot_game(settings_map):
+            players.append(
+                {
+                    "seat": s.seat,
+                    "opponent_type": "bot",
+                    "user": None,
+                    "bot": bot_public,
+                }
+            )
+        else:
+            profile = (
+                users_by_id[s.user_id].public_profile()
+                if s.user_id in users_by_id
+                else {"id": str(s.user_id)}
+            )
+            players.append(
+                {
+                    "seat": s.seat,
+                    "opponent_type": "human",
+                    "user": profile,
+                }
+            )
+    status_val = getattr(game, "status", None)
+    payload = {
         "id": str(game.id),
         "game_type": game.game_type,
-        "status": game.status,
+        "status": status_val,
         "max_players": game.max_players,
         "created_by": str(game.created_by),
         "created_at": _iso(game.created_at),
-        "expires_at": _iso(lobby_expires_at(game)),
-        "players": [
-            {
-                "seat": s.seat,
-                "user": users_by_id[s.user_id].public_profile() if s.user_id in users_by_id else {"id": str(s.user_id)},
-            }
-            for s in sorted(game.seats, key=lambda x: x.seat)
-        ],
+        "expires_at": (
+            _iso(lobby_expires_at(game))
+            if status_val == GameStatus.waiting.value
+            else None
+        ),
+        "players": players,
     }
+    if is_bot_game(settings_map):
+        from app.services.bot_match import bot_game_view_fields
+
+        payload.update(bot_game_view_fields(game))
+    return payload
 
 
 async def game_view(db: AsyncSession, game: Game, user: User | None = None) -> dict:
@@ -205,12 +253,22 @@ async def offer_rematch(db: AsyncSession, game: Game, user: User) -> tuple[Game,
 
     Former opponents are invited over WS; they join themselves. Auto-seating
     them was seating without consent.
+
+    Bot games: immediately create a new active unrated bot match (same persona;
+    random color re-rolls). No invitees / consent banner.
     """
+    from app.games.chess_bot import is_bot_game
+
     if seat_of(game, user.id) is None:
         raise PermissionError("Not a member")
     if game.status != GameStatus.finished.value:
         raise ValueError("Game is not finished")
-    invitees = [s.user_id for s in game.seats if s.user_id != user.id]
+    if is_bot_game(game.settings):
+        from app.services.bot_match import rematch_bot_game
+
+        new_bot = await rematch_bot_game(db, game, user)
+        return new_bot, []
+    invitees = [s.user_id for s in game.seats if s.user_id is not None and s.user_id != user.id]
     if not invitees:
         raise ValueError("No opponent to rematch")
     new_game = await create_game(
@@ -350,12 +408,20 @@ async def apply_action(
 
     # Build per-seat visible snapshots (hidden-info ready).
     message = build_state_message(engine, game, state, result.events)
+    if not result.finished:
+        from app.services.bot_match import maybe_schedule_after_human_move
+
+        maybe_schedule_after_human_move(game)
     return message, result.events
 
 
 async def _apply_ratings(db: AsyncSession, game: Game, result: dict) -> None:
     """Elo update on game end (rated games). Stashes deltas into game.result."""
     if game.game_type != "chess":
+        return
+    from app.games.chess_bot import is_bot_game
+
+    if is_bot_game(game.settings) or (game.settings or {}).get("rated") is False:
         return
     winner_seat = result.get("winner_seat")
     seats = sorted(game.seats, key=lambda s: s.seat)
@@ -439,12 +505,12 @@ async def my_games(db: AsyncSession, user_id: uuid.UUID) -> list[dict]:
 
 
 async def _load_users(db: AsyncSession, game: Game) -> dict[uuid.UUID, User]:
-    ids = [s.user_id for s in game.seats]
+    ids = [s.user_id for s in game.seats if s.user_id is not None]
     return await _load_users_by_ids(db, ids)
 
 
 async def _load_users_many(db: AsyncSession, games: list[Game]) -> dict[uuid.UUID, User]:
-    ids = [u for g in games for u in (s.user_id for s in g.seats)]
+    ids = [u for g in games for u in (s.user_id for s in g.seats) if u is not None]
     return await _load_users_by_ids(db, list(set(ids)))
 
 

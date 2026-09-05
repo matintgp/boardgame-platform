@@ -70,3 +70,11 @@ class JoinGameIn(BaseModel):
 class ActionIn(BaseModel):
     action: str = "move"
     payload: dict
+
+
+class CreateBotGameIn(BaseModel):
+    """POST /games/bot — unrated chess vs Stockfish persona."""
+
+    game_type: str = "chess"
+    difficulty: str = Field(min_length=1, max_length=32)
+    player_color: str = "random"

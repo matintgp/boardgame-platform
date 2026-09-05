@@ -38,3 +38,28 @@ def cleanup_stale_lobbies() -> int:
     aborted = run_async(_run())
     logger.info("Aborted %s stale lobbies", aborted)
     return aborted
+
+
+
+@celery_app.task(name="app.workers.tasks.compute_bot_move", bind=True, max_retries=0)
+def compute_bot_move(self, game_id: str, expected_seq: int, attempt: int = 0) -> bool:
+    """Idempotent Stockfish move: (game_id, expected_seq, still active, still bot turn)."""
+    import uuid as _uuid
+
+    from app.services.bot_match import run_bot_move
+
+    async def _run() -> bool:
+        msg = await run_bot_move(
+            _uuid.UUID(game_id), int(expected_seq), attempt=int(attempt)
+        )
+        return msg is not None
+
+    applied = run_async(_run())
+    logger.info(
+        "bot move game=%s seq=%s attempt=%s applied=%s",
+        game_id,
+        expected_seq,
+        attempt,
+        applied,
+    )
+    return applied

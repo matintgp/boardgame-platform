@@ -209,6 +209,16 @@ async def ws_endpoint(websocket: WebSocket) -> None:
                     text = str((msg.get("payload") or {}).get("text", "")).strip()[:500]
                     if not text:
                         continue
+                    async with SessionLocal() as db:
+                        game = await game_service.get_game(db, game_id)
+                        from app.games.chess_bot import is_bot_game
+
+                        if game is not None and is_bot_game(game.settings):
+                            await websocket.send_json(
+                                {"type": "error", "room": room,
+                                 "payload": {"message": "bot_no_chat"}}
+                            )
+                            continue
                     from app.core.limiter import rate_limit
 
                     if not await rate_limit(f"chat:{user.id}", 8, 10):

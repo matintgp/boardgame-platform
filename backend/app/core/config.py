@@ -23,6 +23,14 @@ class Settings(BaseSettings):
     livekit_api_secret: str = "devsecret-please-change-me-32-chars-min!!"
     livekit_public_url: str = "ws://localhost:7880"
 
+    # Chess vs Bot (Stockfish 18 UCI pool)
+    stockfish_path: str = "/usr/local/bin/stockfish"
+    chess_bot_pool_size: int = 2
+    chess_bot_threads: int = 1
+    chess_bot_hash_mb: int = 64
+    chess_bot_move_timeout: float = 8.0
+    chess_bot_max_concurrent_per_user: int = 3
+
     @field_validator("env")
     @classmethod
     def _validate_env(cls, v: str) -> str:

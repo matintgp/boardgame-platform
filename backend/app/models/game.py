@@ -23,8 +23,9 @@ class GameSeat(Base):
     game_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("games.id", ondelete="CASCADE"), index=True, nullable=False
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    # Nullable for bot seats (opponent_type=bot; no fake human account).
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=True
     )
     seat: Mapped[int] = mapped_column(Integer, nullable=False)
     joined_at: Mapped[datetime] = mapped_column(

@@ -7,7 +7,7 @@ from app.core.deps import get_current_user, get_db
 from app.games.base import IllegalAction
 from app.games.registry import ENGINES, get_engine
 from app.models.user import User
-from app.schemas.api import ActionIn, CreateGameIn
+from app.schemas.api import ActionIn, CreateBotGameIn, CreateGameIn
 from app.services import game_service, matchmaking
 
 router = APIRouter(prefix="/games", tags=["games"])
@@ -35,6 +35,47 @@ async def mine(user: User = Depends(get_current_user),
     return await game_service.my_games(db, user.id)
 
 
+def _bot_create_response(game, user) -> dict:
+    from app.games.chess_bot import is_bot_game
+    from app.services.bot_match import bot_game_view_fields
+
+    payload = {
+        "id": str(game.id),
+        "game_type": game.game_type,
+        "status": game.status,
+        "created_at": game_service._iso(game.created_at),
+        "started_at": game_service._iso(game.started_at),
+        "your_seat": game_service.seat_of(game, user.id),
+    }
+    if is_bot_game(game.settings):
+        payload.update(bot_game_view_fields(game))
+    else:
+        payload["expires_at"] = game_service._iso(game_service.lobby_expires_at(game))
+    return payload
+
+
+@router.post("/bot", status_code=status.HTTP_201_CREATED)
+async def create_bot(body: CreateBotGameIn, user: User = Depends(get_current_user),
+                     db: AsyncSession = Depends(get_db)) -> dict:
+    """Create an active unrated chess game vs a Stockfish persona."""
+    if body.game_type != "chess":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "bot_chess_only")
+    from app.games.chess_bot import BotConfigError
+    from app.services.bot_match import BotCapacityError, create_bot_game
+
+    try:
+        game = await create_bot_game(
+            db, user, difficulty=body.difficulty, player_color=body.player_color
+        )
+    except BotConfigError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, e.code) from e
+    except BotCapacityError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, e.code) from e
+    except ValueError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
+    return _bot_create_response(game, user)
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create(body: CreateGameIn, user: User = Depends(get_current_user),
                  db: AsyncSession = Depends(get_db)) -> dict:
@@ -42,17 +83,20 @@ async def create(body: CreateGameIn, user: User = Depends(get_current_user),
         engine_cls = get_engine(body.game_type)
     except KeyError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+    from app.games.chess_bot import BotConfigError
+    from app.services.bot_match import BotCapacityError
+
     try:
         game = await game_service.create_game(db, user, engine_cls, body.settings)
+    except BotConfigError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, e.code) from e
+    except BotCapacityError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, e.code) from e
     except ValueError as e:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
-    return {
-        "id": str(game.id),
-        "game_type": game.game_type,
-        "status": game.status,
-        "created_at": game_service._iso(game.created_at),
-        "expires_at": game_service._iso(game_service.lobby_expires_at(game)),
-    }
+        code = str(e)
+        status_code = status.HTTP_400_BAD_REQUEST if code == "bot_chess_only" else status.HTTP_409_CONFLICT
+        raise HTTPException(status_code, code) from e
+    return _bot_create_response(game, user)
 
 
 @router.get("/{game_id}")
@@ -96,19 +140,38 @@ async def rematch(game_id: uuid.UUID, user: User = Depends(get_current_user),
     except ValueError as e:
         raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
 
-    from app.realtime import bus
+    if invitees:
+        from app.realtime import bus
 
-    payload = {"game_id": str(new_game.id), "by": user.username}
-    await bus.publish_internal({
-        "room": "",
-        "per_seat": {},
-        "spectator": None,
-        "direct": {
-            str(uid): {"type": "rematch", "payload": payload}
-            for uid in invitees
-        },
-    })
+        payload = {"game_id": str(new_game.id), "by": user.username}
+        await bus.publish_internal({
+            "room": "",
+            "per_seat": {},
+            "spectator": None,
+            "direct": {
+                str(uid): {"type": "rematch", "payload": payload}
+                for uid in invitees
+            },
+        })
     return {"game_id": str(new_game.id)}
+
+
+@router.post("/{game_id}/bot/retry")
+async def bot_retry(game_id: uuid.UUID, user: User = Depends(get_current_user),
+                    db: AsyncSession = Depends(get_db)) -> dict:
+    """Re-schedule a bot move after bot_error (still bot turn)."""
+    game = await game_service.get_game(db, game_id)
+    if game is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Game not found")
+    from app.services.bot_match import retry_bot_move
+
+    try:
+        await retry_bot_move(db, game, user)
+    except PermissionError as e:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from e
+    return {"ok": True}
 
 
 @router.get("/{game_id}/voice-token")
