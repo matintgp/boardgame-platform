@@ -300,7 +300,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
   else if (canPlan) statusHint = t("planHint");
 
   return (
-    <div className="rk-root grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
+    <div className="rk-root game-layout">
       {state?.result && !resultDismissed && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="result-pop card relative w-full max-w-sm p-6 text-center">
@@ -341,7 +341,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
       )}
 
       {rematchOffer && (
-        <div className="card mb-4 flex w-full max-w-md items-center justify-between gap-3 border-[var(--accent)] p-4">
+        <div className="game-layout__full card flex w-full items-center justify-between gap-3 border-[var(--accent)] p-4">
           <span>
             🔁 <span className="font-bold">{rematchOffer.by}</span> {tg("rematchOffer")}
           </span>
@@ -362,49 +362,117 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
         </div>
       )}
 
+      <div className="game-layout__primary">
       <div className="rk-stage mx-auto">
         {waiting ? (
-          <div className="rk-lobby">
-            <div className="rk-lobby-hero">
-              <img src="/heroes/rokugan.jpg" alt="" />
-              <div className="rk-lobby-shade" />
-              <div className="rk-lobby-hero-copy">
-                <p className="rk-lobby-kicker">{t("lobbyKicker")}</p>
-                <h2>{t("title")}</h2>
-                <p className="mt-1 text-sm text-[var(--rk-paper-dim)]">{t("lobbySubtitle")}</p>
-              </div>
-            </div>
-            <div className="rk-lobby-body">
-              <p className="rk-lobby-wait">
+          <div className="rk-wait-table" aria-live="polite">
+            <div className="rk-banner">
+              <span className="flex items-center gap-2 font-bold">
+                <img className="rk-crest" src="/rokugan/icons/crest.svg" alt="" />
+                {t("title")}
+              </span>
+              <span className="rk-status-chip is-waiting">
+                <span className="rk-status-dot" aria-hidden />
                 {tg("waiting")} ({players.length}/{maxPlayers})
-              </p>
-              <LobbyExpiryNote
-                expiresAt={view?.expires_at}
-                createdAt={view?.created_at}
-                status={view?.status}
-                expiredLabel={tl("expired")}
-                expiresIn={(p) => tl("expiresIn", p)}
-              />
-              <p className="mt-3 text-xs font-semibold tracking-wide text-[var(--rk-gold)]">
-                {t("playersSeated")}
-              </p>
-              <div className="rk-seat-list">
-                {players.map((p) => (
-                  <div key={p.seat} className={`rk-seat ${p.user.id === user?.id ? "is-you" : ""}`}>
-                    <span>
-                      {p.user.username}
-                      {p.user.id === user?.id && <em className="muted ms-1">{t("youMarker")}</em>}
-                    </span>
+              </span>
+            </div>
+
+            <p className="rk-lobby-kicker rk-wait-kicker">{t("lobbyKicker")}</p>
+            <p className="rk-hint">{t("lobbySubtitle")}</p>
+
+            <div className="rk-table rk-table--waiting">
+              <div className="rk-commander is-opp">
+                <span className="rk-commander-label">{t("playersSeated")}</span>
+                <div className="rk-commander-slots">
+                  {[0, 1].map((seat) => {
+                    const p = players.find((pl) => pl.seat === seat);
+                    const empty = !p;
+                    const isYou = p?.user.id === user?.id;
+                    return (
+                      <div
+                        key={seat}
+                        className={`rk-commander-slot ${empty ? "is-empty" : ""} ${isYou ? "is-you" : ""}`}
+                      >
+                        <span className="rk-commander-crest" aria-hidden>
+                          <img src="/rokugan/icons/crest.svg" alt="" />
+                        </span>
+                        <span className="rk-commander-name">
+                          {p ? (
+                            <>
+                              {p.user.username}
+                              {isYou && <em className="muted ms-1">{t("youMarker")}</em>}
+                            </>
+                          ) : (
+                            <span className="muted">…</span>
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <p className="rk-side-label mb-2 muted">{oppName === "..." ? "—" : oppName}</p>
+              <div className="rk-row">
+                {[0, 1, 2].map((i) => (
+                  <div key={`wait-opp-${i}`} className="rk-province is-silhouette" aria-hidden>
+                    <img src="/rokugan/icons/shrine.svg" alt="" />
+                    <span className="rk-province-label">{t("province")} {i + 1}</span>
                   </div>
                 ))}
               </div>
+
+              <div className="rk-river">{t("round")} —</div>
+
+              <div className="rk-row">
+                {[0, 1, 2].map((i) => (
+                  <div key={`wait-me-${i}`} className="rk-province is-silhouette" aria-hidden>
+                    <img src="/rokugan/icons/shrine.svg" alt="" />
+                    <span className="rk-province-label">{t("province")} {i + 1}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="rk-side-label is-self mt-2">
+                {myName === "..." ? "—" : myName}
+                {mySeat != null && <em className="muted ms-1 font-normal">{t("youMarker")}</em>}
+              </p>
+
+              <div className="rk-wait-plan" aria-hidden>
+                <div className="rk-wait-plan-block is-attack">
+                  <span className="rk-province-badge is-attack">{t("attackShort")}</span>
+                  <div className="rk-token-row">
+                    {[1, 2, 3, 4, 5].map((v) => (
+                      <span key={`w-a-${v}`} className="rk-token is-ghost">{v}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="rk-wait-plan-block is-defense">
+                  <span className="rk-province-badge is-defense">{t("defenseShort")}</span>
+                  <div className="rk-token-row">
+                    {[1, 2, 3, 4, 5].map((v) => (
+                      <span key={`w-d-${v}`} className="rk-token is-ghost">{v}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <LobbyExpiryNote
+              expiresAt={view?.expires_at}
+              createdAt={view?.created_at}
+              status={view?.status}
+              expiredLabel={tl("expired")}
+              expiresIn={(p) => tl("expiresIn", p)}
+            />
+
+            <div className="rk-wait-actions">
               {view && mySeat == null && !timedOut && (
-                <button type="button" className="btn btn-primary mt-4 w-full" onClick={joinTable}>
+                <button type="button" className="btn btn-primary w-full" onClick={joinTable}>
                   {tg("join")}
                 </button>
               )}
               {canStart && (
-                <button type="button" className="btn btn-primary mt-4 w-full" onClick={start}>
+                <button type="button" className="btn btn-primary w-full" onClick={start}>
                   ▶ {tg("start")}
                 </button>
               )}
@@ -494,8 +562,9 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
           </>
         )}
       </div>
+      </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="game-layout__rail utility-rail">
         <VoicePanel
           gameId={gameId}
           selfName={user?.username}
@@ -517,6 +586,7 @@ export default function RokuganGame({ gameId }: { gameId: string }) {
           title={tc("title")}
           placeholder={tc("placeholder")}
           sendLabel={tc("send")}
+          defaultCollapsed
         />
 
         {!waiting && (

@@ -711,7 +711,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
 
   return (
     <div
-      className={`salem-root grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] ${
+      className={`salem-root game-layout ${
         phase === "confess"
           ? "is-night is-confess"
           : phase === "night"
@@ -729,7 +729,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
                       : ""
       }`}
     >
-      <div className="mx-auto w-full max-w-[44rem]">
+      <div className="game-layout__primary mx-auto w-full max-w-[56rem]">
         {rematchOffer && (
           <div className="card mb-4 flex items-center justify-between gap-3 border-[var(--accent)] p-4">
             <span>
@@ -1116,7 +1116,7 @@ export default function SalemGame({ gameId }: { gameId: string }) {
         )}
       </div>
 
-      <div className="flex w-full min-w-0 flex-col gap-4 self-start">
+      <div className="game-layout__rail utility-rail">
         <VoicePanel
           gameId={gameId}
           selfName={user?.username}

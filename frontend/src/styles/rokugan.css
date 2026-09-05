@@ -23,12 +23,13 @@
   align-items: center;
   gap: var(--space-4, 1rem);
   width: 100%;
+  max-width: 48rem;
 }
 
 /* —— war table —— */
 .rk-table {
   position: relative;
-  width: min(100%, 28rem);
+  width: min(100%, 36rem);
   margin-inline: auto;
   padding: 1.1rem 1rem 1.25rem;
   border-radius: 1.15rem;
@@ -562,38 +563,7 @@ html[dir="rtl"] .rk-outcome-tag {
   background: rgba(42, 90, 58, 0.85);
 }
 
-/* —— waiting lobby —— */
-.rk-lobby {
-  width: 100%;
-  max-width: 26rem;
-  border: 1px solid rgba(232, 200, 106, 0.28);
-  border-radius: var(--radius-card, 1rem);
-  background: rgba(18, 10, 8, 0.88);
-  overflow: hidden;
-  box-shadow: var(--shadow-card, 0 10px 40px rgba(0, 0, 0, 0.22));
-}
-.rk-lobby-hero {
-  position: relative;
-  min-height: 8rem;
-  background: var(--rk-lacquer);
-}
-.rk-lobby-hero img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.rk-lobby-shade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(12, 8, 6, 0.94), rgba(12, 8, 6, 0.25) 55%);
-}
-.rk-lobby-hero-copy {
-  position: relative;
-  z-index: 1;
-  padding: 1.15rem 1.15rem 0.95rem;
-}
+/* —— waiting war-table (not a lobby card) —— */
 .rk-lobby-kicker {
   margin: 0 0 0.25rem;
   font-size: var(--type-caption, 0.72rem);
@@ -606,19 +576,137 @@ html[dir="rtl"] .rk-lobby-kicker {
   letter-spacing: 0.04em;
   text-transform: none;
 }
-.rk-lobby-hero-copy h2 {
-  margin: 0;
-  font-size: var(--type-h2, 1.35rem);
-  font-weight: 800;
-  color: var(--rk-paper);
+.rk-wait-table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
 }
-.rk-lobby-body {
-  padding: 1rem 1.15rem 1.15rem;
+.rk-wait-kicker {
+  text-align: center;
 }
-.rk-lobby-wait {
-  margin: 0 0 0.65rem;
+.rk-table--waiting {
+  width: min(100%, 42rem);
+}
+.rk-wait-table .rk-banner {
+  width: min(100%, 42rem);
+}
+
+.rk-table--waiting .rk-province.is-silhouette {
+  opacity: 0.62;
+  filter: saturate(0.7);
+  border-style: dashed;
+  border-color: rgba(232, 200, 106, 0.28);
+  pointer-events: none;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.35);
+  transform: none;
+}
+.rk-table--waiting .rk-province.is-silhouette img {
+  opacity: 0.55;
+}
+.rk-commander {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.85rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(232, 200, 106, 0.22);
+  background: rgba(12, 8, 6, 0.45);
+}
+.rk-commander-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: var(--type-caption, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--rk-gold);
+}
+.rk-commander-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+.rk-commander-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(106, 74, 40, 0.55);
+  background: rgba(18, 10, 8, 0.55);
   font-size: var(--type-body-sm, 0.875rem);
-  color: var(--text-muted, var(--muted));
+}
+.rk-commander-slot.is-you {
+  border-color: rgba(232, 200, 106, 0.45);
+  background: rgba(232, 200, 106, 0.08);
+}
+.rk-commander-slot.is-empty {
+  border-style: dashed;
+  opacity: 0.72;
+}
+.rk-commander-crest {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+.rk-commander-crest img {
+  width: 0.95rem;
+  height: 0.95rem;
+  opacity: 0.85;
+}
+.rk-commander-slot.is-empty .rk-commander-crest {
+  opacity: 0.4;
+}
+.rk-commander-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rk-wait-plan {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+.rk-wait-plan-block {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.55rem;
+  border: 1px dashed rgba(106, 74, 40, 0.55);
+  background: rgba(12, 8, 6, 0.28);
+  opacity: 0.7;
+}
+.rk-wait-plan-block.is-attack {
+  border-color: rgba(196, 69, 50, 0.35);
+}
+.rk-wait-plan-block.is-defense {
+  border-color: rgba(106, 154, 114, 0.35);
+}
+.rk-token.is-ghost {
+  opacity: 0.35;
+  pointer-events: none;
+  box-shadow: none;
+  transform: none;
+}
+.rk-wait-actions {
+  width: min(100%, 22rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.rk-error {
+  margin: 0.75rem 0 0;
+  font-size: var(--type-body-sm, 0.875rem);
+  color: #f0a0a0;
 }
 .rk-seat-list {
   display: flex;
@@ -640,11 +728,6 @@ html[dir="rtl"] .rk-lobby-kicker {
 .rk-seat.is-you {
   border-color: rgba(232, 200, 106, 0.4);
   background: rgba(232, 200, 106, 0.08);
-}
-.rk-error {
-  margin: 0.75rem 0 0;
-  font-size: var(--type-body-sm, 0.875rem);
-  color: #f0a0a0;
 }
 
 @media (prefers-reduced-motion: reduce) {

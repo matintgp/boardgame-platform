@@ -498,10 +498,10 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
           : "";
 
   return (
-    <div className="mafia-root grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <div className="mx-auto w-full max-w-xl">
+    <div className="mafia-root game-layout">
+      <div className="game-layout__primary mx-auto w-full max-w-5xl">
         {rematchOffer && (
-          <div className="card mb-4 flex items-center justify-between gap-3 border-[var(--accent)] p-4">
+          <div className="game-layout__full card mb-2 flex items-center justify-between gap-3 border-[var(--accent)] p-4">
             <span>
               🔁 <span className="font-bold">{rematchOffer.by}</span> {tg("rematchOffer")}
             </span>
@@ -524,21 +524,26 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
           </div>
         )}
 
-        <p className="mb-2 text-center" aria-live="polite">
+        <div className="mafia-status-row mb-3" aria-live="polite">
           {conn === "open" ? (
             <span className="mafia-chip is-alive">● {t("connLive")}</span>
           ) : (
             <span className="mafia-chip is-waiting">◌ {connLabel}</span>
           )}
-        </p>
+          {!waiting && state && (
+            <span className="mafia-chip is-action">{t("title")}</span>
+          )}
+        </div>
 
         {waiting ? (
-          <div className="mafia-lobby-card">
-            <p className="mafia-role-card__label mb-1">{t("title")}</p>
-            <h2 className="mb-1 text-xl font-bold">{t("waitingForPlayers")}</h2>
-            <p className="muted mb-1 text-sm">
-              {players.length}/{maxPlayers}
-            </p>
+          <div className="mafia-lobby-card mafia-wait-table">
+            <div className="mafia-wait-head">
+              <p className="mafia-role-card__label mb-1">{t("title")}</p>
+              <h2 className="mb-1 text-xl font-bold">{t("waitingForPlayers")}</h2>
+              <p className="muted mb-1 text-sm">
+                {players.length}/{maxPlayers}
+              </p>
+            </div>
             <LobbyExpiryNote
               expiresAt={view?.expires_at}
               createdAt={view?.created_at}
@@ -775,7 +780,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
         )}
       </div>
 
-      <div className="flex w-full min-w-0 flex-col gap-4 self-start">
+      <div className="game-layout__rail utility-rail">
         <VoicePanel
           gameId={gameId}
           selfName={user?.username}
@@ -796,6 +801,7 @@ export default function MafiaGame({ gameId }: { gameId: string }) {
           title={t("chatTitle")}
           placeholder={t("chatPlaceholder")}
           sendLabel={t("chatSend")}
+          defaultCollapsed
         />
         {state && state.log.length > 0 && (
           <div className="card max-h-64 overflow-auto p-4">

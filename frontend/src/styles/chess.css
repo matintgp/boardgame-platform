@@ -8,9 +8,15 @@
 .chess-board-shell {
   border-radius: var(--radius-panel, 1rem);
   border: 1px solid var(--gold-line);
-  background: linear-gradient(180deg, #1c1812, #12100c);
   padding: 0.65rem;
-  box-shadow: var(--shadow-panel);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 162, 78, 0.1), transparent 55%),
+    linear-gradient(180deg, #221c14, #12100c);
+  box-shadow:
+    inset 0 0 0 1px rgba(232, 220, 192, 0.12),
+    0 14px 36px rgba(0, 0, 0, 0.4),
+    0 0 0 6px #2a1e14,
+    0 0 0 7px rgba(212, 162, 78, 0.28);
 }
 .chess-status {
   display: inline-flex;
@@ -60,3 +66,19 @@
   box-shadow: 0 0 14px rgba(212, 162, 78, 0.2);
 }
 .chess-clock.is-low { color: #e8a0a0; }
+
+.chess-board-width {
+  width: min(94vw, 38rem);
+}
+@media (min-width: 1024px) {
+  .chess-board-width { width: min(100%, 46rem); }
+}
+@media (min-width: 1440px) {
+  .chess-board-width { width: min(100%, 52rem); }
+}
+.chess-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.chess-layout .chess-status { margin-inline: auto; }

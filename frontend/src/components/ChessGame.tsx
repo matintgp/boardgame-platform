@@ -418,10 +418,10 @@ export default function GamePage({ gameId }: { gameId: string }) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
+    <div className="game-layout chess-layout">
       {/* Rematch offer from the opponent */}
       {rematchOffer && (
-        <div className="card mb-4 flex items-center justify-between border-[var(--accent)] p-4">
+        <div className="game-layout__full card mb-0 flex items-center justify-between border-[var(--accent)] p-4">
           <span>
             🔁 <span className="font-bold">{rematchOffer.by}</span> {t("rematchOffer")}
           </span>
@@ -541,10 +541,11 @@ export default function GamePage({ gameId }: { gameId: string }) {
           </div>
         </div>
       )}
+      <div className="game-layout__primary">
       {/* Board */}
-      <div className="mx-auto">
+      <div className="chess-stage mx-auto w-full">
         {state && (
-          <div className="mx-auto mb-1 flex w-[min(88vw,480px)] justify-between text-sm">
+          <div className="chess-board-width mx-auto mb-1 flex justify-between text-sm">
             {[oppSeat, mySeat ?? 0].map((seat) => {
               const secs = displayClock(seat);
               const isActive = state.turn_seat === seat && !state.result;
@@ -586,7 +587,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
           )}
         <div
           ref={boardRef}
-          className="chess-board-shell chess-root grid aspect-square w-[min(88vw,480px)] overflow-hidden select-none"
+          className="chess-board-shell chess-root chess-board-width grid aspect-square overflow-hidden select-none"
           style={{
             gridTemplateColumns: "repeat(8, 1fr)",
             gridTemplateRows: "repeat(8, 1fr)",
@@ -645,33 +646,32 @@ export default function GamePage({ gameId }: { gameId: string }) {
             })
           )}
         </div>
-        <p
-          className={`chess-status mx-auto mt-3 ${
-            conn === "closed"
-              ? "is-warn"
-              : state && !state.result && mySeat === state.turn_seat
-                ? "is-turn"
-                : ""
-          }`}
-        >
-          {conn === "closed"
-            ? t("disconnected")
-            : conn === "connecting"
-              ? t("connecting")
-            : !state
-              ? status === "waiting"
-                ? t("waiting")
-                : "..."
-              : state.result
-                ? formatResult(state.result, mySeat, t)
-                : mySeat === state.turn_seat
-                  ? t("yourTurn")
-                  : t("opponentTurn")}
-        </p>
+        {(state || conn !== "open") && (
+          <p
+            className={`chess-status mx-auto mt-3 ${
+              conn === "closed"
+                ? "is-warn"
+                : state && !state.result && mySeat === state.turn_seat
+                  ? "is-turn"
+                  : ""
+            }`}
+          >
+            {conn === "closed"
+              ? t("disconnected")
+              : conn === "connecting"
+                ? t("connecting")
+                : state?.result
+                  ? formatResult(state.result, mySeat, t)
+                  : mySeat === state?.turn_seat
+                    ? t("yourTurn")
+                    : t("opponentTurn")}
+          </p>
+        )}
+      </div>
       </div>
 
       {/* Side panel */}
-      <div className="flex flex-col gap-4">
+      <div className="game-layout__rail utility-rail">
         <div className="card p-4">
           <h3 className="chess-panel-title mb-2">♞ Chess</h3>
           {players.map((p) => {
@@ -732,6 +732,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
           title={tc("title")}
           placeholder={tc("placeholder")}
           sendLabel={tc("send")}
+          defaultCollapsed
         />
 
         {state && (
