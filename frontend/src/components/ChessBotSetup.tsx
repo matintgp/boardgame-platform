@@ -114,6 +114,27 @@ export default function ChessBotSetup({
     }
   }, [persona, color, router, t]);
 
+  function personaName(id: BotPersonaId): string {
+    switch (id) {
+      case "pawn": return t("persona.pawn.name");
+      case "knight": return t("persona.knight.name");
+      case "bishop": return t("persona.bishop.name");
+      case "rook": return t("persona.rook.name");
+      case "queen": return t("persona.queen.name");
+      case "king": return t("persona.king.name");
+    }
+  }
+  function personaFlavor(id: BotPersonaId): string {
+    switch (id) {
+      case "pawn": return t("persona.pawn.flavor");
+      case "knight": return t("persona.knight.flavor");
+      case "bishop": return t("persona.bishop.flavor");
+      case "rook": return t("persona.rook.flavor");
+      case "queen": return t("persona.queen.flavor");
+      case "king": return t("persona.king.flavor");
+    }
+  }
+
   if (!open) return null;
 
   return (
@@ -170,10 +191,10 @@ export default function ChessBotSetup({
                   draggable={false}
                 />
                 <span className="chess-bot-persona__name">
-                  {t(`persona.${id}.name`)}
+                  {personaName(id)}
                 </span>
                 <span className="chess-bot-persona__flavor muted">
-                  {t(`persona.${id}.flavor`)}
+                  {personaFlavor(id)}
                 </span>
                 <span className="chess-bot-persona__pips" aria-hidden="true">
                   {Array.from({ length: 6 }, (_, i) => (

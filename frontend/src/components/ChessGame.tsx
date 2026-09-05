@@ -153,13 +153,15 @@ export default function GamePage({ gameId }: { gameId: string }) {
 
   function botDisplayName(profile: BotProfile | null | undefined): string {
     const id = profile?.persona_id;
-    if (id) {
-      try {
-        return tb(`persona.${id}.name`);
-      } catch {
-        /* fall through */
-      }
-    }
+    const names: Record<string, string> = {
+      pawn: tb("persona.pawn.name"),
+      knight: tb("persona.knight.name"),
+      bishop: tb("persona.bishop.name"),
+      rook: tb("persona.rook.name"),
+      queen: tb("persona.queen.name"),
+      king: tb("persona.king.name"),
+    };
+    if (id && names[id]) return names[id];
     return profile?.display_name ?? tb("botBadge");
   }
 
@@ -172,29 +174,25 @@ export default function GamePage({ gameId }: { gameId: string }) {
 
   function difficultyLabel(profile: BotProfile | null): string {
     if (!profile) return "";
-    const map: Record<string, string> = {
-      novice: "difficultyNovice",
-      easy: "difficultyEasy",
-      normal: "difficultyNormal",
-      hard: "difficultyHard",
-      expert: "difficultyExpert",
-      master: "difficultyMaster",
-      pawn: "difficultyNovice",
-      knight: "difficultyEasy",
-      bishop: "difficultyNormal",
-      rook: "difficultyHard",
-      queen: "difficultyExpert",
-      king: "difficultyMaster",
+    const labels: Record<string, string> = {
+      novice: tb("difficultyNovice"),
+      easy: tb("difficultyEasy"),
+      normal: tb("difficultyNormal"),
+      hard: tb("difficultyHard"),
+      expert: tb("difficultyExpert"),
+      master: tb("difficultyMaster"),
+      pawn: tb("difficultyNovice"),
+      knight: tb("difficultyEasy"),
+      bishop: tb("difficultyNormal"),
+      rook: tb("difficultyHard"),
+      queen: tb("difficultyExpert"),
+      king: tb("difficultyMaster"),
     };
-    const key = map[profile.difficulty] ?? map[profile.persona_id];
-    if (key) {
-      try {
-        return tb(key);
-      } catch {
-        return profile.difficulty;
-      }
-    }
-    return profile.difficulty;
+    return (
+      labels[profile.difficulty] ??
+      labels[profile.persona_id] ??
+      profile.difficulty
+    );
   }
 
   const applyEnvelope = useCallback(
@@ -326,8 +324,12 @@ export default function GamePage({ gameId }: { gameId: string }) {
 
       // Current game info over REST (works even before WS connects).
       try {
-        const g = await api<GameView>(`/api/games/${gameId}`);
+        const g = await api<GameView & { state?: ChessState }>(`/api/games/${gameId}`);
         setView(g);
+        if (g.state) {
+          setState(g.state);
+          hydratedRef.current = true;
+        }
       } catch {
         setError("game not found");
         return;
