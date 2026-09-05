@@ -76,7 +76,9 @@
     "expired": "منقضی",
     "tooManyLobbies": "حداکثر ۲ لابی باز هم‌زمان می‌توانی داشته باشی.",
     "statusAborted": "لغو شد",
-    "hostCap": "میز میزبان: {n} از {max}"
+    "hostCap": "میز میزبان: {n} از {max}",
+    "playOnline": "بازی آنلاین",
+    "playVsBot": "بازی با ربات"
   },
   "game": {
     "waiting": "در انتظار حریف...",
@@ -546,5 +548,66 @@
     "drawTwo": "دو کارت بکش",
     "endTurn": "پایان نوبت",
     "playedHint": "کارت بازی کردی. بیشتر بازی کن، یا نوبت را تمام کن."
+  },
+  "chessBot": {
+    "playOnline": "بازی آنلاین",
+    "playVsBot": "بازی با ربات",
+    "setupTitle": "بازی با ربات",
+    "setupSubtitle": "حریف را انتخاب کن. بدون ریتینگ. میز باشگاهی.",
+    "hierarchyHint": "مهره‌های بالاتر قوی‌تر بازی می‌کنند.",
+    "colorLabel": "رنگ تو",
+    "colorWhite": "سفید",
+    "colorBlack": "سیاه",
+    "colorRandom": "تصادفی",
+    "start": "شروع بازی",
+    "starting": "در حال شروع…",
+    "cancel": "لغو",
+    "preparing": "در حال چیدن مهره‌ها…",
+    "thinking": "ربات دارد فکر می‌کند",
+    "botBadge": "ربات",
+    "practice": "تمرین · در برابر ربات",
+    "changeBot": "تغییر حریف",
+    "rematch": "بازی مجدد",
+    "noChat": "در میز ربات چت نیست.",
+    "noRating": "—",
+    "retry": "تلاش مجدد",
+    "startError": "میز ربات شروع نشد. دوباره تلاش کن.",
+    "errorUnknownDifficulty": "این حریف در دسترس نیست. یکی دیگر انتخاب کن.",
+    "errorInvalidColor": "سفید، سیاه یا تصادفی را انتخاب کن.",
+    "errorCapacity": "میزهای ربات زیادی باز است. یکی را تمام کن و دوباره امتحان کن.",
+    "errorEngineUnavailable": "موتور باشگاه در دسترس نیست. کمی بعد دوباره تلاش کن.",
+    "errorEngine": "ربات نتوانست حرکت کند. دوباره تلاش کن.",
+    "difficultyNovice": "مبتدی",
+    "difficultyEasy": "آسان",
+    "difficultyNormal": "معمولی",
+    "difficultyHard": "باشگاهی",
+    "difficultyExpert": "خبره",
+    "difficultyMaster": "استاد",
+    "persona": {
+      "pawn": {
+        "name": "ربات سرباز",
+        "flavor": "در حال یادگیری صفحه"
+      },
+      "knight": {
+        "name": "ربات اسب",
+        "flavor": "کنجکاو و جسور"
+      },
+      "bishop": {
+        "name": "ربات فیل",
+        "flavor": "فشار آرام"
+      },
+      "rook": {
+        "name": "ربات رخ",
+        "flavor": "بازیکن محکم باشگاه"
+      },
+      "queen": {
+        "name": "ربات وزیر",
+        "flavor": "تیز و بلندپرواز"
+      },
+      "king": {
+        "name": "ربات شاه",
+        "flavor": "قدرت کامل باشگاه"
+      }
+    }
   }
 }

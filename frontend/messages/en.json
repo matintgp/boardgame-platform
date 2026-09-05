@@ -76,7 +76,9 @@
     "expired": "Expired",
     "tooManyLobbies": "You can host at most 2 open lobbies at a time.",
     "statusAborted": "Cancelled",
-    "hostCap": "Hosting {n} of {max} tables"
+    "hostCap": "Hosting {n} of {max} tables",
+    "playOnline": "Play Online",
+    "playVsBot": "Play vs Bot"
   },
   "game": {
     "waiting": "Waiting for opponent...",
@@ -546,5 +548,66 @@
     "drawTwo": "Draw two",
     "endTurn": "End turn",
     "playedHint": "You played. Play more cards, or end your turn."
+  },
+  "chessBot": {
+    "playOnline": "Play Online",
+    "playVsBot": "Play vs Bot",
+    "setupTitle": "Play vs Bot",
+    "setupSubtitle": "Choose your opponent. No rating. Local club table.",
+    "hierarchyHint": "Higher pieces play stronger.",
+    "colorLabel": "Your color",
+    "colorWhite": "White",
+    "colorBlack": "Black",
+    "colorRandom": "Random",
+    "start": "Start game",
+    "starting": "Starting…",
+    "cancel": "Cancel",
+    "preparing": "Preparing the table…",
+    "thinking": "Bot is thinking",
+    "botBadge": "BOT",
+    "practice": "Practice · Vs Bot",
+    "changeBot": "Change opponent",
+    "rematch": "Rematch",
+    "noChat": "No chat at bot tables.",
+    "noRating": "—",
+    "retry": "Retry",
+    "startError": "Couldn't start the bot table. Try again.",
+    "errorUnknownDifficulty": "That opponent isn't available. Pick another.",
+    "errorInvalidColor": "Pick White, Black, or Random.",
+    "errorCapacity": "Too many bot tables open. Finish one and try again.",
+    "errorEngineUnavailable": "The club engine is unavailable. Try again shortly.",
+    "errorEngine": "Bot could not move. Retry.",
+    "difficultyNovice": "Learning",
+    "difficultyEasy": "Curious",
+    "difficultyNormal": "Steady",
+    "difficultyHard": "Club",
+    "difficultyExpert": "Sharp",
+    "difficultyMaster": "Master",
+    "persona": {
+      "pawn": {
+        "name": "Pawn Bot",
+        "flavor": "Learning the board"
+      },
+      "knight": {
+        "name": "Knight Bot",
+        "flavor": "Curious and bold"
+      },
+      "bishop": {
+        "name": "Bishop Bot",
+        "flavor": "Quiet pressure"
+      },
+      "rook": {
+        "name": "Rook Bot",
+        "flavor": "Solid club player"
+      },
+      "queen": {
+        "name": "Queen Bot",
+        "flavor": "Sharp and ambitious"
+      },
+      "king": {
+        "name": "King Bot",
+        "flavor": "Full club strength"
+      }
+    }
   }
 }

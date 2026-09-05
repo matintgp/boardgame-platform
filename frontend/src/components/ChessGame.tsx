@@ -47,9 +47,19 @@ interface LastMove {
   san: string;
 }
 
+interface BotProfile {
+  persona_id: string;
+  difficulty: string;
+  display_name: string;
+  avatar_path: string;
+  tier: number;
+}
+
 interface PlayerInfo {
   seat: number;
-  user: { id: string; username: string; rating?: number };
+  opponent_type?: "human" | "bot";
+  user: { id: string; username: string; rating?: number } | null;
+  bot?: BotProfile;
 }
 
 interface GameView {
@@ -63,6 +73,11 @@ interface GameView {
   players: PlayerInfo[];
   your_seat: number | null;
   is_host?: boolean;
+  rated?: boolean;
+  opponent_type?: "human" | "bot";
+  player_color?: string;
+  color_preference?: string;
+  bot?: BotProfile | null;
 }
 
 function parseFen(fen: string): string[][] {
@@ -89,6 +104,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
   const tc = useTranslations("chat");
   const tv = useTranslations("voice");
   const tl = useTranslations("lobby");
+  const tb = useTranslations("chessBot");
   const [user, setUser] = useState<SessionUser | null>(null);
   const [view, setView] = useState<GameView | null>(null);
   const [state, setState] = useState<ChessState | null>(null);
@@ -100,6 +116,9 @@ export default function GamePage({ gameId }: { gameId: string }) {
   const [moveSeq, setMoveSeq] = useState(0);
   const [resultDismissed, setResultDismissed] = useState(false);
   const [rematchOffer, setRematchOffer] = useState<{ game_id: string; by: string } | null>(null);
+  const [botThinking, setBotThinking] = useState(false);
+  const [botError, setBotError] = useState<string | null>(null);
+  const [botRetryBusy, setBotRetryBusy] = useState(false);
   const socketRef = useRef<GameSocket | null>(null);
   const [socket, setSocket] = useState<GameSocket | null>(null);
   const seatFetchRef = useRef(false);
@@ -115,6 +134,69 @@ export default function GamePage({ gameId }: { gameId: string }) {
   const isHost = view?.is_host ?? false;
   mySeatRef.current = mySeat;
 
+  const isBotGame =
+    view?.opponent_type === "bot" ||
+    players.some((p) => p.opponent_type === "bot") ||
+    !!view?.bot;
+  const botProfile: BotProfile | null =
+    view?.bot ??
+    players.find((p) => p.opponent_type === "bot")?.bot ??
+    null;
+  const botSeat =
+    players.find((p) => p.opponent_type === "bot")?.seat ??
+    (isBotGame ? (mySeat === 0 ? 1 : 0) : null);
+  const botTurn =
+    isBotGame &&
+    state != null &&
+    !state.result &&
+    ((botSeat != null && state.turn_seat === botSeat) || botThinking);
+
+  function botDisplayName(profile: BotProfile | null | undefined): string {
+    const id = profile?.persona_id;
+    if (id) {
+      try {
+        return tb(`persona.${id}.name`);
+      } catch {
+        /* fall through */
+      }
+    }
+    return profile?.display_name ?? tb("botBadge");
+  }
+
+  function playerLabel(p: PlayerInfo): string {
+    if (p.opponent_type === "bot" || (p.bot && !p.user)) {
+      return botDisplayName(p.bot ?? botProfile);
+    }
+    return p.user?.username ?? "?";
+  }
+
+  function difficultyLabel(profile: BotProfile | null): string {
+    if (!profile) return "";
+    const map: Record<string, string> = {
+      novice: "difficultyNovice",
+      easy: "difficultyEasy",
+      normal: "difficultyNormal",
+      hard: "difficultyHard",
+      expert: "difficultyExpert",
+      master: "difficultyMaster",
+      pawn: "difficultyNovice",
+      knight: "difficultyEasy",
+      bishop: "difficultyNormal",
+      rook: "difficultyHard",
+      queen: "difficultyExpert",
+      king: "difficultyMaster",
+    };
+    const key = map[profile.difficulty] ?? map[profile.persona_id];
+    if (key) {
+      try {
+        return tb(key);
+      } catch {
+        return profile.difficulty;
+      }
+    }
+    return profile.difficulty;
+  }
+
   const applyEnvelope = useCallback(
     (env: Envelope) => {
       if (env.room && env.room !== room) return;
@@ -126,6 +208,22 @@ export default function GamePage({ gameId }: { gameId: string }) {
       if (env.type === "rematch") {
         const p = env.payload as { game_id: string; by: string };
         setRematchOffer(p);
+        return;
+      }
+      if (env.type === "bot_thinking") {
+        setBotThinking(true);
+        setBotError(null);
+        return;
+      }
+      if (env.type === "bot_error") {
+        setBotThinking(false);
+        const p = env.payload as { code?: string; message?: string } | undefined;
+        const code = p?.code ?? "bot_engine_error";
+        setBotError(
+          code === "bot_engine_error" || code === "bot_engine_unavailable"
+            ? code
+            : p?.message ?? "bot_engine_error"
+        );
         return;
       }
       if (env.type === "lobby_update") {
@@ -151,10 +249,25 @@ export default function GamePage({ gameId }: { gameId: string }) {
         const payload = env.payload as {
           players?: PlayerInfo[];
           state?: ChessState;
+          opponent_type?: "human" | "bot";
+          rated?: boolean;
+          bot?: BotProfile | null;
           events?: { type: string; payload?: { san?: string; uci?: string } }[];
         };
-        if (payload.players) {
-          setView((prev) => (prev ? { ...prev, players: payload.players! } : prev));
+        if (payload.players || payload.opponent_type || payload.bot !== undefined) {
+          setView((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  ...(payload.players ? { players: payload.players } : {}),
+                  ...(payload.opponent_type
+                    ? { opponent_type: payload.opponent_type }
+                    : {}),
+                  ...(payload.rated !== undefined ? { rated: payload.rated } : {}),
+                  ...(payload.bot !== undefined ? { bot: payload.bot } : {}),
+                }
+              : prev
+          );
         }
         if (payload.state) {
           // Sounds + animation only for LIVE moves (seq newer than what we've
@@ -191,6 +304,8 @@ export default function GamePage({ gameId }: { gameId: string }) {
             }
           }
           setState(payload.state);
+          setBotThinking(false);
+          if (!payload.state.result) setBotError(null);
           hydratedRef.current = true;
         }
         }
@@ -365,7 +480,35 @@ export default function GamePage({ gameId }: { gameId: string }) {
   }
 
   const timedOut = lobbyTimedOut(view?.status, view?.expires_at, view?.created_at);
-  const canStart = isHost && status === "waiting" && players.length >= 2 && !timedOut;
+  const canStart =
+    !isBotGame && isHost && status === "waiting" && players.length >= 2 && !timedOut;
+
+  async function retryBotMove() {
+    setBotRetryBusy(true);
+    setBotError(null);
+    try {
+      await api(`/api/games/${gameId}/bot/retry`, { method: "POST" });
+      setBotThinking(true);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "bot_engine_error";
+      setBotError(msg);
+    } finally {
+      setBotRetryBusy(false);
+    }
+  }
+
+  function changeOpponent() {
+    router.push("/lobby?botSetup=1");
+  }
+
+  function botErrorMessage(code: string | null): string {
+    if (!code) return tb("errorEngine");
+    const c = code.toLowerCase();
+    if (c === "bot_engine_unavailable") return tb("errorEngineUnavailable");
+    if (c === "bot_capacity") return tb("errorCapacity");
+    if (c === "bot_engine_error") return tb("errorEngine");
+    return code.includes(" ") ? code : tb("errorEngine");
+  }
 
   async function rematch() {
     try {
@@ -382,7 +525,10 @@ export default function GamePage({ gameId }: { gameId: string }) {
   const showResult = result != null && !resultDismissed;
   const winnerName =
     result?.winner_seat != null
-      ? (players.find((p) => p.seat === result.winner_seat)?.user.username ?? "?")
+      ? (() => {
+          const wp = players.find((p) => p.seat === result.winner_seat);
+          return wp ? playerLabel(wp) : "?";
+        })()
       : null;
   const iWon = result?.winner_seat != null && result.winner_seat === mySeat;
   const isCheckmate = result?.reason === "checkmate";
@@ -420,7 +566,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
   return (
     <div className="game-layout chess-layout">
       {/* Rematch offer from the opponent */}
-      {rematchOffer && (
+      {rematchOffer && !isBotGame && (
         <div className="game-layout__full card mb-0 flex items-center justify-between border-[var(--accent)] p-4">
           <span>
             🔁 <span className="font-bold">{rematchOffer.by}</span> {t("rematchOffer")}
@@ -491,7 +637,7 @@ export default function GamePage({ gameId }: { gameId: string }) {
                 </>
               )}
             </p>
-            {myRatingDelta != null && (
+            {myRatingDelta != null && !isBotGame && (
               <p
                 className={`mt-1 text-lg font-bold ${
                   myRatingDelta >= 0 ? "text-green-400" : "text-red-400"
@@ -501,8 +647,15 @@ export default function GamePage({ gameId }: { gameId: string }) {
                 {myRatingDelta} {t("rating")}
               </p>
             )}
-            <div className="mt-5 flex justify-center gap-3">
-              <button className="btn btn-primary" onClick={rematch}>🔁 {t("rematch")}</button>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <button className="btn btn-primary" onClick={rematch}>
+                🔁 {isBotGame ? tb("rematch") : t("rematch")}
+              </button>
+              {isBotGame && (
+                <button className="btn btn-ghost" onClick={changeOpponent}>
+                  {tb("changeBot")}
+                </button>
+              )}
               <button className="btn btn-ghost" onClick={() => setResultDismissed(true)}>
                 {t("reviewBoard")}
               </button>
@@ -557,14 +710,20 @@ export default function GamePage({ gameId }: { gameId: string }) {
                     isActive ? "is-active" : ""
                   } ${low ? "is-low" : ""}`}
                 >
-                  {players.find((p) => p.seat === seat)?.user.username.slice(0, 12) ?? "?"}{" "}
+                  {(
+                    (() => {
+                      const pl = players.find((p) => p.seat === seat);
+                      const label = pl ? playerLabel(pl) : "?";
+                      return label.slice(0, 12);
+                    })()
+                  )}{" "}
                   <span className="font-bold">{fmtClock(seat)}</span>
                 </div>
               );
             })}
           </div>
         )}
-        {state?.paused && state.paused.seat !== mySeat && (
+        {state?.paused && state.paused.seat !== mySeat && !isBotGame && (
           <div className="card mb-2 border-yellow-600 p-2 text-center text-sm text-yellow-400">
             ⏳ {t("opponentOffline")}{" "}
             {Math.max(0, Math.ceil(60 - (Date.now() / 1000 - state.paused.since)))}s
@@ -662,9 +821,20 @@ export default function GamePage({ gameId }: { gameId: string }) {
                 ? t("connecting")
                 : state?.result
                   ? formatResult(state.result, mySeat, t)
+                  : botTurn
+                    ? (
+                      <span className="chess-bot-thinking" aria-live="polite">
+                        {tb("thinking")}
+                        <span className="chess-bot-dots" aria-hidden="true">
+                          <span /><span /><span />
+                        </span>
+                      </span>
+                    )
                   : mySeat === state?.turn_seat
                     ? t("yourTurn")
-                    : t("opponentTurn")}
+                    : isBotGame
+                      ? `${t("opponentTurn")} · ${tb("practice")}`
+                      : t("opponentTurn")}
           </p>
         )}
       </div>
@@ -673,36 +843,66 @@ export default function GamePage({ gameId }: { gameId: string }) {
       {/* Side panel */}
       <div className="game-layout__rail utility-rail">
         <div className="card p-4">
-          <h3 className="chess-panel-title mb-2">♞ Chess</h3>
+          <h3 className="chess-panel-title mb-2">
+            ♞ Chess{isBotGame ? <span className="muted ms-2 text-xs font-semibold">{tb("practice")}</span> : null}
+          </h3>
           {players.map((p) => {
-            const isViewer = p.user.id === user?.id;
+            const isBot = p.opponent_type === "bot" || (!!p.bot && !p.user);
+            const isViewer = !isBot && p.user?.id === user?.id;
+            const profile = isBot ? (p.bot ?? botProfile) : null;
             return (
               <div key={p.seat} className="chess-player-row">
-                <span>
-                  {p.seat === 0 ? "♔" : "♚"} {p.user.username}
-                  {isViewer && <em className="muted ms-1">{t("youMarker")}</em>}
+                <span className="flex min-w-0 items-center gap-2">
+                  {isBot && profile?.avatar_path ? (
+                    <img
+                      src={profile.avatar_path}
+                      alt=""
+                      className={`chess-bot-avatar ${botTurn && p.seat === botSeat ? "is-thinking" : ""}`}
+                      width={32}
+                      height={32}
+                      draggable={false}
+                    />
+                  ) : (
+                    <span aria-hidden="true">{p.seat === 0 ? "♔" : "♚"}</span>
+                  )}
+                  <span className="min-w-0 truncate">
+                    {playerLabel(p)}
+                    {isBot && <span className="chess-bot-badge">{tb("botBadge")}</span>}
+                    {isViewer && <em className="muted ms-1">{t("youMarker")}</em>}
+                  </span>
                 </span>
-                <span className="muted">
-                  {p.seat === 0
-                    ? isViewer ? t("youPlayWhite") : t("playsWhite")
-                    : isViewer ? t("youPlayBlack") : t("playsBlack")}
+                <span className="muted shrink-0 text-end">
+                  {isBot ? (
+                    <>
+                      {difficultyLabel(profile)}
+                      <span className="ms-1">{tb("noRating")}</span>
+                    </>
+                  ) : p.seat === 0 ? (
+                    isViewer ? t("youPlayWhite") : t("playsWhite")
+                  ) : isViewer ? (
+                    t("youPlayBlack")
+                  ) : (
+                    t("playsBlack")
+                  )}
                 </span>
               </div>
             );
           })}
-          {players.length < 2 && (
+          {!isBotGame && players.length < 2 && (
             <p className="muted mt-2 text-sm">
               ⏳ {t("waiting")} ({players.length}/{view?.max_players ?? 2})
             </p>
           )}
-          <LobbyExpiryNote
-            expiresAt={view?.expires_at}
-            createdAt={view?.created_at}
-            status={view?.status}
-            expiredLabel={tl("expired")}
-            expiresIn={(p) => tl("expiresIn", p)}
-          />
-          {view && mySeat == null && view.status === "waiting" && !timedOut && (
+          {!isBotGame && (
+            <LobbyExpiryNote
+              expiresAt={view?.expires_at}
+              createdAt={view?.created_at}
+              status={view?.status}
+              expiredLabel={tl("expired")}
+              expiresIn={(p) => tl("expiresIn", p)}
+            />
+          )}
+          {!isBotGame && view && mySeat == null && view.status === "waiting" && !timedOut && (
             <button className="btn btn-primary mt-3 w-full" onClick={joinTable}>
               {t("join")}
             </button>
@@ -716,24 +916,41 @@ export default function GamePage({ gameId }: { gameId: string }) {
 
         {error && <p className="text-sm text-red-400">{error}</p>}
 
-        <VoicePanel
-          gameId={gameId}
-          selfName={user?.username}
-          defaultCollapsed
-          labels={{ join: tv("join"), leave: tv("leave"), mute: tv("mute"), unmute: tv("unmute"), title: tv("title"), micError: tv("micError") }}
-        />
+        {botError && (
+          <div className="card border-[rgba(196,69,69,0.45)] p-3" role="alert">
+            <p className="text-sm text-red-300">{botErrorMessage(botError)}</p>
+            <button
+              className="btn btn-primary mt-2 w-full"
+              onClick={() => void retryBotMove()}
+              disabled={botRetryBusy}
+            >
+              {botRetryBusy ? tb("starting") : tb("retry")}
+            </button>
+          </div>
+        )}
 
+        {!isBotGame && (
+          <VoicePanel
+            gameId={gameId}
+            selfName={user?.username}
+            defaultCollapsed
+            labels={{ join: tv("join"), leave: tv("leave"), mute: tv("mute"), unmute: tv("unmute"), title: tv("title"), micError: tv("micError") }}
+          />
+        )}
 
-
-        <ChatPanel
-          socket={socket}
-          selfName={user?.username}
-          room={room}
-          title={tc("title")}
-          placeholder={tc("placeholder")}
-          sendLabel={tc("send")}
-          defaultCollapsed
-        />
+        {isBotGame ? (
+          <div className="card chess-bot-nochat muted">{tb("noChat")}</div>
+        ) : (
+          <ChatPanel
+            socket={socket}
+            selfName={user?.username}
+            room={room}
+            title={tc("title")}
+            placeholder={tc("placeholder")}
+            sendLabel={tc("send")}
+            defaultCollapsed
+          />
+        )}
 
         {state && (
           <div className="card max-h-64 overflow-auto p-4">

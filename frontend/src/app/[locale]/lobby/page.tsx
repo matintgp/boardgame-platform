@@ -10,6 +10,7 @@ import {
   parseExpiryMs,
   remainingLobby,
 } from "@/lib/lobbyExpiry";
+import ChessBotSetup from "@/components/ChessBotSetup";
 
 interface LobbyInfo {
   id: string;
@@ -107,6 +108,7 @@ export default function LobbyPage() {
   type ModeId = "chess" | "mafia" | "rokugan" | "salem";
   const [searching, setSearching] = useState<ModeId | null>(null);
   const searchRef = useRef<ModeId | null>(null);
+  const [botSetupOpen, setBotSetupOpen] = useState(false);
 
   const refreshLists = useCallback(async () => {
     setListError(null);
@@ -123,6 +125,16 @@ export default function LobbyPage() {
       setListLoading(false);
     }
   }, [t]);
+
+  useEffect(() => {
+    try {
+      const q = new URLSearchParams(window.location.search);
+      const flag = q.get("botSetup") ?? q.get("chessBot");
+      if (flag === "1" || flag === "true") setBotSetupOpen(true);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     ensureSession().then((u) => {
@@ -296,7 +308,7 @@ export default function LobbyPage() {
                       onClick={() => quickMatch(m.id)}
                       disabled={searching !== null}
                     >
-                      {t("quickMatch")}
+                      {m.id === "chess" ? t("playOnline") : t("quickMatch")}
                     </button>
                     <button
                       className="btn btn-ghost"
@@ -305,6 +317,15 @@ export default function LobbyPage() {
                     >
                       {t(m.createKey)}
                     </button>
+                    {m.id === "chess" && (
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() => setBotSetupOpen(true)}
+                        disabled={busy !== null || searching !== null}
+                      >
+                        {t("playVsBot")}
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -402,6 +423,10 @@ export default function LobbyPage() {
           </div>
         </section>
       )}
+      <ChessBotSetup
+        open={botSetupOpen}
+        onClose={() => setBotSetupOpen(false)}
+      />
     </div>
   );
 }
