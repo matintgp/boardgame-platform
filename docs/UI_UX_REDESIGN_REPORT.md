@@ -2,7 +2,7 @@
 
 **Repo:** boardgame-platform
 **Date:** 2026-09-05 (Asia/Tehran)
-**Branch:** `main` (local ahead of `origin/main`; **not pushed**)
+**Branch:** `review/grok-ui-ux-redesign-20260905` (pushed for independent review; not merged to `main`). Baseline `origin/main` @ `ebbc5d7`.
 **Stack:** Next.js 15 / React 19 / Tailwind CSS v4 / next-intl (`fa` default + `en`)
 
 Companion baseline: [UI_UX_REDESIGN_AUDIT.md](./UI_UX_REDESIGN_AUDIT.md) (Phase 0).
@@ -165,3 +165,36 @@ End of report.
 Finish-pass commits on this branch tip:
 - 9246f34efbedcd3a96d29c5aa3f6869c65f5c1d6 — UI/UX: motion/a11y polish
 - (this docs commit) — docs: UI/UX redesign final report
+
+
+## Independent Review Fixes
+
+Packaging follow-up on `review/grok-ui-ux-redesign-20260905` after independent review (UI-only; no backend changes).
+
+### Fixes
+
+- **i18n navbar:** Added `openMenu` / `closeMenu` / `menu` keys; Navbar uses `useTranslations` for those labels (fa + en).
+- **Mobile nav disclosure:** Panel is `role="navigation"` (not dialog/modal). Escape closes and restores focus to the toggle.
+- **RTL seat-bar gradients:** Lobby seat-fill gradients use explicit `90deg` / `270deg` instead of `to inline-end` (RTL-safe under current CSS).
+- **diff-check:** Audit whitespace stripped; `git diff --check origin/main..HEAD` is clean.
+
+### Visual QA
+
+- Production frontend on `:3010`, `BUILD_ID` `1xDzWKk2lWE1VjcY8jK9T`.
+- Viewports: 375 / 430 / 768 / 1440 / 1920.
+- Covered: FA home + menu + lobby; EN home + lobby; Chess.
+- No product UI defects found in those passes.
+- Earlier `:3000` chunk errors were a corrupted `.next` env issue (not product UI).
+- Do **not** claim Playwright / Lighthouse / pytest coverage from this pass.
+
+### Verification
+
+- Build: **PASS**
+- `tsc`: **PASS**
+- `git diff --check origin/main..HEAD`: **PASS**
+- Backend: **no changes**
+
+### Commits
+
+- `7016a7b` — code fixes (navbar i18n, disclosure nav a11y, RTL seat-bar gradient, audit whitespace)
+- (this docs commit) — docs: Independent Review Fixes — i18n/a11y/RTL, diff-check, visual QA.
