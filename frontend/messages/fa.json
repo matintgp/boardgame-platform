@@ -126,7 +126,14 @@
     "loadFailed": "نتونستم این بازی رو بارگذاری کنم.",
     "backToLobby": "برگشت به لابی",
     "moves": "حرکت‌ها",
-    "youMarker": "(تو)"
+    "youMarker": "(تو)",
+    "abandonedLostTitle": "شکست با ترک بازی",
+    "youWonAbandoned": "بردی — حریف میز را ترک کرد.",
+    "youLostAbandoned": "باختی — میز رها شد.",
+    "wonByAbandonment": "با ترک بازی برد",
+    "youWonTimeout": "با تمام شدن زمان حریف بردی!",
+    "youLostTimeout": "زمانت تمام شد.",
+    "wonByTimeout": "با تمام شدن زمان برد"
   },
   "friends": {
     "title": "دوستان",

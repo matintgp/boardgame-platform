@@ -621,7 +621,9 @@ export default function GamePage({ gameId }: { gameId: string }) {
                   : result.reason === "timeout"
                     ? t("timeoutTitle")
                     : result.reason === "abandoned"
-                      ? t("abandonedTitle")
+                      ? iWon
+                        ? t("abandonedTitle")
+                        : t("abandonedLostTitle")
                       : t("draw")}
             </h2>
             <p className="mt-2 text-sm">
@@ -629,13 +631,33 @@ export default function GamePage({ gameId }: { gameId: string }) {
                 t("drawReason")
               ) : iWon ? (
                 <span className="font-bold text-[var(--accent)]">
-                  {isCheckmate ? t("youWonBy") : t("winGeneric")}
+                  {isCheckmate
+                    ? t("youWonBy")
+                    : result.reason === "abandoned"
+                      ? t("youWonAbandoned")
+                      : result.reason === "timeout"
+                        ? t("youWonTimeout")
+                        : t("winGeneric")}
                 </span>
               ) : (
                 <>
                   <span className="font-bold">{winnerName}</span>{" "}
-                  {isCheckmate ? t("wonByCheckmate") : t("opponentWonGeneric")}
-                  <span className="muted block mt-1">{t("youLostBy")}</span>
+                  {isCheckmate
+                    ? t("wonByCheckmate")
+                    : result.reason === "abandoned"
+                      ? t("wonByAbandonment")
+                      : result.reason === "timeout"
+                        ? t("wonByTimeout")
+                        : t("opponentWonGeneric")}
+                  <span className="muted block mt-1">
+                    {isCheckmate
+                      ? t("youLostBy")
+                      : result.reason === "abandoned"
+                        ? t("youLostAbandoned")
+                        : result.reason === "timeout"
+                          ? t("youLostTimeout")
+                          : t("youLose")}
+                  </span>
                 </>
               )}
             </p>

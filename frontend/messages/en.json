@@ -126,7 +126,14 @@
     "loadFailed": "Couldn't load this game.",
     "backToLobby": "Back to lobby",
     "moves": "Moves",
-    "youMarker": "(you)"
+    "youMarker": "(you)",
+    "abandonedLostTitle": "Lost by abandonment",
+    "youWonAbandoned": "You won — opponent left the table.",
+    "youLostAbandoned": "You lost — the table was abandoned.",
+    "wonByAbandonment": "won by abandonment",
+    "youWonTimeout": "You won on time!",
+    "youLostTimeout": "You ran out of time.",
+    "wonByTimeout": "won on time"
   },
   "friends": {
     "title": "Friends",
