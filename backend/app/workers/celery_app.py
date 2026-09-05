@@ -31,5 +31,23 @@ celery_app.conf.update(
 
 
 def run_async(coro):
-    """Bridge for running asyncio code (SQLAlchemy async) inside Celery tasks."""
-    return asyncio.run(coro)
+    """Run asyncio code inside a Celery worker.
+
+    Each asyncio.run() creates a fresh event loop. Async SQLAlchemy engines and
+    redis.asyncio clients are loop-bound, so we dispose/re-init around every call.
+    """
+
+    async def _wrapped():
+        from app.db import session as db_session
+        from app.realtime import bus
+
+        await db_session.engine.dispose()
+        await bus.close_redis()
+        await bus.init_redis()
+        try:
+            return await coro
+        finally:
+            await bus.close_redis()
+            await db_session.engine.dispose()
+
+    return asyncio.run(_wrapped())

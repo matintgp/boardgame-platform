@@ -118,8 +118,26 @@ def schedule_bot_move(
     delay_seconds: float | None = None,
     attempt: int = 0,
 ) -> None:
-    """Enqueue an idempotent bot move. Prefer Celery; fall back to asyncio."""
+    """Enqueue an idempotent bot move.
+
+    Prefer the running API event loop (reliable Redis + DB). Fall back to Celery
+    when called from a sync worker context with no loop.
+    """
     delay = 0.0 if delay_seconds is None else max(0.0, float(delay_seconds))
+
+    async def _inline() -> None:
+        if delay:
+            await asyncio.sleep(delay)
+        await run_bot_move(game_id, expected_seq, attempt=attempt)
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop is not None and settings.env != "test":
+        loop.create_task(_inline(), name=f"bot-move-{game_id}-{expected_seq}")
+        return
 
     if settings.env != "test":
         try:
@@ -131,18 +149,11 @@ def schedule_bot_move(
             )
             return
         except Exception:
-            logger.exception("Celery enqueue failed; falling back to asyncio")
+            logger.exception("Celery enqueue failed; no in-process loop either")
+            return
 
-    async def _inline() -> None:
-        if delay:
-            await asyncio.sleep(delay)
-        await run_bot_move(game_id, expected_seq, attempt=attempt)
-
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        # Sync context without a loop (should not happen for API); no-op — Celery
-        # task entrypoint calls run_bot_move directly.
+    # Tests: always inline on the running pytest/asyncio loop.
+    if loop is None:
         logger.warning(
             "schedule_bot_move: no event loop for game=%s seq=%s", game_id, expected_seq
         )

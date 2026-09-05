@@ -39,7 +39,10 @@ async def close_redis() -> None:
 
 async def publish_internal(message: dict) -> None:
     """Fan a message out to all backend nodes."""
-    await get_redis().publish(CHANNEL, json.dumps(message, default=str))
+    redis = _redis
+    if redis is None:
+        redis = await init_redis()
+    await redis.publish(CHANNEL, json.dumps(message, default=str))
 
 
 async def listen(handler) -> None:
