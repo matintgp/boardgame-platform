@@ -1,7 +1,7 @@
 # UI/UX Redesign Audit — Phase 0
 
-**Repo:** boardgame-platform @ `ebbc5d7`  
-**Scope:** Frontend inspection only (no gameplay/backend changes).  
+**Repo:** boardgame-platform @ `ebbc5d7`
+**Scope:** Frontend inspection only (no gameplay/backend changes).
 **Honest baseline:** Salem is furthest toward premium after recent overhaul commits; Chess / Mafia / Rokugan and shell screens still read as functional salon skins, not 9/10 product UIs.
 
 ---
@@ -16,7 +16,7 @@
 | Realtime | Memory JWT + WS auth frame; `gameSocket` reconnect/`sync`; chat over WS; LiveKit voice (`VoicePanel`, collapsed by default) |
 | Backend engines (registry) | `chess`, `rokugan`, `mafia`, `salem` — server-authoritative; client renders `visible_state` only |
 
-**i18n namespaces** (`messages/{fa,en}.json`, keys in parity ~438 each):  
+**i18n namespaces** (`messages/{fa,en}.json`, keys in parity ~438 each):
 `app`, `auth`, `lobby`, `game`, `friends`, `profile`, `rokugan`, `chat`, `mafia`, `voice`, `notFound`, `salem` (largest).
 
 **Public assets:** `/heroes` (4 covers), `/pieces` (chess PNGs), `/rokugan/{icons,sounds}`, `/salem/{portraits,icons,sounds,heroes}` + CREDITS, shared `/sounds`.

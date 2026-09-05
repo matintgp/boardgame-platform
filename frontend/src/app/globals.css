@@ -373,7 +373,11 @@ html[dir="rtl"] .kicker {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(to inline-end, #b8893a, var(--accent));
+  /* Explicit LTR/RTL — avoid logical gradient keywords for broader browser support */
+  background: linear-gradient(90deg, #b8893a, var(--accent));
+}
+html[dir="rtl"] .seat-bar > span {
+  background: linear-gradient(270deg, #b8893a, var(--accent));
 }
 
 .game-cover {

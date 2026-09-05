@@ -17,7 +17,10 @@
     "gameWorldChess": "Tournament floor",
     "gameWorldMafia": "Night salon",
     "gameWorldRokugan": "War table",
-    "gameWorldSalem": "1692 trial"
+    "gameWorldSalem": "1692 trial",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menu": "Menu"
   },
   "auth": {
     "email": "Email",

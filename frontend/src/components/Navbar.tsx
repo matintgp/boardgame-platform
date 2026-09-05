@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ensureSession, getCurrentUser, logout, onAuthChange, type SessionUser } from "@/lib/api";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import Avatar from "@/components/Avatar";
@@ -14,6 +14,7 @@ export default function Navbar() {
   const [user, setUser] = useState<SessionUser | null>(() => getCurrentUser());
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const menuBtnRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const unsub = onAuthChange(setUser);
@@ -30,8 +31,7 @@ export default function Navbar() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setMenuOpen(false);
-        const btn = document.querySelector<HTMLButtonElement>("[data-nav-menu-btn]");
-        btn?.focus();
+        menuBtnRef.current?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -52,8 +52,7 @@ export default function Navbar() {
   const linkClass = (href: string) =>
     `nav-link ${active(href) ? "nav-link-active" : ""}`;
 
-  const menuLabel = locale === "fa" ? (menuOpen ? "بستن منو" : "باز کردن منو") : (menuOpen ? "Close menu" : "Open menu");
-  const drawerLabel = locale === "fa" ? "منو" : "Menu";
+  const menuLabel = menuOpen ? t("closeMenu") : t("openMenu");
 
   const langSwitch = (
     <div
@@ -142,7 +141,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          data-nav-menu-btn
+          ref={menuBtnRef}
           className="nav-menu-btn btn btn-ghost !px-3 !py-1.5"
           aria-expanded={menuOpen}
           aria-controls={menuId}
@@ -153,12 +152,12 @@ export default function Navbar() {
         </button>
       </nav>
 
+      {/* Disclosure panel (not a modal dialog): aria-expanded + Escape close */}
       <div
         id={menuId}
         className="nav-drawer"
-        role="dialog"
-        aria-modal={menuOpen ? true : undefined}
-        aria-label={drawerLabel}
+        role="navigation"
+        aria-label={t("menu")}
         hidden={!menuOpen}
       >
         <Link href="/lobby" className={linkClass("/lobby")} onClick={() => setMenuOpen(false)}>

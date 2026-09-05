@@ -17,7 +17,10 @@
     "gameWorldChess": "سالن مسابقه",
     "gameWorldMafia": "سالن شب",
     "gameWorldRokugan": "میز جنگ",
-    "gameWorldSalem": "محاکمه ۱۶۹۲"
+    "gameWorldSalem": "محاکمه ۱۶۹۲",
+    "openMenu": "باز کردن منو",
+    "closeMenu": "بستن منو",
+    "menu": "منو"
   },
   "auth": {
     "email": "ایمیل",
