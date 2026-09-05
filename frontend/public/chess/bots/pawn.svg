@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Pawn Bot">
+  <defs>
+    <radialGradient id="wood" cx="42%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="#3a2a1a"/>
+      <stop offset="55%" stop-color="#1c140e"/>
+      <stop offset="100%" stop-color="#0d0a08"/>
+    </radialGradient>
+    <linearGradient id="brass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c87a"/>
+      <stop offset="45%" stop-color="#d4a24e"/>
+      <stop offset="100%" stop-color="#8a6a2e"/>
+    </linearGradient>
+    <linearGradient id="ivory" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f2e6c8"/>
+      <stop offset="100%" stop-color="#c4b090"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="60" fill="url(#wood)"/>
+  <circle cx="64" cy="64" r="60" fill="none" stroke="url(#brass)" stroke-width="5"/>
+  <circle cx="64" cy="64" r="54" fill="none" stroke="#d4a24e" stroke-opacity="0.28" stroke-width="1.5"/>
+  <!-- subtle robotic optic -->
+  <circle cx="64" cy="28" r="3.2" fill="#d4a24e" opacity="0.85"/>
+  <circle cx="64" cy="28" r="1.4" fill="#1a120a"/>
+  <!-- pawn silhouette -->
+  <g fill="url(#ivory)" stroke="#2a1e14" stroke-width="1.2" stroke-linejoin="round">
+    <circle cx="64" cy="48" r="11"/>
+    <path d="M53 58c2 6 6 10 11 11 5-1 9-5 11-11l-3 4c-2 8-5 14-8 18h-0c-3-4-6-10-8-18z"/>
+    <path d="M44 96c2-10 8-18 20-22 12 4 18 12 20 22 0 3-4 5-20 5s-20-2-20-5z"/>
+    <ellipse cx="64" cy="100" rx="26" ry="5.5"/>
+  </g>
+  <!-- rivets -->
+  <circle cx="22" cy="64" r="2" fill="#d4a24e" opacity="0.55"/>
+  <circle cx="106" cy="64" r="2" fill="#d4a24e" opacity="0.55"/>
+</svg>

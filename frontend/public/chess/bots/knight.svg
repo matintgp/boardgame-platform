@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Knight Bot">
+  <defs>
+    <radialGradient id="wood" cx="42%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="#342818"/>
+      <stop offset="55%" stop-color="#18120c"/>
+      <stop offset="100%" stop-color="#0b0906"/>
+    </radialGradient>
+    <linearGradient id="brass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0c070"/>
+      <stop offset="45%" stop-color="#c99644"/>
+      <stop offset="100%" stop-color="#7a5e28"/>
+    </linearGradient>
+    <linearGradient id="ivory" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#efe2c4"/>
+      <stop offset="100%" stop-color="#b8a484"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="60" fill="url(#wood)"/>
+  <circle cx="64" cy="64" r="60" fill="none" stroke="url(#brass)" stroke-width="5"/>
+  <circle cx="64" cy="64" r="54" fill="none" stroke="#c99644" stroke-opacity="0.3" stroke-width="1.5"/>
+  <circle cx="64" cy="28" r="3.2" fill="#c99644" opacity="0.9"/>
+  <circle cx="64" cy="28" r="1.4" fill="#14100a"/>
+  <g fill="url(#ivory)" stroke="#241a12" stroke-width="1.2" stroke-linejoin="round">
+    <path d="M42 98c1-16 6-28 14-38 2-8 4-16 2-24 8 4 16 6 22 4 4-1 8 2 10 8 3 8 1 16-2 22 6 6 10 14 12 24 0 4-6 6-24 6s-34-2-34-2z"/>
+    <path d="M58 42c-2-8 2-16 10-18 2 6 4 12 2 18-4 2-8 2-12 0z"/>
+    <circle cx="72" cy="48" r="2.2" fill="#1a120a" stroke="none"/>
+  </g>
+  <circle cx="22" cy="64" r="2" fill="#c99644" opacity="0.55"/>
+  <circle cx="106" cy="64" r="2" fill="#c99644" opacity="0.55"/>
+</svg>
